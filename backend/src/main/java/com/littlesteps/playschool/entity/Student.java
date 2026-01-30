@@ -1,0 +1,180 @@
+package com.littlesteps.playschool.entity;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.index.Indexed;
+import java.time.LocalDateTime;
+
+@Document(collection = "students")
+public class Student {
+
+    @Id
+    private String id;
+
+    @Indexed(unique = true)
+    private String admissionNo;
+
+    private String name;
+
+    private Integer age;
+
+    private String className; // Keep for display/legacy if needed, or remove if fully switching.
+    private String classId;
+    private String sectionId;
+
+    // Guardian details
+    private String guardian;
+    private String guardianPhone;
+    private String guardianEmail;
+    private String address;
+
+    private Status status = Status.ACTIVE;
+
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    private LocalDateTime updatedAt = LocalDateTime.now();
+
+    public enum Status {
+        ACTIVE, INACTIVE, GRADUATED
+    }
+
+    private String schoolId;
+
+    public Student() {
+    }
+
+    public Student(String admissionNo, String name, Integer age, String className,
+            String guardian, String guardianPhone, String guardianEmail, String address, String schoolId) {
+        this.admissionNo = admissionNo;
+        this.name = name;
+        this.age = age;
+        this.className = className;
+        this.guardian = guardian;
+        this.guardianPhone = guardianPhone;
+        this.guardianEmail = guardianEmail;
+        this.address = address;
+        this.schoolId = schoolId;
+        this.status = Status.ACTIVE;
+    }
+
+    // Getters and Setters
+    public String getClassId() {
+        return classId;
+    }
+
+    public void setClassId(String classId) {
+        this.classId = classId;
+    }
+
+    public String getSectionId() {
+        return sectionId;
+    }
+
+    public void setSectionId(String sectionId) {
+        this.sectionId = sectionId;
+    }
+
+    public String getSchoolId() {
+        return schoolId;
+    }
+
+    public void setSchoolId(String schoolId) {
+        this.schoolId = schoolId;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getAdmissionNo() {
+        return admissionNo;
+    }
+
+    public void setAdmissionNo(String admissionNo) {
+        this.admissionNo = admissionNo;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
+    public String getGuardian() {
+        return guardian;
+    }
+
+    public void setGuardian(String guardian) {
+        this.guardian = guardian;
+    }
+
+    public String getGuardianPhone() {
+        return guardianPhone;
+    }
+
+    public void setGuardianPhone(String guardianPhone) {
+        this.guardianPhone = guardianPhone;
+    }
+
+    public String getGuardianEmail() {
+        return guardianEmail;
+    }
+
+    public void setGuardianEmail(String guardianEmail) {
+        this.guardianEmail = guardianEmail;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+}

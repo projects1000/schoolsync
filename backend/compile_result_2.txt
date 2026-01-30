@@ -1,0 +1,154 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ---------------< com.littlesteps:playschool-management >----------------
+[INFO] Building playschool-management 1.0.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.3.2:clean (default-clean) @ playschool-management ---
+[INFO] Deleting D:\playschool\backend\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ playschool-management ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ playschool-management ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 71 source files with javac [debug parameters release 21] to target\classes
+[INFO] Annotation processing is enabled because one or more processors were found
+  on the class path. A future release of javac may disable annotation processing
+  unless at least one processor is specified by name (-processor), or a search
+  path is specified (--processor-path, --processor-module-path), or annotation
+  processing is enabled explicitly (-proc:only, -proc:full).
+  Use -Xlint:-options to suppress this message.
+  Use -proc:none to disable annotation processing.
+[INFO] Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/AdminController.java:[243,69] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/AttendanceController.java:[65,80] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/AttendanceController.java:[67,69] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/AttendanceController.java:[90,82] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/AttendanceController.java:[123,48] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/AuthService.java:[45,27] incompatible types: java.lang.String cannot be converted to java.lang.Long
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/AuthService.java:[95,32] incompatible types: java.lang.String cannot be converted to java.lang.Long
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/AuthService.java:[149,32] incompatible types: java.lang.String cannot be converted to java.lang.Long
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/InviteController.java:[46,56] incompatible types: java.lang.String cannot be converted to java.lang.Long
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/InviteController.java:[48,67] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/InviteController.java:[147,54] incompatible types: java.lang.String cannot be converted to java.lang.Long
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/InviteController.java:[169,54] incompatible types: java.lang.String cannot be converted to java.lang.Long
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/InviteService.java:[103,9] cannot find symbol
+  symbol:   class Specification
+  location: class com.littlesteps.playschool.service.InviteService
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/InviteService.java:[103,38] cannot find symbol
+  symbol:   variable Specification
+  location: class com.littlesteps.playschool.service.InviteService
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/InviteService.java:[121,42] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/InviteService.java:[211,46] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/InviteService.java:[241,46] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/StudentController.java:[29,64] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/StudentController.java:[49,70] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/StudentController.java:[59,42] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/TeacherController.java:[47,64] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/TeacherController.java:[63,56] cannot find symbol
+  symbol:   method createTeacherWithUser(@jakarta.validation.Valid com.littlesteps.playschool.dto.TeacherDTO,java.lang.String)
+  location: variable teacherService of type com.littlesteps.playschool.service.TeacherService
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/TeacherController.java:[82,70] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/TeacherController.java:[97,46] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/TeacherController.java:[121,42] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/TeacherController.java:[140,55] cannot find symbol
+  symbol:   method getTeachersByDepartment(java.lang.String)
+  location: variable teacherService of type com.littlesteps.playschool.service.TeacherService
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/TeacherController.java:[153,55] cannot find symbol
+  symbol:   method searchTeachers(java.lang.String)
+  location: variable teacherService of type com.littlesteps.playschool.service.TeacherService
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/TeacherController.java:[168,70] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/TeacherController.java:[190,51] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/TeacherService.java:[77,42] cannot find symbol
+  symbol:   variable EmploymentType
+  location: class com.littlesteps.playschool.entity.Teacher
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/TeacherService.java:[77,76] cannot find symbol
+  symbol:   method getEmploymentType()
+  location: variable teacherDTO of type com.littlesteps.playschool.dto.TeacherDTO
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/TeacherService.java:[79,42] cannot find symbol
+  symbol:   method getJoiningDate()
+  location: variable teacherDTO of type com.littlesteps.playschool.dto.TeacherDTO
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/TeacherService.java:[80,38] cannot find symbol
+  symbol:   method getAddress()
+  location: variable teacherDTO of type com.littlesteps.playschool.dto.TeacherDTO
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/TeacherService.java:[81,39] cannot find symbol
+  symbol:   method getSubjects()
+  location: variable teacherDTO of type com.littlesteps.playschool.dto.TeacherDTO
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/TeacherService.java:[127,36] incompatible types: java.util.List<java.lang.String> cannot be converted to java.lang.String
+[INFO] 35 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  5.845 s
+[INFO] Finished at: 2026-01-27T10:50:44+05:30
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.13.0:compile (default-compile) on project playschool-management: Compilation failure: Compilation failure: 
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/AdminController.java:[243,69] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/AttendanceController.java:[65,80] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/AttendanceController.java:[67,69] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/AttendanceController.java:[90,82] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/AttendanceController.java:[123,48] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/AuthService.java:[45,27] incompatible types: java.lang.String cannot be converted to java.lang.Long
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/AuthService.java:[95,32] incompatible types: java.lang.String cannot be converted to java.lang.Long
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/AuthService.java:[149,32] incompatible types: java.lang.String cannot be converted to java.lang.Long
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/InviteController.java:[46,56] incompatible types: java.lang.String cannot be converted to java.lang.Long
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/InviteController.java:[48,67] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/InviteController.java:[147,54] incompatible types: java.lang.String cannot be converted to java.lang.Long
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/InviteController.java:[169,54] incompatible types: java.lang.String cannot be converted to java.lang.Long
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/InviteService.java:[103,9] cannot find symbol
+[ERROR]   symbol:   class Specification
+[ERROR]   location: class com.littlesteps.playschool.service.InviteService
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/InviteService.java:[103,38] cannot find symbol
+[ERROR]   symbol:   variable Specification
+[ERROR]   location: class com.littlesteps.playschool.service.InviteService
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/InviteService.java:[121,42] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/InviteService.java:[211,46] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/InviteService.java:[241,46] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/StudentController.java:[29,64] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/StudentController.java:[49,70] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/StudentController.java:[59,42] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/TeacherController.java:[47,64] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/TeacherController.java:[63,56] cannot find symbol
+[ERROR]   symbol:   method createTeacherWithUser(@jakarta.validation.Valid com.littlesteps.playschool.dto.TeacherDTO,java.lang.String)
+[ERROR]   location: variable teacherService of type com.littlesteps.playschool.service.TeacherService
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/TeacherController.java:[82,70] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/TeacherController.java:[97,46] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/TeacherController.java:[121,42] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/TeacherController.java:[140,55] cannot find symbol
+[ERROR]   symbol:   method getTeachersByDepartment(java.lang.String)
+[ERROR]   location: variable teacherService of type com.littlesteps.playschool.service.TeacherService
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/TeacherController.java:[153,55] cannot find symbol
+[ERROR]   symbol:   method searchTeachers(java.lang.String)
+[ERROR]   location: variable teacherService of type com.littlesteps.playschool.service.TeacherService
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/TeacherController.java:[168,70] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/controller/TeacherController.java:[190,51] incompatible types: java.lang.Long cannot be converted to java.lang.String
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/TeacherService.java:[77,42] cannot find symbol
+[ERROR]   symbol:   variable EmploymentType
+[ERROR]   location: class com.littlesteps.playschool.entity.Teacher
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/TeacherService.java:[77,76] cannot find symbol
+[ERROR]   symbol:   method getEmploymentType()
+[ERROR]   location: variable teacherDTO of type com.littlesteps.playschool.dto.TeacherDTO
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/TeacherService.java:[79,42] cannot find symbol
+[ERROR]   symbol:   method getJoiningDate()
+[ERROR]   location: variable teacherDTO of type com.littlesteps.playschool.dto.TeacherDTO
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/TeacherService.java:[80,38] cannot find symbol
+[ERROR]   symbol:   method getAddress()
+[ERROR]   location: variable teacherDTO of type com.littlesteps.playschool.dto.TeacherDTO
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/TeacherService.java:[81,39] cannot find symbol
+[ERROR]   symbol:   method getSubjects()
+[ERROR]   location: variable teacherDTO of type com.littlesteps.playschool.dto.TeacherDTO
+[ERROR] /D:/playschool/backend/src/main/java/com/littlesteps/playschool/service/TeacherService.java:[127,36] incompatible types: java.util.List<java.lang.String> cannot be converted to java.lang.String
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

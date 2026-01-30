@@ -1,0 +1,32 @@
+# General
+.DS_Store
+.vscode/
+.idea/
+*.log
+
+# Backend (Maven)
+backend/target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Frontend (Node)
+frontend/node_modules/
+**/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Eclipse/Other
+.metadata/
+.classpath
+.project
