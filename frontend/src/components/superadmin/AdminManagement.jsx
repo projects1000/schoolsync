@@ -20,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import SuperAdminService from '../../services/superAdminService';
+import CreateAdminModal from './CreateAdminModal';
 
 const AdminManagement = ({ currentUser }) => {
     const { toast } = useToast();
@@ -38,11 +39,6 @@ const AdminManagement = ({ currentUser }) => {
     const [confirmAction, setConfirmAction] = useState(null);
     const [activeDropdown, setActiveDropdown] = useState(null);
 
-    // Create admin form
-    const [formData, setFormData] = useState({
-        name: '', email: '', phone: '', schoolId: ''
-    });
-
     useEffect(() => {
         fetchData();
     }, []);
@@ -58,6 +54,9 @@ const AdminManagement = ({ currentUser }) => {
             setSchools(schoolsRes.data);
         } catch (error) {
             console.error("Failed to load admin data:", error);
+            // Default to empty array to avoid crash in filteredAdmins
+            if (admins === undefined) setAdmins([]);
+            if (schools === undefined) setSchools([]);
             toast({
                 title: 'Error',
                 description: 'Failed to load admins and schools',
@@ -90,34 +89,18 @@ const AdminManagement = ({ currentUser }) => {
     }, [admins, searchQuery, statusFilter]);
 
     // Action handlers
-    const handleCreateAdmin = async () => {
-        if (!formData.name || !formData.email || !formData.schoolId) {
-            toast({ title: 'Error', description: 'Please fill all required fields', variant: 'destructive' });
-            return;
-        }
-
+    const handleCreateAdminSave = async (adminData) => {
         try {
-            const payload = {
-                name: formData.name,
-                email: formData.email,
-                username: formData.email, // Use email as username
-                phone: formData.phone,
-                schoolId: formData.schoolId,
-                role: 'ADMIN',
-                status: 'ACTIVE',
-                password: 'password123' // Default password, should be changed or emailed
-            };
-
-            await SuperAdminService.createAdmin(payload);
-            toast({ title: 'Success', description: `Admin ${formData.name} created successfully.` });
+            await SuperAdminService.createAdmin(adminData);
+            toast({ title: 'Success', description: `Admin ${adminData.name} created successfully.` });
             setShowCreateModal(false);
-            setFormData({ name: '', email: '', phone: '', schoolId: '' });
             fetchData(); // Refresh list
         } catch (error) {
             console.error("Create admin error:", error);
+            const message = error.response?.data?.message || 'Failed to create admin';
             toast({
                 title: 'Error',
-                description: error.response?.data?.message || 'Failed to create admin',
+                description: message,
                 variant: 'destructive'
             });
         }
@@ -143,15 +126,15 @@ const AdminManagement = ({ currentUser }) => {
         try {
             switch (confirmAction) {
                 case 'block':
-                    await SuperAdminService.updateAdminStatus(selectedAdmin.id, 'SUSPENDED'); // Enum uses SUSPENDED or INACTIVE
-                    toast({ title: 'Admin Blocked', description: `${selectedAdmin.name} has been suspended` });
+                    await SuperAdminService.updateAdminStatus(selectedAdmin.id, 'BLOCKED');
+                    toast({ title: 'Admin Blocked', description: `${selectedAdmin.name} has been blocked` });
                     break;
                 case 'unblock':
                     await SuperAdminService.updateAdminStatus(selectedAdmin.id, 'ACTIVE');
                     toast({ title: 'Admin Unblocked', description: `${selectedAdmin.name} is now active` });
                     break;
                 case 'resetPassword':
-                    await SuperAdminService.resetAdminPassword(selectedAdmin.id, 'password123'); // Reset to default
+                    await SuperAdminService.resetAdminPassword(selectedAdmin.id);
                     toast({ title: 'Password Reset', description: `Password reset to 'password123' for ${selectedAdmin.email}` });
                     break;
                 case 'forceLogout':
@@ -394,88 +377,12 @@ const AdminManagement = ({ currentUser }) => {
             </motion.div>
 
             {/* Create Admin Modal */}
-            <AnimatePresence>
-                {showCreateModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-                        onClick={() => setShowCreateModal(false)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white rounded-xl shadow-xl max-w-md w-full p-6"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold text-gray-800">Create Admin</h2>
-                                <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-
-                            {/* Show schools regardless of availability for now */}
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Admin Name *</label>
-                                    <input
-                                        type="text"
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500"
-                                        placeholder="Enter name"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email * (Username)</label>
-                                    <input
-                                        type="email"
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500"
-                                        placeholder="admin@school.com"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                                    <input
-                                        type="tel"
-                                        value={formData.phone}
-                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500"
-                                        placeholder="+91 12345 67890"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Assign to School *</label>
-                                    <select
-                                        value={formData.schoolId}
-                                        onChange={(e) => setFormData({ ...formData, schoolId: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500"
-                                    >
-                                        <option value="">Select school</option>
-                                        {availableSchools.map(school => (
-                                            <option key={school.id} value={school.id}>{school.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="flex gap-3 mt-6">
-                                    <Button onClick={() => setShowCreateModal(false)} className="flex-1 bg-gray-100 text-gray-700 hover:bg-gray-200">
-                                        Cancel
-                                    </Button>
-                                    <Button onClick={handleCreateAdmin} className="flex-1 bg-purple-600 hover:bg-purple-700">
-                                        Create Admin
-                                    </Button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            <CreateAdminModal
+                isOpen={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                onSave={handleCreateAdminSave}
+                schools={schools}
+            />
 
             {/* Transfer School Modal - Keeping UI but functionality not fully hooked */}
             <AnimatePresence>

@@ -1,12 +1,9 @@
 package com.littlesteps.playschool.entity;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.index.Indexed;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Document(collection = "parents")
 public class Parent {
@@ -19,25 +16,30 @@ public class Parent {
     @Indexed(unique = true)
     private String email;
 
-    // Column annotations removed for remaining fields as they are not needed in
-    // Mongo
+    @Indexed
+    private String schoolId;
+
+    // Reference to user collection (no @DBRef, use ID reference instead)
+    @Indexed
+    private String userId;
+
     private String phoneNumber;
     private String address;
     private String occupation;
 
     private RelationType relation = RelationType.FATHER;
 
-    @DBRef
-    private List<Student> children = new ArrayList<>();
-
-    @DBRef
-    private User user;
+    // Removed @DBRef List<Student> children - now using parent_student_map
+    // collection
+    // Use ParentStudentMapRepository to query children
 
     private String emergencyContactName;
     private String emergencyContactPhone;
     private String emergencyContactRelation;
 
     private Status status = Status.ACTIVE;
+
+    private String createdBy; // Admin ID who created this parent
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -63,6 +65,14 @@ public class Parent {
     }
 
     // Getters and Setters
+    public String getSchoolId() {
+        return schoolId;
+    }
+
+    public void setSchoolId(String schoolId) {
+        this.schoolId = schoolId;
+    }
+
     public String getId() {
         return id;
     }
@@ -119,20 +129,12 @@ public class Parent {
         this.relation = relation;
     }
 
-    public List<Student> getChildren() {
-        return children;
+    public String getUserId() {
+        return userId;
     }
 
-    public void setChildren(List<Student> children) {
-        this.children = children;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public String getEmergencyContactName() {
@@ -167,6 +169,14 @@ public class Parent {
         this.status = status;
     }
 
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -181,20 +191,5 @@ public class Parent {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    // Helper methods
-    public void addChild(Student student) {
-        this.children.add(student);
-        student.setGuardian(this.name);
-        student.setGuardianPhone(this.phoneNumber);
-        student.setGuardianEmail(this.email);
-    }
-
-    public void removeChild(Student student) {
-        this.children.remove(student);
-        student.setGuardian(null);
-        student.setGuardianPhone(null);
-        student.setGuardianEmail(null);
     }
 }

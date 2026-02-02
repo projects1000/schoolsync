@@ -25,8 +25,8 @@ public class StudentService {
     @Autowired
     private com.littlesteps.playschool.repository.SectionRepository sectionRepository;
 
-    public List<StudentDTO> getAllStudents() {
-        return studentRepository.findAll()
+    public List<StudentDTO> getAllStudents(String schoolId) {
+        return studentRepository.findBySchoolId(schoolId)
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -38,13 +38,14 @@ public class StudentService {
         return convertToDTO(student);
     }
 
-    public StudentDTO createStudent(StudentDTO studentDTO) {
+    public StudentDTO createStudent(StudentDTO studentDTO, String schoolId) {
         // Auto-generate Admission No
         String admissionNo = generateAdmissionNo();
 
         Student student = modelMapper.map(studentDTO, Student.class);
         student.setAdmissionNo(admissionNo);
         student.setStatus(Student.Status.ACTIVE); // Default status
+        student.setSchoolId(schoolId);
 
         // Resolve Class/Section Names if IDs are provided
         if (studentDTO.getClassId() != null) {
@@ -122,31 +123,15 @@ public class StudentService {
         studentRepository.deleteById(id);
     }
 
-    public List<StudentDTO> getStudentsByClass(String classId) {
-        // Assuming findByClassName now might need to change to findByClassId if we
-        // switch logic
-        // For now, let's keep finding by className if the frontend sends name, OR
-        // filter stream
-        // But better to use Repository method.
-        // Warning: The repository method is findByClassName.
-        // Let's interpret the argument as classId if it looks like an ID, or Name.
-        // Actually, for safety, let's fetch all and filter or add a method to repo.
-        // To avoid repo changs loops, I'll filter efficiently or assume the argument is
-        // generic.
-
-        // Current Repo: findByClassName(String className)
-        // Let's assume the Controller sends ClassName for now as per old logic?
-        // Or if we change controller to send ID, we need new repo method.
-        // Let's stick to Name for this method signature to match Repo,
-        // BUT add a new one for ID if needed suitable for the UI filter.
-        return studentRepository.findByClassName(classId) // Variable name says className in Repo
+    public List<StudentDTO> getStudentsByClass(String schoolId, String classId) {
+        return studentRepository.findBySchoolIdAndClassName(schoolId, classId)
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-    public List<StudentDTO> searchStudents(String searchTerm) {
-        return studentRepository.findByNameContainingOrAdmissionNoContaining(searchTerm)
+    public List<StudentDTO> searchStudents(String schoolId, String searchTerm) {
+        return studentRepository.searchStudents(schoolId, searchTerm)
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());

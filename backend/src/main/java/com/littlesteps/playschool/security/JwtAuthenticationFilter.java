@@ -23,6 +23,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private com.littlesteps.playschool.repository.UserRepository userRepository;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -44,6 +47,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             username, null, authorities);
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                    // Validate User Status from DB to enforce BLOCKED/INACTIVE checks immediately
+                    com.littlesteps.playschool.entity.User user = userRepository.findByEmail(username).orElse(null);
+                    if (user == null || !user.getActive()
+                            || user.getStatus() == com.littlesteps.playschool.entity.User.Status.BLOCKED
+                            || user.getStatus() == com.littlesteps.playschool.entity.User.Status.INACTIVE) {
+                        logger.warn("User " + username + " is not active or blocked. Denying access.");
+                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Account is disabled");
+                        return;
+                    }
 
                     // Set SchoolContext
                     String schoolId = jwtUtil.getSchoolIdFromToken(jwt);

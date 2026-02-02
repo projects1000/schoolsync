@@ -1,29 +1,24 @@
 import api from './api';
 
 const SuperAdminService = {
-    getDashboardData: () => api.get('/superadmin/dashboard'),
-
-    // Schools
+    // School Management
     getAllSchools: () => api.get('/superadmin/schools'),
-    getSchool: (id) => api.get(`/superadmin/schools/${id}`),
     createSchool: (data) => api.post('/superadmin/schools', data),
     updateSchool: (id, data) => api.put(`/superadmin/schools/${id}`, data),
     deleteSchool: (id) => api.delete(`/superadmin/schools/${id}`),
 
-    // Admins
+    // Admin Management
     getAllAdmins: () => api.get('/superadmin/admins'),
-    createAdmin: (data) => api.post('/superadmin/admins', data),
-    updateAdminStatus: (id, status) => api.put(`/superadmin/admins/${id}/status`, { status }),
-    resetAdminPassword: (id, password) => api.post(`/superadmin/admins/${id}/reset-password`, { password }),
+    createAdmin: (data) => api.post('/superadmin/admins', data), // Ideally remove schoolId from here if generic
+    createAdminForSchool: (schoolId, data) => api.post(`/superadmin/schools/${schoolId}/admin`, data),
+    assignAdminToSchool: (schoolId, adminId) => api.put(`/superadmin/schools/${schoolId}/assign-admin/${adminId}`),
 
-    // Academic Master
-    getAllClassTemplates: () => api.get('/superadmin/academic/templates'),
-    createClassTemplate: (data) => api.post('/superadmin/academic/templates', data),
-    getAllAcademicYears: () => api.get('/superadmin/academic/years'),
-    createAcademicYear: (data) => api.post('/superadmin/academic/years', data),
-
-    // System
-    performBackup: () => api.post('/superadmin/backup'),
+    // Admin Actions
+    // Admin Actions
+    reassignAdmin: (oldAdminId, newAdminId) => api.put(`/superadmin/admins/${oldAdminId}/reassign`, { newAdminId }),
+    updateAdminStatus: (id, status) => api.patch(`/superadmin/admins/${id}/status`, { status }),
+    resetAdminPassword: (id) => api.post(`/superadmin/admins/${id}/reset-password`),
+    getDashboardData: () => api.get('/superadmin/dashboard'),
 };
 
 export default SuperAdminService;

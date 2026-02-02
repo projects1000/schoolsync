@@ -16,6 +16,8 @@ public class School {
 
     private String name;
 
+    private String adminId;
+
     private String address;
     private String city;
     private String state;
@@ -190,5 +192,13 @@ public class School {
 
     public void setLogo(String logo) {
         this.logo = logo;
+    }
+
+    public String getAdminId() {
+        return adminId;
+    }
+
+    public void setAdminId(String adminId) {
+        this.adminId = adminId;
     }
 }

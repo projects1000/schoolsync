@@ -3,7 +3,9 @@ package com.littlesteps.playschool.entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.index.Indexed;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Document(collection = "users")
 public class User {
@@ -39,12 +41,18 @@ public class User {
 
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    private String createdBy;
+
+    private LocalDate joiningDate;
+
+    private List<String> assignedClassIds;
+
     public enum Role {
         SUPERADMIN, ADMIN, TEACHER, PARENT
     }
 
     public enum Status {
-        ACTIVE, INACTIVE, SUSPENDED
+        ACTIVE, INACTIVE, SUSPENDED, BLOCKED
     }
 
     // Constructors
@@ -171,5 +179,29 @@ public class User {
 
     public void setLastLogin(LocalDateTime lastLogin) {
         this.lastLogin = lastLogin;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public LocalDate getJoiningDate() {
+        return joiningDate;
+    }
+
+    public void setJoiningDate(LocalDate joiningDate) {
+        this.joiningDate = joiningDate;
+    }
+
+    public List<String> getAssignedClassIds() {
+        return assignedClassIds;
+    }
+
+    public void setAssignedClassIds(List<String> assignedClassIds) {
+        this.assignedClassIds = assignedClassIds;
     }
 }

@@ -20,24 +20,40 @@ public class ParentController {
     @Autowired
     private ParentService parentService;
 
+    @Autowired
+    private com.littlesteps.playschool.repository.UserRepository userRepository;
+
+    private String getSchoolId(org.springframework.security.core.Authentication authentication) {
+        String email = authentication.getName();
+        com.littlesteps.playschool.entity.User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return user.getSchoolId();
+    }
+
     @GetMapping
-    public ResponseEntity<List<ParentDTO>> getAllParents() {
-        return ResponseEntity.ok(parentService.getAllParents());
+    public ResponseEntity<List<ParentDTO>> getAllParents(
+            org.springframework.security.core.Authentication authentication) {
+        String schoolId = getSchoolId(authentication);
+        return ResponseEntity.ok(parentService.getAllParents(schoolId));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ParentDTO> getParentById(@PathVariable String id) {
+    public ResponseEntity<ParentDTO> getParentById(@PathVariable String id,
+            org.springframework.security.core.Authentication authentication) {
         try {
-            return ResponseEntity.ok(parentService.getParentById(id));
+            String schoolId = getSchoolId(authentication);
+            return ResponseEntity.ok(parentService.getParentById(id, schoolId));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
     @PostMapping
-    public ResponseEntity<ParentDTO> createParent(@RequestBody ParentDTO parentDTO) {
+    public ResponseEntity<ParentDTO> createParent(@RequestBody ParentDTO parentDTO,
+            org.springframework.security.core.Authentication authentication) {
         try {
-            ParentDTO created = parentService.createParent(parentDTO);
+            String schoolId = getSchoolId(authentication);
+            ParentDTO created = parentService.createParent(parentDTO, schoolId);
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
@@ -45,9 +61,11 @@ public class ParentController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ParentDTO> updateParent(@PathVariable String id, @RequestBody ParentDTO parentDTO) {
+    public ResponseEntity<ParentDTO> updateParent(@PathVariable String id, @RequestBody ParentDTO parentDTO,
+            org.springframework.security.core.Authentication authentication) {
         try {
-            return ResponseEntity.ok(parentService.updateParent(id, parentDTO));
+            String schoolId = getSchoolId(authentication);
+            return ResponseEntity.ok(parentService.updateParent(id, parentDTO, schoolId));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

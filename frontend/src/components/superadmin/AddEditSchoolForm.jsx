@@ -92,7 +92,10 @@ const AddEditSchoolForm = ({
         try {
             setIsLoadingAdmins(true);
             const response = await SuperAdminService.getAllAdmins();
-            setAvailableAdmins(response.data);
+            // Filter out admins who already have a school assigned, unless it's the current school's admin
+            const allAdmins = response.data || [];
+            const unassignedAdmins = allAdmins.filter(admin => !admin.schoolId || (editSchool && admin.id === editSchool.adminId));
+            setAvailableAdmins(unassignedAdmins);
         } catch (error) {
             console.error("Failed to fetch admins:", error);
             toast({

@@ -13,6 +13,8 @@ import java.util.Optional;
 @Repository
 public interface FeeInvoiceRepository extends MongoRepository<FeeInvoice, String> {
 
+    List<FeeInvoice> findBySchoolId(String schoolId);
+
     Optional<FeeInvoice> findByInvoiceNo(String invoiceNo);
 
     List<FeeInvoice> findByStudent(Student student);

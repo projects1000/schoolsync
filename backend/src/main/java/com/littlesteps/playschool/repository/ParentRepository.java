@@ -1,7 +1,6 @@
 package com.littlesteps.playschool.repository;
 
 import com.littlesteps.playschool.entity.Parent;
-import com.littlesteps.playschool.entity.Parent;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -12,12 +11,16 @@ import java.util.Optional;
 @Repository
 public interface ParentRepository extends MongoRepository<Parent, String> {
 
-    Optional<Parent> findByEmail(String email);
+    List<Parent> findBySchoolId(String schoolId);
 
-    List<Parent> findByStatus(Parent.Status status);
+    Optional<Parent> findByIdAndSchoolId(String id, String schoolId);
 
-    @Query("{ '$or': [ { 'name': { '$regex': ?0, '$options': 'i' } }, { 'email': { '$regex': ?0, '$options': 'i' } } ] }")
-    List<Parent> searchByNameOrEmail(String searchTerm);
+    Optional<Parent> findBySchoolIdAndEmail(String schoolId, String email);
+
+    List<Parent> findBySchoolIdAndStatus(String schoolId, Parent.Status status);
+
+    @Query("{ 'schoolId': ?0, '$or': [ { 'name': { '$regex': ?1, '$options': 'i' } }, { 'email': { '$regex': ?1, '$options': 'i' } } ] }")
+    List<Parent> searchParents(String schoolId, String searchTerm);
 
     // Complex joins are difficult in Mongo Repository interface.
     // It's better to fetch parents and filter in service or store class info in
