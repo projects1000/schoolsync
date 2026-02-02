@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Plus, Search, Edit2, Trash2, Users, Mail, Phone,
-  BookOpen, Calendar, MapPin, CheckCircle, XCircle
+  Plus, Search, Edit2, Mail, BookOpen, CheckCircle,
+  ShieldOff, ShieldCheck
 } from 'lucide-react';
+
 import adminService from '@/services/adminService';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -33,20 +34,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+
 const TeacherManagement = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [teachers, setTeachers] = useState([]);
-  const [classes, setClasses] = useState([]); // For assignment dropdown
+  const [classes, setClasses] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
 
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   const [currentTeacher, setCurrentTeacher] = useState(null);
-  const [selectedClasses, setSelectedClasses] = useState([]); // For assignment
+  const [selectedClasses, setSelectedClasses] = useState([]);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -58,7 +63,8 @@ const TeacherManagement = () => {
     experience: '',
     employmentType: 'FULL_TIME',
     joiningDate: new Date().toISOString().split('T')[0],
-    address: ''
+    address: '',
+    password: ''
   });
 
   const fetchTeachers = async () => {
@@ -106,7 +112,7 @@ const TeacherManagement = () => {
       setFormData({
         name: '', email: '', phone: '', department: '', qualification: '',
         experience: '', employmentType: 'FULL_TIME',
-        joiningDate: new Date().toISOString().split('T')[0], address: ''
+        joiningDate: new Date().toISOString().split('T')[0], address: '', password: ''
       });
     } catch (error) {
       toast({ title: "Error", description: error.response?.data?.message || "Failed to create teacher", variant: "destructive" });
@@ -160,12 +166,12 @@ const TeacherManagement = () => {
 
   const handleAssignSubmit = async () => {
     try {
-      await adminService.assignClassesToTeacher(currentTeacher.id, selectedClasses);
+      await adminService.updateTeacherClassAssignments(currentTeacher.id, selectedClasses);
       toast({ title: "Success", description: "Classes assigned successfully" });
       setIsAssignModalOpen(false);
       fetchTeachers();
     } catch (error) {
-      toast({ title: "Error", description: "Failed to assign classes", variant: "destructive" });
+      toast({ title: "Error", description: error.response?.data?.message || "Failed to assign classes", variant: "destructive" });
     }
   };
 
@@ -177,12 +183,62 @@ const TeacherManagement = () => {
     );
   };
 
+  // Block/Unblock Teacher
+  const handleStatusChange = async (teacher, newStatus) => {
+    setCurrentTeacher(teacher);
+    setConfirmAction({ type: newStatus === 'BLOCKED' ? 'block' : 'unblock', teacher, status: newStatus });
+    setIsConfirmModalOpen(true);
+  };
+
+  const confirmStatusChange = async () => {
+    if (!confirmAction) return;
+    try {
+      await adminService.updateTeacherStatus(confirmAction.teacher.id, confirmAction.status);
+      toast({
+        title: "Success",
+        description: confirmAction.status === 'BLOCKED'
+          ? `${confirmAction.teacher.name} has been blocked`
+          : `${confirmAction.teacher.name} has been unblocked`
+      });
+      setIsConfirmModalOpen(false);
+      setConfirmAction(null);
+      fetchTeachers();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to update teacher status",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Filter teachers
+  const filteredTeachers = teachers.filter(t => {
+    const matchesSearch = t.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'ALL' || t.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'ACTIVE':
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Active</Badge>;
+      case 'BLOCKED':
+        return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Blocked</Badge>;
+      case 'INACTIVE':
+        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">Inactive</Badge>;
+      default:
+        return <Badge variant="secondary">{status || 'Unknown'}</Badge>;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Teacher Management</h1>
-          <p className="text-gray-500">Manage teaching staff and assignments</p>
+          <p className="text-gray-500">Manage teaching staff, classes, and access</p>
         </div>
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
           <DialogTrigger asChild>
@@ -203,6 +259,10 @@ const TeacherManagement = () => {
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password (optional)</Label>
+                <Input id="password" name="password" type="password" value={formData.password} onChange={handleInputChange} placeholder="Auto-generated if empty" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone</Label>
@@ -234,8 +294,8 @@ const TeacherManagement = () => {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-        {/* Search Bar */}
-        <div className="p-4 border-b border-gray-200">
+        {/* Search & Filter Bar */}
+        <div className="p-4 border-b border-gray-200 flex items-center gap-4">
           <div className="relative w-64">
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <Input
@@ -245,65 +305,107 @@ const TeacherManagement = () => {
               className="pl-9"
             />
           </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Status</SelectItem>
+              <SelectItem value="ACTIVE">Active</SelectItem>
+              <SelectItem value="BLOCKED">Blocked</SelectItem>
+              <SelectItem value="INACTIVE">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="ml-auto text-sm text-gray-500">
+            {filteredTeachers.length} teacher(s)
+          </div>
         </div>
 
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Teacher</TableHead>
-              <TableHead>Contact</TableHead>
-              <TableHead>Department</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Assigned Classes</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Classes</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {teachers.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase())).map((teacher) => (
-              <TableRow key={teacher.id}>
-                <TableCell>
-                  <div className="font-medium">{teacher.name}</div>
-                  <div className="text-xs text-gray-500">{teacher.qualification}</div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-col text-sm text-gray-500 space-y-1">
-                    <div className="flex items-center"><Mail className="w-3 h-3 mr-1" /> {teacher.email}</div>
-                    <div className="flex items-center"><Phone className="w-3 h-3 mr-1" /> {teacher.phone}</div>
-                  </div>
-                </TableCell>
-                <TableCell>{teacher.department}</TableCell>
-                <TableCell>
-                  <Badge variant={teacher.status === 'ACTIVE' ? 'success' : 'secondary'} className={teacher.status === 'ACTIVE' ? "bg-green-100 text-green-800 hover:bg-green-200" : ""}>
-                    {teacher.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {teacher.assignedClasses?.length > 0 ? (
-                      teacher.assignedClasses.map((clsId, idx) => {
-                        const cls = classes.find(c => c.id === clsId);
-                        return <Badge key={idx} variant="outline" className="text-xs">{cls ? cls.name : 'Unknown'}</Badge>
-                      })
-                    ) : (
-                      <span className="text-xs text-gray-400">No classes</span>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end space-x-2">
-                    <Button variant="ghost" size="sm" onClick={() => handleAssignClick(teacher)} title="Assign Classes">
-                      <BookOpen className="w-4 h-4 text-blue-500" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleEditClick(teacher)} title="Edit">
-                      <Edit2 className="w-4 h-4 text-gray-500" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(teacher.id)} title="Deactivate">
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </Button>
-                  </div>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                  Loading teachers...
                 </TableCell>
               </TableRow>
-            ))}
+            ) : filteredTeachers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                  No teachers found
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredTeachers.map((teacher) => (
+                <TableRow key={teacher.id} className={teacher.status === 'BLOCKED' ? 'bg-red-50/50' : ''}>
+                  <TableCell>
+                    <div className="font-medium">{teacher.name}</div>
+                    <div className="text-xs text-gray-500">{teacher.department || 'No department'}</div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Mail className="w-3 h-3 mr-1" /> {teacher.email}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1 max-w-[200px]">
+                      {teacher.assignedClasses?.length > 0 ? (
+                        teacher.assignedClasses.slice(0, 3).map((clsId, idx) => {
+                          const cls = classes.find(c => c.id === clsId);
+                          return <Badge key={idx} variant="outline" className="text-xs">{cls ? cls.name : clsId}</Badge>
+                        })
+                      ) : (
+                        <span className="text-xs text-gray-400">No classes assigned</span>
+                      )}
+                      {teacher.assignedClasses?.length > 3 && (
+                        <Badge variant="outline" className="text-xs">+{teacher.assignedClasses.length - 3} more</Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {getStatusBadge(teacher.status)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end space-x-1">
+                      <Button variant="ghost" size="sm" onClick={() => handleAssignClick(teacher)} title="Assign Classes">
+                        <BookOpen className="w-4 h-4 text-blue-500" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleEditClick(teacher)} title="Edit">
+                        <Edit2 className="w-4 h-4 text-gray-500" />
+                      </Button>
+                      {teacher.status === 'ACTIVE' ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleStatusChange(teacher, 'BLOCKED')}
+                          title="Block Teacher"
+                        >
+                          <ShieldOff className="w-4 h-4 text-red-500" />
+                        </Button>
+                      ) : teacher.status === 'BLOCKED' ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleStatusChange(teacher, 'ACTIVE')}
+                          title="Unblock Teacher"
+                        >
+                          <ShieldCheck className="w-4 h-4 text-green-500" />
+                        </Button>
+                      ) : null}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
@@ -356,8 +458,8 @@ const TeacherManagement = () => {
                   <div
                     key={cls.id}
                     className={`p-3 rounded-lg border cursor-pointer transition-colors ${selectedClasses.includes(cls.id)
-                        ? 'bg-purple-50 border-purple-500 text-purple-700'
-                        : 'hover:bg-gray-50 border-gray-200'
+                      ? 'bg-purple-50 border-purple-500 text-purple-700'
+                      : 'hover:bg-gray-50 border-gray-200'
                       }`}
                     onClick={() => toggleClassSelection(cls.id)}
                   >
@@ -373,6 +475,39 @@ const TeacherManagement = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAssignModalOpen(false)}>Cancel</Button>
             <Button onClick={handleAssignSubmit}>Save Assignments</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm Block/Unblock Modal */}
+      <Dialog open={isConfirmModalOpen} onOpenChange={setIsConfirmModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {confirmAction?.type === 'block' ? 'Block Teacher?' : 'Unblock Teacher?'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {confirmAction?.type === 'block' ? (
+              <p className="text-gray-600">
+                Are you sure you want to block <strong>{confirmAction?.teacher?.name}</strong>?
+                They will no longer be able to login to the system.
+              </p>
+            ) : (
+              <p className="text-gray-600">
+                Are you sure you want to unblock <strong>{confirmAction?.teacher?.name}</strong>?
+                They will regain access to the system.
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsConfirmModalOpen(false)}>Cancel</Button>
+            <Button
+              onClick={confirmStatusChange}
+              className={confirmAction?.type === 'block' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}
+            >
+              {confirmAction?.type === 'block' ? 'Block Teacher' : 'Unblock Teacher'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -2,6 +2,8 @@ package com.littlesteps.playschool.controller;
 
 import com.littlesteps.playschool.dto.TeacherDTO;
 import com.littlesteps.playschool.service.TeacherService;
+import com.littlesteps.playschool.repository.UserRepository;
+import com.littlesteps.playschool.entity.User;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,6 +24,15 @@ public class TeacherController {
     @Autowired
     private TeacherService teacherService;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    private String getSchoolId(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return user.getSchoolId();
+    }
+
     /**
      * Get all teachers with optional filtering
      */
@@ -29,9 +40,11 @@ public class TeacherController {
     public ResponseEntity<List<TeacherDTO>> getAllTeachers(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String department,
-            @RequestParam(required = false) String status) {
+            @RequestParam(required = false) String status,
+            Authentication authentication) {
         try {
-            List<TeacherDTO> teachers = teacherService.getAllTeachers(name, department, status);
+            String schoolId = getSchoolId(authentication.getName());
+            List<TeacherDTO> teachers = teacherService.getAllTeachers(schoolId, name, department, status);
             return ResponseEntity.ok(teachers);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -60,7 +73,8 @@ public class TeacherController {
             Authentication authentication) {
         try {
             String createdBy = authentication.getName();
-            Map<String, Object> result = teacherService.createTeacherWithUser(teacherDTO, createdBy);
+            String schoolId = getSchoolId(createdBy);
+            Map<String, Object> result = teacherService.createTeacherWithUser(teacherDTO, createdBy, schoolId);
             return ResponseEntity.status(HttpStatus.CREATED).body(result);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of(
@@ -105,7 +119,7 @@ public class TeacherController {
     }
 
     /**
-     * Assign classes to teacher
+     * Assign classes to teacher (legacy - uses class names)
      */
     @PostMapping("/{id}/assign-classes")
     public ResponseEntity<Map<String, Object>> assignClasses(
@@ -127,12 +141,40 @@ public class TeacherController {
     }
 
     /**
+     * Update teacher class assignments (uses class IDs with validation)
+     * Validates teacher and classes belong to admin's school
+     */
+    @PutMapping("/{teacherId}/assign-classes")
+    public ResponseEntity<Map<String, Object>> updateClassAssignments(
+            @PathVariable String teacherId,
+            @RequestBody Map<String, Object> request,
+            Authentication authentication) {
+        try {
+            String adminEmail = authentication.getName();
+            String schoolId = getSchoolId(adminEmail);
+
+            @SuppressWarnings("unchecked")
+            List<String> assignedClassIds = (List<String>) request.get("assignedClassIds");
+
+            Map<String, Object> result = teacherService.updateTeacherClassAssignments(
+                    teacherId, assignedClassIds, adminEmail, schoolId);
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()));
+        }
+    }
+
+    /**
      * Get teachers by department
      */
     @GetMapping("/department/{department}")
-    public ResponseEntity<List<TeacherDTO>> getTeachersByDepartment(@PathVariable String department) {
+    public ResponseEntity<List<TeacherDTO>> getTeachersByDepartment(@PathVariable String department,
+            Authentication authentication) {
         try {
-            List<TeacherDTO> teachers = teacherService.getAllTeachers(null, department, null);
+            String schoolId = getSchoolId(authentication.getName());
+            List<TeacherDTO> teachers = teacherService.getAllTeachers(schoolId, null, department, null);
             return ResponseEntity.ok(teachers);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -143,9 +185,10 @@ public class TeacherController {
      * Search teachers
      */
     @GetMapping("/search")
-    public ResponseEntity<List<TeacherDTO>> searchTeachers(@RequestParam String term) {
+    public ResponseEntity<List<TeacherDTO>> searchTeachers(@RequestParam String term, Authentication authentication) {
         try {
-            List<TeacherDTO> teachers = teacherService.getAllTeachers(term, null, null);
+            String schoolId = getSchoolId(authentication.getName());
+            List<TeacherDTO> teachers = teacherService.getAllTeachers(schoolId, term, null, null);
             return ResponseEntity.ok(teachers);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -184,6 +227,37 @@ public class TeacherController {
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "message", "Credentials sent successfully"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()));
+        }
+    }
+
+    /**
+     * Update teacher status (block/unblock)
+     * BLOCKED → Teacher cannot login
+     * ACTIVE → Teacher regains access
+     */
+    @PatchMapping("/{teacherId}/status")
+    public ResponseEntity<Map<String, Object>> updateTeacherStatus(
+            @PathVariable String teacherId,
+            @RequestBody Map<String, Object> request,
+            Authentication authentication) {
+        try {
+            String adminEmail = authentication.getName();
+            String schoolId = getSchoolId(adminEmail);
+            String newStatus = (String) request.get("status");
+
+            if (newStatus == null || newStatus.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Status is required"));
+            }
+
+            Map<String, Object> result = teacherService.updateTeacherStatus(
+                    teacherId, newStatus, adminEmail, schoolId);
+            return ResponseEntity.ok(result);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,

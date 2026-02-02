@@ -3,6 +3,9 @@ package com.littlesteps.playschool.controller;
 import com.littlesteps.playschool.dto.StudentDTO;
 import com.littlesteps.playschool.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.littlesteps.playschool.repository.UserRepository;
+import com.littlesteps.playschool.entity.User;
+import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,9 +21,19 @@ public class StudentController {
     @Autowired
     private StudentService studentService;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    private String getSchoolId(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return user.getSchoolId();
+    }
+
     @GetMapping
-    public ResponseEntity<List<StudentDTO>> getAllStudents() {
-        List<StudentDTO> students = studentService.getAllStudents();
+    public ResponseEntity<List<StudentDTO>> getAllStudents(Authentication authentication) {
+        String schoolId = getSchoolId(authentication.getName());
+        List<StudentDTO> students = studentService.getAllStudents(schoolId);
         return ResponseEntity.ok(students);
     }
 
@@ -35,9 +48,10 @@ public class StudentController {
     }
 
     @PostMapping
-    public ResponseEntity<StudentDTO> createStudent(@RequestBody StudentDTO studentDTO) {
+    public ResponseEntity<StudentDTO> createStudent(@RequestBody StudentDTO studentDTO, Authentication authentication) {
         try {
-            StudentDTO createdStudent = studentService.createStudent(studentDTO);
+            String schoolId = getSchoolId(authentication.getName());
+            StudentDTO createdStudent = studentService.createStudent(studentDTO, schoolId);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdStudent);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
@@ -65,14 +79,17 @@ public class StudentController {
     }
 
     @GetMapping("/class/{className}")
-    public ResponseEntity<List<StudentDTO>> getStudentsByClass(@PathVariable String className) {
-        List<StudentDTO> students = studentService.getStudentsByClass(className);
+    public ResponseEntity<List<StudentDTO>> getStudentsByClass(@PathVariable String className,
+            Authentication authentication) {
+        String schoolId = getSchoolId(authentication.getName());
+        List<StudentDTO> students = studentService.getStudentsByClass(schoolId, className);
         return ResponseEntity.ok(students);
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<StudentDTO>> searchStudents(@RequestParam String term) {
-        List<StudentDTO> students = studentService.searchStudents(term);
+    public ResponseEntity<List<StudentDTO>> searchStudents(@RequestParam String term, Authentication authentication) {
+        String schoolId = getSchoolId(authentication.getName());
+        List<StudentDTO> students = studentService.searchStudents(schoolId, term);
         return ResponseEntity.ok(students);
     }
 

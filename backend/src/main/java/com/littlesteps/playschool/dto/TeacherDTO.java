@@ -16,6 +16,8 @@ public class TeacherDTO {
     private String qualification;
     private String experience;
     private java.util.List<String> assignedClasses;
+    private java.util.List<String> assignedClassIds;
+    private String password;
     private String status;
     private java.util.List<String> subjects;
     private String address;
@@ -154,5 +156,21 @@ public class TeacherDTO {
 
     public void setJoiningDate(LocalDate joiningDate) {
         this.joiningDate = joiningDate;
+    }
+
+    public java.util.List<String> getAssignedClassIds() {
+        return assignedClassIds;
+    }
+
+    public void setAssignedClassIds(java.util.List<String> assignedClassIds) {
+        this.assignedClassIds = assignedClassIds;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

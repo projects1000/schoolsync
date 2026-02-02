@@ -207,15 +207,23 @@ public class AuditService {
     }
 
     public void logTeacherCreated(String username, String teacherId, Map<String, Object> teacherData) {
-        logAction(username, "CREATE", "TEACHER", teacherId, teacherData, "New teacher created");
+        logAction(username, "CREATE_TEACHER", "TEACHER", teacherId, teacherData, "New teacher created");
     }
 
     public void logTeacherUpdated(String username, String teacherId, Map<String, Object> changes) {
-        logAction(username, "UPDATE", "TEACHER", teacherId, changes, "Teacher information updated");
+        logAction(username, "UPDATE_TEACHER", "TEACHER", teacherId, changes, "Teacher information updated");
     }
 
     public void logTeacherDeactivated(String username, String teacherId) {
-        logAction(username, "DEACTIVATE", "TEACHER", teacherId, null, "Teacher deactivated");
+        logAction(username, "DEACTIVATE_TEACHER", "TEACHER", teacherId, null, "Teacher deactivated");
+    }
+
+    public void logTeacherBlocked(String username, String teacherId, Map<String, Object> details) {
+        logAction(username, "BLOCK_TEACHER", "TEACHER", teacherId, details, "Teacher blocked - access revoked");
+    }
+
+    public void logTeacherUnblocked(String username, String teacherId, Map<String, Object> details) {
+        logAction(username, "UNBLOCK_TEACHER", "TEACHER", teacherId, details, "Teacher unblocked - access restored");
     }
 
     public void logStudentCreated(String username, String studentId, Map<String, Object> studentData) {
@@ -224,5 +232,29 @@ public class AuditService {
 
     public void logParentCreated(String username, String parentId, Map<String, Object> parentData) {
         logAction(username, "CREATE", "PARENT", parentId, parentData, "New parent created");
+    }
+
+    /**
+     * Log an action with explicit School ID (useful for Super Admin actions)
+     */
+    public void logSchoolAction(String username, String action, String targetType, String targetId, String schoolId,
+            Object payload, String description) {
+        try {
+            User actorUser = userRepository.findByEmail(username).orElse(null);
+
+            String payloadJson = null;
+            if (payload != null) {
+                payloadJson = objectMapper.writeValueAsString(payload);
+            }
+
+            AuditLog auditLog = new AuditLog(actorUser, action, targetType, targetId, payloadJson, description,
+                    schoolId);
+            auditLogRepository.save(auditLog);
+        } catch (JsonProcessingException e) {
+            System.err.println("Failed to serialize audit payload: " + e.getMessage());
+            User actorUser = userRepository.findByEmail(username).orElse(null);
+            AuditLog auditLog = new AuditLog(actorUser, action, targetType, targetId, null, description, schoolId);
+            auditLogRepository.save(auditLog);
+        }
     }
 }

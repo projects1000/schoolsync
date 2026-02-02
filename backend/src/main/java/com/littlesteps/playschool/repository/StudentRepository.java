@@ -1,7 +1,6 @@
 package com.littlesteps.playschool.repository;
 
 import com.littlesteps.playschool.entity.Student;
-import com.littlesteps.playschool.entity.Student;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -14,14 +13,18 @@ public interface StudentRepository extends MongoRepository<Student, String> {
 
     Optional<Student> findByAdmissionNo(String admissionNo);
 
-    List<Student> findByClassName(String className);
+    List<Student> findBySchoolId(String schoolId);
 
-    List<Student> findByStatus(Student.Status status);
+    List<Student> findBySchoolIdAndClassName(String schoolId, String className);
 
-    @Query("{ '$or': [ { 'name': { '$regex': ?0, '$options': 'i' } }, { 'admissionNo': { '$regex': ?0, '$options': 'i' } } ] }")
-    List<Student> findByNameContainingOrAdmissionNoContaining(String name);
+    List<Student> findBySchoolIdAndStatus(String schoolId, Student.Status status);
+
+    @Query("{ 'schoolId': ?0, '$or': [ { 'name': { '$regex': ?1, '$options': 'i' } }, { 'admissionNo': { '$regex': ?1, '$options': 'i' } } ] }")
+    List<Student> searchStudents(String schoolId, String name);
 
     boolean existsByAdmissionNo(String admissionNo);
 
     long countBySchoolIdAndStatus(String schoolId, Student.Status status);
+
+    long countBySchoolId(String schoolId);
 }

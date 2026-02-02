@@ -42,6 +42,49 @@ public class AuthService {
             throw new RuntimeException("Invalid credentials");
         }
 
+        // Additional checks for ADMIN role
+        if (user.getRole() == User.Role.ADMIN) {
+            // Check User Status
+            if (user.getStatus() != User.Status.ACTIVE) {
+                throw new RuntimeException("Your account is not active. Please contact Super Admin.");
+            }
+
+            // Check School Assignment
+            if (user.getSchoolId() == null || user.getSchoolId().isEmpty()) {
+                throw new RuntimeException("No school assigned to this admin account.");
+            }
+
+            // Check School Status
+            com.littlesteps.playschool.entity.School school = schoolRepository.findById(user.getSchoolId())
+                    .orElseThrow(() -> new RuntimeException("Associated school not found"));
+
+            if (school.getStatus() != com.littlesteps.playschool.entity.School.Status.ACTIVE) {
+                throw new RuntimeException("Your school is currently inactive. Please contact Super Admin.");
+            }
+        }
+
+        // Additional checks for TEACHER role
+        if (user.getRole() == User.Role.TEACHER) {
+            // Check User Status - BLOCKED teachers cannot login
+            if (user.getStatus() != User.Status.ACTIVE) {
+                throw new RuntimeException(
+                        "Your account is blocked or inactive. Please contact your school administrator.");
+            }
+
+            // Check School Assignment
+            if (user.getSchoolId() == null || user.getSchoolId().isEmpty()) {
+                throw new RuntimeException("No school assigned to this teacher account.");
+            }
+
+            // Check School Status
+            com.littlesteps.playschool.entity.School school = schoolRepository.findById(user.getSchoolId())
+                    .orElseThrow(() -> new RuntimeException("Associated school not found"));
+
+            if (school.getStatus() != com.littlesteps.playschool.entity.School.Status.ACTIVE) {
+                throw new RuntimeException("Your school is currently inactive. Please contact your administrator.");
+            }
+        }
+
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name(), user.getId(), user.getSchoolId());
 
         return new LoginResponse(
@@ -70,6 +113,18 @@ public class AuthService {
             role = User.Role.valueOf(request.getRole().toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Invalid role specified");
+        }
+
+        // TEACHER role cannot self-register - must be created by Admin
+        if (role == User.Role.TEACHER) {
+            throw new RuntimeException(
+                    "Teacher accounts cannot be created through self-registration. Please contact your school administrator.");
+        }
+
+        // ADMIN role cannot self-register - must be created by Super Admin
+        if (role == User.Role.ADMIN) {
+            throw new RuntimeException(
+                    "Admin accounts cannot be created through self-registration. Please contact the Super Admin.");
         }
 
         // For parent registration, validate registration code if provided

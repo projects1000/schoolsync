@@ -132,6 +132,25 @@ const adminService = {
             throw error;
         }
     },
+    // Update teacher class assignments using PUT with class IDs
+    updateTeacherClassAssignments: async (teacherId, assignedClassIds) => {
+        try {
+            const response = await api.put(`/admin/teachers/${teacherId}/assign-classes`, { assignedClassIds });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    // Update teacher status (block/unblock)
+    updateTeacherStatus: async (teacherId, status) => {
+        try {
+            const response = await api.patch(`/admin/teachers/${teacherId}/status`, { status });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     // Student APIs
     getStudents: async (params) => {
         try {

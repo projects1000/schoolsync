@@ -2,8 +2,9 @@ package com.littlesteps.playschool.service;
 
 import com.littlesteps.playschool.dto.CreateAdminRequest;
 import com.littlesteps.playschool.dto.AdminResponse;
-// Imports will be fixed generically if needed, but for now focusing on methods
+import com.littlesteps.playschool.entity.School;
 import com.littlesteps.playschool.entity.User;
+import com.littlesteps.playschool.repository.SchoolRepository;
 import com.littlesteps.playschool.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,6 +26,9 @@ public class AdminService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private SchoolRepository schoolRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -48,6 +53,18 @@ public class AdminService {
             throw new RuntimeException("User with this email already exists");
         }
 
+        // Check school if provided
+        String schoolName = null;
+        if (request.getSchoolId() != null) {
+            School school = schoolRepository.findById(request.getSchoolId())
+                    .orElseThrow(() -> new RuntimeException("School not found"));
+            schoolName = school.getName();
+
+            if (school.getAdminId() != null) {
+                throw new RuntimeException("School already has an admin assigned");
+            }
+        }
+
         try {
             // Create new admin user
             User admin = new User();
@@ -57,28 +74,26 @@ public class AdminService {
             admin.setPassword(passwordEncoder.encode(request.getPassword()));
             admin.setRole(User.Role.ADMIN);
             admin.setActive(true);
+            admin.setSchoolId(request.getSchoolId());
+            admin.setStatus(User.Status.ACTIVE);
             admin.setCreatedAt(LocalDateTime.now());
+            admin.setCreatedBy(currentUser.getId());
 
             // Save admin to database
             User savedAdmin = userRepository.save(admin);
             logger.info("Successfully created admin with ID: {} and email: {}",
                     savedAdmin.getId(), savedAdmin.getEmail());
 
-            // Verify the admin was saved by fetching from database
-            User verifyAdmin = userRepository.findById(savedAdmin.getId())
-                    .orElseThrow(() -> new RuntimeException("Failed to verify admin creation"));
+            if (request.getSchoolId() != null) {
+                School school = schoolRepository.findById(request.getSchoolId()).get();
+                school.setAdminId(savedAdmin.getId());
+                school.setPrincipalName(savedAdmin.getName());
+                school.setPrincipalEmail(savedAdmin.getEmail());
+                schoolRepository.save(school);
+            }
 
-            logger.info("Verified admin creation in database. Admin ID: {}, Name: {}, Email: {}, Role: {}",
-                    verifyAdmin.getId(), verifyAdmin.getName(), verifyAdmin.getEmail(), verifyAdmin.getRole());
+            return AdminResponse.fromUser(savedAdmin, schoolName);
 
-            return new AdminResponse(
-                    savedAdmin.getId(),
-                    savedAdmin.getName(),
-                    savedAdmin.getEmail(),
-                    savedAdmin.getPhone(),
-                    savedAdmin.getRole().name(),
-                    savedAdmin.getActive(),
-                    savedAdmin.getCreatedAt());
         } catch (Exception e) {
             logger.error("Error creating admin: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to create admin: " + e.getMessage());
@@ -102,17 +117,21 @@ public class AdminService {
         List<User> admins = userRepository.findByRoleInAndActive(
                 List.of(User.Role.SUPERADMIN, User.Role.ADMIN), true);
 
+        // Fetch school names map
+        List<String> schoolIds = admins.stream()
+                .map(User::getSchoolId)
+                .filter(id -> id != null)
+                .collect(Collectors.toList());
+        Map<String, String> schoolIdToName = schoolRepository.findAllById(schoolIds).stream()
+                .collect(Collectors.toMap(School::getId, School::getName));
+
         logger.info("Found {} active admins in database", admins.size());
 
         return admins.stream()
-                .map(admin -> new AdminResponse(
-                        admin.getId(),
-                        admin.getName(),
-                        admin.getEmail(),
-                        admin.getPhone(),
-                        admin.getRole().name(),
-                        admin.getActive(),
-                        admin.getCreatedAt()))
+                .map(admin -> {
+                    String sName = admin.getSchoolId() != null ? schoolIdToName.get(admin.getSchoolId()) : null;
+                    return AdminResponse.fromUser(admin, sName);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -137,16 +156,16 @@ public class AdminService {
         }
 
         admin.setActive(active);
+        admin.setStatus(active ? User.Status.ACTIVE : User.Status.SUSPENDED);
         User updatedAdmin = userRepository.save(admin);
 
-        return new AdminResponse(
-                updatedAdmin.getId(),
-                updatedAdmin.getName(),
-                updatedAdmin.getEmail(),
-                updatedAdmin.getPhone(),
-                updatedAdmin.getRole().name(),
-                updatedAdmin.getActive(),
-                updatedAdmin.getCreatedAt());
+        String sName = null;
+        if (updatedAdmin.getSchoolId() != null) {
+            sName = schoolRepository.findById(updatedAdmin.getSchoolId())
+                    .map(School::getName).orElse(null);
+        }
+
+        return AdminResponse.fromUser(updatedAdmin, sName);
     }
 
     /**

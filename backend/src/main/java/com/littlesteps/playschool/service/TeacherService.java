@@ -40,17 +40,18 @@ public class TeacherService {
     /**
      * Get all teachers with optional filtering
      */
-    public List<TeacherDTO> getAllTeachers(String name, String department, String status) {
+    public List<TeacherDTO> getAllTeachers(String schoolId, String name, String department, String status) {
         List<Teacher> teachers;
 
         if (name != null && !name.trim().isEmpty()) {
-            teachers = teacherRepository.searchTeachers(name.trim());
+            teachers = teacherRepository.searchTeachers(schoolId, name.trim());
         } else if (department != null && !department.trim().isEmpty()) {
-            teachers = teacherRepository.findByDepartment(department);
+            teachers = teacherRepository.findBySchoolIdAndDepartment(schoolId, department);
         } else if (status != null && !status.trim().isEmpty()) {
-            teachers = teacherRepository.findByStatus(Teacher.Status.valueOf(status.toUpperCase()));
+            teachers = teacherRepository.findBySchoolIdAndStatus(schoolId,
+                    Teacher.Status.valueOf(status.toUpperCase()));
         } else {
-            teachers = teacherRepository.findAll();
+            teachers = teacherRepository.findBySchoolId(schoolId);
         }
 
         return teachers.stream()
@@ -59,23 +60,57 @@ public class TeacherService {
     }
 
     /**
-     * Get teacher by ID
+     * Create a new teacher with associated user account
      */
     @Transactional
-    public Map<String, Object> createTeacherWithUser(TeacherDTO teacherDTO, String createdBy) {
-        if (teacherRepository.existsByEmail(teacherDTO.getEmail())) {
-            throw new RuntimeException("Email already exists");
+    public Map<String, Object> createTeacherWithUser(TeacherDTO teacherDTO, String createdBy, String schoolId) {
+        // Validate schoolId is present
+        if (schoolId == null || schoolId.trim().isEmpty()) {
+            throw new RuntimeException("School ID is required to create a teacher");
         }
 
-        // Create User
+        // Check email uniqueness within the school for TEACHER role
+        if (userRepository.existsBySchoolIdAndEmailAndRole(schoolId, teacherDTO.getEmail(), User.Role.TEACHER)) {
+            throw new RuntimeException("Email already exists for a teacher in this school");
+        }
+
+        // Validate assignedClassIds belong to the same school
+        java.util.List<String> assignedClassIds = teacherDTO.getAssignedClassIds();
+        if (assignedClassIds != null && !assignedClassIds.isEmpty()) {
+            java.util.List<com.littlesteps.playschool.entity.Classes> schoolClasses = classesRepository
+                    .findBySchoolId(schoolId);
+            java.util.Set<String> validClassIds = schoolClasses.stream()
+                    .map(com.littlesteps.playschool.entity.Classes::getId)
+                    .collect(java.util.stream.Collectors.toSet());
+
+            for (String classId : assignedClassIds) {
+                if (!validClassIds.contains(classId)) {
+                    throw new RuntimeException("Class ID " + classId + " does not belong to this school");
+                }
+            }
+        }
+
+        // Use provided password or generate a secure one
+        String rawPassword;
+        if (teacherDTO.getPassword() != null && !teacherDTO.getPassword().trim().isEmpty()) {
+            rawPassword = teacherDTO.getPassword();
+        } else {
+            rawPassword = generateSecurePassword();
+        }
+
+        // Create User with school context
         User user = new User();
+        user.setSchoolId(schoolId);
+        user.setCreatedBy(createdBy);
         user.setEmail(teacherDTO.getEmail());
         user.setUsername(teacherDTO.getEmail()); // Set username as email
         user.setName(teacherDTO.getName());
         user.setPhone(teacherDTO.getPhone());
         user.setRole(User.Role.TEACHER);
+        user.setStatus(User.Status.ACTIVE);
         user.setActive(true);
-        String rawPassword = generateSecurePassword();
+        user.setJoiningDate(teacherDTO.getJoiningDate());
+        user.setAssignedClassIds(assignedClassIds);
         user.setPassword(passwordEncoder.encode(rawPassword));
 
         user = userRepository.save(user);
@@ -103,6 +138,7 @@ public class TeacherService {
         teacher.setSubjects(teacherDTO.getSubjects());
         teacher.setAssignedClasses(teacherDTO.getAssignedClasses());
         teacher.setUser(user);
+        teacher.setSchoolId(schoolId);
 
         teacher = teacherRepository.save(teacher);
 
@@ -110,7 +146,7 @@ public class TeacherService {
         result.put("teacher", convertToDTO(teacher));
         result.put("password", rawPassword);
 
-        // Fix: Pass result (or teacher data) as 3rd argument
+        // Log in audit
         auditService.logTeacherCreated(createdBy, teacher.getId(), result);
 
         return result;
@@ -317,5 +353,148 @@ public class TeacherService {
         }
 
         return password.toString();
+    }
+
+    /**
+     * Update teacher class assignments
+     * Validates teacher and classes belong to admin's school
+     */
+    @Transactional
+    public Map<String, Object> updateTeacherClassAssignments(String teacherId, java.util.List<String> assignedClassIds,
+            String adminEmail, String schoolId) {
+        // Validate schoolId is present
+        if (schoolId == null || schoolId.trim().isEmpty()) {
+            throw new RuntimeException("School ID is required");
+        }
+
+        // Find the teacher (User with TEACHER role)
+        User teacherUser = userRepository.findById(teacherId)
+                .orElseThrow(() -> new RuntimeException("Teacher not found with ID: " + teacherId));
+
+        // Validate teacher role
+        if (teacherUser.getRole() != User.Role.TEACHER) {
+            throw new RuntimeException("User is not a teacher");
+        }
+
+        // Validate teacher belongs to admin's school
+        if (!schoolId.equals(teacherUser.getSchoolId())) {
+            throw new RuntimeException("Teacher does not belong to your school");
+        }
+
+        // Validate assignedClassIds belong to the same school
+        if (assignedClassIds != null && !assignedClassIds.isEmpty()) {
+            java.util.List<com.littlesteps.playschool.entity.Classes> schoolClasses = classesRepository
+                    .findBySchoolId(schoolId);
+            java.util.Set<String> validClassIds = schoolClasses.stream()
+                    .map(com.littlesteps.playschool.entity.Classes::getId)
+                    .collect(java.util.stream.Collectors.toSet());
+
+            for (String classId : assignedClassIds) {
+                if (!validClassIds.contains(classId)) {
+                    throw new RuntimeException("Class ID " + classId + " does not belong to this school");
+                }
+            }
+        }
+
+        // Store old assignments for audit
+        java.util.List<String> oldAssignments = teacherUser.getAssignedClassIds();
+
+        // Replace existing assignments
+        teacherUser.setAssignedClassIds(assignedClassIds);
+        userRepository.save(teacherUser);
+
+        // Log assignment update
+        Map<String, Object> changes = new HashMap<>();
+        changes.put("teacherId", teacherId);
+        changes.put("oldAssignments", oldAssignments);
+        changes.put("newAssignments", assignedClassIds);
+        auditService.logTeacherUpdated(adminEmail, teacherId, changes);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("message", "Class assignments updated successfully");
+        result.put("teacherId", teacherId);
+        result.put("assignedClassIds", assignedClassIds);
+
+        return result;
+    }
+
+    /**
+     * Update teacher status (block/unblock)
+     * BLOCKED → Teacher cannot login
+     * ACTIVE → Teacher regains access
+     */
+    @Transactional
+    public Map<String, Object> updateTeacherStatus(String teacherId, String newStatus, String adminEmail,
+            String schoolId) {
+        // Validate schoolId is present
+        if (schoolId == null || schoolId.trim().isEmpty()) {
+            throw new RuntimeException("School ID is required");
+        }
+
+        // Validate status value
+        User.Status status;
+        try {
+            status = User.Status.valueOf(newStatus.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid status. Must be ACTIVE or BLOCKED");
+        }
+
+        // Only allow ACTIVE or BLOCKED status
+        if (status != User.Status.ACTIVE && status != User.Status.BLOCKED) {
+            throw new RuntimeException("Invalid status. Must be ACTIVE or BLOCKED");
+        }
+
+        // Find the teacher (User with TEACHER role)
+        User teacherUser = userRepository.findById(teacherId)
+                .orElseThrow(() -> new RuntimeException("Teacher not found with ID: " + teacherId));
+
+        // Validate teacher role
+        if (teacherUser.getRole() != User.Role.TEACHER) {
+            throw new RuntimeException("User is not a teacher");
+        }
+
+        // Validate teacher belongs to admin's school
+        if (!schoolId.equals(teacherUser.getSchoolId())) {
+            throw new RuntimeException("Teacher does not belong to your school");
+        }
+
+        // Store old status for audit
+        User.Status oldStatus = teacherUser.getStatus();
+
+        // Update status
+        teacherUser.setStatus(status);
+
+        // If blocking, also set active to false for login prevention
+        if (status == User.Status.BLOCKED) {
+            teacherUser.setActive(false);
+        } else if (status == User.Status.ACTIVE) {
+            teacherUser.setActive(true);
+        }
+
+        userRepository.save(teacherUser);
+
+        // Log status update with specific action type
+        Map<String, Object> changes = new HashMap<>();
+        changes.put("teacherId", teacherId);
+        changes.put("teacherEmail", teacherUser.getEmail());
+        changes.put("oldStatus", oldStatus != null ? oldStatus.name() : "null");
+        changes.put("newStatus", status.name());
+        changes.put("schoolId", schoolId);
+
+        if (status == User.Status.BLOCKED) {
+            auditService.logTeacherBlocked(adminEmail, teacherId, changes);
+        } else {
+            auditService.logTeacherUnblocked(adminEmail, teacherId, changes);
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("message", status == User.Status.BLOCKED ? "Teacher has been blocked and cannot login"
+                : "Teacher has been unblocked and can now login");
+        result.put("teacherId", teacherId);
+        result.put("status", status.name());
+
+        return result;
     }
 }

@@ -44,6 +44,7 @@ const SchoolManagement = ({ currentUser }) => {
     // Modal states
     const [showAddEditModal, setShowAddEditModal] = useState(false);
     const [showAssignAdminModal, setShowAssignAdminModal] = useState(false);
+    const [availableAdmins, setAvailableAdmins] = useState([]); // List of admins for assignment
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [selectedSchool, setSelectedSchool] = useState(null);
@@ -92,9 +93,18 @@ const SchoolManagement = ({ currentUser }) => {
         setShowDetailsModal(true);
     };
 
-    const handleAssignAdmin = (school) => {
+    const handleAssignAdmin = async (school) => {
         setSelectedSchool(school);
         setShowAssignAdminModal(true);
+        try {
+            // Filter out admins who already have a school assigned
+            const allAdmins = response.data || [];
+            const unassignedAdmins = allAdmins.filter(admin => !admin.schoolId);
+            setAvailableAdmins(unassignedAdmins);
+        } catch (error) {
+            console.error("Failed to fetch admins", error);
+            toast({ title: 'Error', description: 'Failed to fetch admins', variant: 'destructive' });
+        }
     };
 
     const handleConfirmAction = (school, action) => {
@@ -169,11 +179,16 @@ const SchoolManagement = ({ currentUser }) => {
         }
     };
 
-    const handleAssignAdminSubmit = (admin) => {
-        // Implement Admin assignment logic (likely updating School with admin info or creating Admin user linked to school)
-        // For now, simple toast
-        toast({ title: 'Info', description: 'To implement real admin assignment, please use Admin Management.' });
-        setShowAssignAdminModal(false);
+    const handleAssignAdminSubmit = async (admin) => {
+        try {
+            await SuperAdminService.assignAdminToSchool(selectedSchool.id, admin.id);
+            toast({ title: 'Success', description: `Admin ${admin.name} assigned to school.` });
+            fetchSchools();
+            setShowAssignAdminModal(false);
+        } catch (error) {
+            console.error(error);
+            toast({ title: 'Error', description: 'Failed to assign admin', variant: 'destructive' });
+        }
     };
 
     const getStatusBadge = (status) => {
@@ -346,8 +361,13 @@ const SchoolManagement = ({ currentUser }) => {
                                                     <button onClick={() => handleEditSchool(school)} className="p-2 hover:bg-gray-100 rounded-lg" title="Edit">
                                                         <Edit className="w-4 h-4 text-blue-500" />
                                                     </button>
-                                                    <button onClick={() => handleAssignAdmin(school)} className="p-2 hover:bg-gray-100 rounded-lg" title="Assign Admin">
-                                                        <UserPlus className="w-4 h-4 text-purple-500" />
+                                                    <button
+                                                        onClick={() => !school.admin && handleAssignAdmin(school)}
+                                                        disabled={!!school.admin}
+                                                        className={`p-2 rounded-lg ${school.admin ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-100'}`}
+                                                        title={school.admin ? "Admin already assigned" : "Assign Admin"}
+                                                    >
+                                                        <UserPlus className={`w-4 h-4 ${school.admin ? 'text-gray-400' : 'text-purple-500'}`} />
                                                     </button>
                                                     {school.status === 'active' && (
                                                         <button onClick={() => handleConfirmAction(school, 'suspend')} className="p-2 hover:bg-gray-100 rounded-lg" title="Suspend">
@@ -413,8 +433,12 @@ const SchoolManagement = ({ currentUser }) => {
                                     <button onClick={() => handleEditSchool(school)} className="flex-1 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                                         Edit
                                     </button>
-                                    <button onClick={() => handleAssignAdmin(school)} className="flex-1 py-2 text-sm text-purple-600 hover:bg-purple-50 rounded-lg transition-colors">
-                                        Admin
+                                    <button
+                                        onClick={() => !school.admin && handleAssignAdmin(school)}
+                                        disabled={!!school.admin}
+                                        className={`flex-1 py-2 text-sm rounded-lg transition-colors ${school.admin ? 'text-gray-400 cursor-not-allowed' : 'text-purple-600 hover:bg-purple-50'}`}
+                                    >
+                                        {school.admin ? 'Assigned' : 'Admin'}
                                     </button>
                                 </div>
                             </motion.div>
@@ -431,6 +455,7 @@ const SchoolManagement = ({ currentUser }) => {
                 editSchool={selectedSchool}
                 existingSchools={schools}
             />
+
 
             {/* Assign Admin Modal */}
             <AnimatePresence>
@@ -469,22 +494,29 @@ const SchoolManagement = ({ currentUser }) => {
                             )}
 
                             <div className="space-y-2 max-h-64 overflow-y-auto">
-                                {[] /* TODO: Fetch admins from API */.map(admin => (
-                                    <button
-                                        key={admin.id}
-                                        onClick={() => handleAssignAdminSubmit(admin)}
-                                        className="w-full p-3 flex items-center gap-3 hover:bg-indigo-50 rounded-lg border border-gray-200 transition-colors"
-                                    >
-                                        <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                                            <span className="font-semibold text-indigo-600">{admin.name.charAt(0)}</span>
-                                        </div>
-                                        <div className="text-left flex-1">
-                                            <p className="font-medium text-gray-800">{admin.name}</p>
-                                            <p className="text-xs text-gray-500">{admin.email}</p>
-                                        </div>
-                                        <UserPlus className="w-4 h-4 text-gray-400" />
-                                    </button>
-                                ))}
+                                {availableAdmins.length === 0 ? (
+                                    <div className="text-center py-4 text-gray-500">
+                                        <p>No unassigned admins available.</p>
+                                        <p className="text-xs mt-1">Create a new admin in Admin Management.</p>
+                                    </div>
+                                ) : (
+                                    availableAdmins.map(admin => (
+                                        <button
+                                            key={admin.id}
+                                            onClick={() => handleAssignAdminSubmit(admin)}
+                                            className="w-full p-3 flex items-center gap-3 hover:bg-indigo-50 rounded-lg border border-gray-200 transition-colors"
+                                        >
+                                            <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                                                <span className="font-semibold text-indigo-600">{admin.name.charAt(0)}</span>
+                                            </div>
+                                            <div className="text-left flex-1">
+                                                <p className="font-medium text-gray-800">{admin.name}</p>
+                                                <p className="text-xs text-gray-500">{admin.email}</p>
+                                            </div>
+                                            <UserPlus className="w-4 h-4 text-gray-400" />
+                                        </button>
+                                    ))
+                                )}
                             </div>
                         </motion.div>
                     </motion.div>
