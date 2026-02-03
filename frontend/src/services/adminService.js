@@ -209,6 +209,14 @@ const adminService = {
             throw error;
         }
     },
+    getParentChildren: async (parentId) => {
+        try {
+            const response = await api.get(`/admin/parents/${parentId}/children`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
     createParent: async (data) => {
         try {
             const response = await api.post('/admin/parents', data);
@@ -228,6 +236,30 @@ const adminService = {
     mapStudentToParent: async (parentId, studentId) => {
         try {
             const response = await api.post('/admin/parents/map-student', { parentId, studentId });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    mapStudentsToParent: async (parentId, studentIds) => {
+        try {
+            const response = await api.post('/admin/parents/map-students', { parentId, studentIds });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    updateParentStatus: async (parentId, status) => {
+        try {
+            const response = await api.patch(`/admin/parents/${parentId}/status`, { status });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    resetParentPassword: async (parentId) => {
+        try {
+            const response = await api.post(`/admin/parents/${parentId}/reset-password`);
             return response.data;
         } catch (error) {
             throw error;

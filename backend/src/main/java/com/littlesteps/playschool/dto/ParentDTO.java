@@ -7,10 +7,12 @@ public class ParentDTO {
     private String id;
     private String name;
     private String email;
+    @com.fasterxml.jackson.annotation.JsonProperty("phone")
     private String phoneNumber;
     private String address;
     private String occupation;
     private String relation; // FATHER, MOTHER, GUARDIAN, etc.
+    private String password;
     private List<StudentDTO> children;
     private String emergencyContactName;
     private String emergencyContactPhone;
@@ -84,6 +86,14 @@ public class ParentDTO {
 
     public void setRelation(String relation) {
         this.relation = relation;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public List<StudentDTO> getChildren() {

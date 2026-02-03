@@ -367,9 +367,14 @@ public class TeacherService {
             throw new RuntimeException("School ID is required");
         }
 
-        // Find the teacher (User with TEACHER role)
-        User teacherUser = userRepository.findById(teacherId)
+        // Find the teacher entity first
+        com.littlesteps.playschool.entity.Teacher teacher = teacherRepository.findById(teacherId)
                 .orElseThrow(() -> new RuntimeException("Teacher not found with ID: " + teacherId));
+
+        User teacherUser = teacher.getUser();
+        if (teacherUser == null) {
+            throw new RuntimeException("Teacher record exists but has no associated User account");
+        }
 
         // Validate teacher role
         if (teacherUser.getRole() != User.Role.TEACHER) {
@@ -399,7 +404,10 @@ public class TeacherService {
         // Store old assignments for audit
         java.util.List<String> oldAssignments = teacherUser.getAssignedClassIds();
 
-        // Replace existing assignments
+        // Replace existing assignments on BOTH Teacher and User to keep them in sync
+        teacher.setAssignedClasses(assignedClassIds);
+        teacherRepository.save(teacher);
+
         teacherUser.setAssignedClassIds(assignedClassIds);
         userRepository.save(teacherUser);
 
@@ -445,9 +453,14 @@ public class TeacherService {
             throw new RuntimeException("Invalid status. Must be ACTIVE or BLOCKED");
         }
 
-        // Find the teacher (User with TEACHER role)
-        User teacherUser = userRepository.findById(teacherId)
+        // Find the teacher entity first
+        com.littlesteps.playschool.entity.Teacher teacher = teacherRepository.findById(teacherId)
                 .orElseThrow(() -> new RuntimeException("Teacher not found with ID: " + teacherId));
+
+        User teacherUser = teacher.getUser();
+        if (teacherUser == null) {
+            throw new RuntimeException("Teacher record exists but has no associated User account");
+        }
 
         // Validate teacher role
         if (teacherUser.getRole() != User.Role.TEACHER) {
@@ -462,8 +475,25 @@ public class TeacherService {
         // Store old status for audit
         User.Status oldStatus = teacherUser.getStatus();
 
-        // Update status
+        // Update status on BOTH entities
+        try {
+            teacher.setStatus(com.littlesteps.playschool.entity.Teacher.Status.valueOf(newStatus.toUpperCase()));
+        } catch (Exception e) {
+            // If status enum doesn't match exactly, fallback or ignore if Teacher status is
+            // different
+            // Teacher.Status has ACTIVE, INACTIVE, SUSPENDED
+            // User.Status has ACTIVE, INACTIVE, BLOCKED, SUSPENDED
+            if (status == User.Status.BLOCKED) {
+                teacher.setStatus(com.littlesteps.playschool.entity.Teacher.Status.INACTIVE); // or SUSPENDED?
+            } else {
+                teacher.setStatus(com.littlesteps.playschool.entity.Teacher.Status.valueOf(status.name()));
+            }
+        }
+        teacherRepository.save(teacher);
+
         teacherUser.setStatus(status);
+
+        // If blocking, also set active to false for login prevention
 
         // If blocking, also set active to false for login prevention
         if (status == User.Status.BLOCKED) {

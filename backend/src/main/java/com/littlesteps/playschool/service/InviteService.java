@@ -325,7 +325,7 @@ public class InviteService {
 
             case PARENT:
                 Parent parent = new Parent();
-                parent.setUser(user);
+                parent.setUserId(user.getId());
                 parent.setName(acceptDTO.getName());
                 parent.setEmail(user.getEmail());
                 parent.setPhoneNumber(acceptDTO.getPhoneNumber());
