@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Calendar, CreditCard, MessageSquare, Download, Bell, Star, X, Send, ChevronsUpDown, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import parentService from '@/services/parentService';
 
 const ParentPortal = ({ currentUser }) => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -13,40 +14,55 @@ const ParentPortal = ({ currentUser }) => {
   const [composeData, setComposeData] = useState({ subject: '', message: '' });
   const { toast } = useToast();
 
-  const [students] = useLocalStorage('students', []);
+  const [children, setChildren] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Still mocking other data for now to prevent crashes until full API integration
   const [teachers] = useLocalStorage('teachers', []);
   const [attendance] = useLocalStorage('attendance', {});
   const [invoices] = useLocalStorage('invoices', []);
   const [communications, setCommunications] = useLocalStorage('communications', []);
-  const [academics] = useLocalStorage('academics', []);
 
-  // Get children for this parent
-  const children = useMemo(() => 
-    students.filter(student => student.parentId === currentUser?.id), 
-    [students, currentUser]
-  );
+  useEffect(() => {
+    const fetchChildren = async () => {
+      try {
+        setIsLoading(true);
+        const data = await parentService.getMyChildren();
+        setChildren(data);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load children data",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchChildren();
+  }, []);
 
   const child = children[0]; // For now, handle single child
-  
+
   const childAttendance = useMemo(() => {
     if (!child) return [];
     return attendance[child.id] || [];
   }, [child, attendance]);
 
-  const childInvoices = useMemo(() => 
+  const childInvoices = useMemo(() =>
     invoices.filter(invoice => invoice.studentId === child?.id),
     [invoices, child]
   );
 
-  const childMessages = useMemo(() => 
-    communications.filter(comm => 
-      comm.recipients.includes(currentUser?.id) && 
+  const childMessages = useMemo(() =>
+    communications.filter(comm =>
+      comm.recipients?.includes(currentUser?.id) &&
       comm.type === 'parent'
     ),
     [communications, currentUser]
   );
 
-  const teacher = useMemo(() => 
+  const teacher = useMemo(() =>
     teachers.find(t => t.classId === child?.classId),
     [teachers, child]
   );
@@ -54,9 +70,9 @@ const ParentPortal = ({ currentUser }) => {
   const handleDownloadReport = () => {
     const doc = new jsPDF();
     doc.text(`Progress Report - ${child?.name}`, 20, 20);
-    
+
     const attendanceData = childAttendance.slice(0, 10).map(a => [a.date, a.status, a.time || 'N/A']);
-    
+
     doc.autoTable({
       head: [['Date', 'Status', 'Time']],
       body: attendanceData,
@@ -64,7 +80,7 @@ const ParentPortal = ({ currentUser }) => {
     });
 
     doc.save(`${child?.name}_report.pdf`);
-    
+
     toast({
       title: "Report Downloaded",
       description: `Progress report for ${child?.name} has been downloaded.`,
@@ -96,16 +112,24 @@ const ParentPortal = ({ currentUser }) => {
     setCommunications([...communications, newMessage]);
     setComposeData({ subject: '', message: '' });
     setIsComposing(false);
-    
+
     toast({
       title: "Message Sent",
       description: `Your message has been sent to ${teacher?.name}.`,
     });
   };
 
-  const attendancePercentage = childAttendance.length > 0 
-    ? Math.round((childAttendance.filter(a => a.status === 'present' || a.status === 'late').length / childAttendance.length) * 100) 
+  const attendancePercentage = childAttendance.length > 0
+    ? Math.round((childAttendance.filter(a => a.status === 'present' || a.status === 'late').length / childAttendance.length) * 100)
     : 100;
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
 
   if (children.length === 0) {
     return (
@@ -119,16 +143,16 @@ const ParentPortal = ({ currentUser }) => {
     <>
       <AnimatePresence>
         {isComposing && (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }} 
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
           >
-            <motion.div 
-              initial={{ scale: 0.9 }} 
-              animate={{ scale: 1 }} 
-              exit={{ scale: 0.9 }} 
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
               className="bg-white rounded-xl shadow-2xl w-full max-w-lg"
             >
               <div className="p-6 border-b flex justify-between items-center">
@@ -140,18 +164,18 @@ const ParentPortal = ({ currentUser }) => {
                 </Button>
               </div>
               <div className="p-6 space-y-4">
-                <input 
-                  value={composeData.subject} 
-                  onChange={(e) => setComposeData({...composeData, subject: e.target.value})} 
-                  placeholder="Subject" 
-                  className="w-full p-2 border rounded-lg" 
+                <input
+                  value={composeData.subject}
+                  onChange={(e) => setComposeData({ ...composeData, subject: e.target.value })}
+                  placeholder="Subject"
+                  className="w-full p-2 border rounded-lg"
                 />
-                <textarea 
-                  value={composeData.message} 
-                  onChange={(e) => setComposeData({...composeData, message: e.target.value})} 
-                  placeholder="Your message..." 
-                  rows={5} 
-                  className="w-full p-2 border rounded-lg" 
+                <textarea
+                  value={composeData.message}
+                  onChange={(e) => setComposeData({ ...composeData, message: e.target.value })}
+                  placeholder="Your message..."
+                  rows={5}
+                  className="w-full p-2 border rounded-lg"
                 />
                 <div className="flex justify-end">
                   <Button onClick={handleSendMessage}>
@@ -166,9 +190,9 @@ const ParentPortal = ({ currentUser }) => {
       </AnimatePresence>
 
       <div className="space-y-6">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} 
-          animate={{ opacity: 1, y: 0 }} 
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-xl shadow-sm p-6 border border-gray-200"
         >
           <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
@@ -181,8 +205,8 @@ const ParentPortal = ({ currentUser }) => {
                 <Bell className="w-4 h-4" />
                 <span>Notifications</span>
               </Button>
-              <Button 
-                onClick={handleDownloadReport} 
+              <Button
+                onClick={handleDownloadReport}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 flex items-center space-x-2"
               >
                 <Download className="w-4 h-4" />
@@ -192,10 +216,10 @@ const ParentPortal = ({ currentUser }) => {
           </div>
         </motion.div>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          transition={{ delay: 0.2 }} 
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
           className="bg-white rounded-xl shadow-sm border border-gray-200"
         >
           <div className="border-b border-gray-200">
@@ -211,11 +235,10 @@ const ParentPortal = ({ currentUser }) => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 whitespace-nowrap ${
-                      activeTab === tab.id 
-                        ? 'border-purple-500 text-purple-600' 
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 whitespace-nowrap ${activeTab === tab.id
+                      ? 'border-purple-500 text-purple-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     <span>{tab.label}</span>
@@ -279,13 +302,12 @@ const ParentPortal = ({ currentUser }) => {
                         <tr key={index}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{record.date}</td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              record.status === 'present' 
-                                ? 'bg-green-100 text-green-800' 
-                                : record.status === 'absent'
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${record.status === 'present'
+                              ? 'bg-green-100 text-green-800'
+                              : record.status === 'absent'
                                 ? 'bg-red-100 text-red-800'
                                 : 'bg-yellow-100 text-yellow-800'
-                            }`}>
+                              }`}>
                               {record.status}
                             </span>
                           </td>
@@ -312,13 +334,12 @@ const ParentPortal = ({ currentUser }) => {
                         </div>
                         <div className="text-right">
                           <p className="text-lg font-bold text-gray-900">₹{invoice.amount}</p>
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            invoice.status === 'paid' 
-                              ? 'bg-green-100 text-green-800' 
-                              : invoice.status === 'overdue'
+                          <span className={`px-2 py-1 text-xs rounded-full ${invoice.status === 'paid'
+                            ? 'bg-green-100 text-green-800'
+                            : invoice.status === 'overdue'
                               ? 'bg-red-100 text-red-800'
                               : 'bg-yellow-100 text-yellow-800'
-                          }`}>
+                            }`}>
                             {invoice.status}
                           </span>
                         </div>
@@ -333,8 +354,8 @@ const ParentPortal = ({ currentUser }) => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold text-gray-800">Messages</h3>
-                  <Button 
-                    onClick={() => setIsComposing(true)} 
+                  <Button
+                    onClick={() => setIsComposing(true)}
                     className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                   >
                     <Send className="w-4 h-4 mr-2" />
@@ -343,16 +364,15 @@ const ParentPortal = ({ currentUser }) => {
                 </div>
                 <div className="space-y-3">
                   {childMessages.map((message, index) => (
-                    <motion.div 
-                      key={message.id} 
-                      initial={{ opacity: 0, x: -20 }} 
-                      animate={{ opacity: 1, x: 0 }} 
-                      transition={{ delay: index * 0.1 }} 
-                      className={`p-4 border rounded-lg cursor-pointer hover:shadow-md transition-shadow ${
-                        !message.readBy.includes(currentUser.id) 
-                          ? 'border-blue-200 bg-blue-50' 
-                          : 'border-gray-200 bg-white'
-                      }`}
+                    <motion.div
+                      key={message.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className={`p-4 border rounded-lg cursor-pointer hover:shadow-md transition-shadow ${!message.readBy.includes(currentUser.id)
+                        ? 'border-blue-200 bg-blue-50'
+                        : 'border-gray-200 bg-white'
+                        }`}
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div>

@@ -401,12 +401,22 @@ public class SuperAdminService {
         // Note: Ideally use a custom repository method for efficiency, here doing
         // stream for simplicity as School volume is likely low initially
         List<Map<String, Object>> recentSchools = schoolRepository.findAll().stream()
-                .sorted((s1, s2) -> s2.getCreatedAt().compareTo(s1.getCreatedAt()))
+                .sorted((s1, s2) -> {
+                    LocalDateTime t1 = s1.getCreatedAt();
+                    LocalDateTime t2 = s2.getCreatedAt();
+                    if (t1 == null && t2 == null)
+                        return 0;
+                    if (t1 == null)
+                        return 1;
+                    if (t2 == null)
+                        return -1;
+                    return t2.compareTo(t1);
+                })
                 .limit(5)
                 .map(s -> Map.<String, Object>of(
-                        "name", s.getName(),
-                        "date", s.getCreatedAt().toString(),
-                        "status", s.getStatus().toString(),
+                        "name", s.getName() != null ? s.getName() : "Unknown",
+                        "date", s.getCreatedAt() != null ? s.getCreatedAt().toString() : LocalDateTime.now().toString(),
+                        "status", s.getStatus() != null ? s.getStatus().toString() : "UNKNOWN",
                         "students", studentRepository.countBySchoolId(s.getId()) // N+1 but ok for 5 items
                 ))
                 .collect(Collectors.toList());

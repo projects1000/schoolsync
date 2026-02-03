@@ -187,40 +187,57 @@ public class ParentService {
      */
     @Transactional
     public void mapStudentToParent(String parentId, String studentId, String createdBy, String schoolId) {
+        mapStudentsToParent(parentId, List.of(studentId), createdBy, schoolId);
+    }
+
+    /**
+     * Map multiple students to a parent using parent_student_map collection
+     * Validates cross-school restrictions for all students
+     */
+    @Transactional
+    public void mapStudentsToParent(String parentId, List<String> studentIds, String createdBy, String schoolId) {
         Parent parent = parentRepository.findByIdAndSchoolId(parentId, schoolId)
                 .orElseThrow(() -> new RuntimeException("Parent not found in this school"));
 
-        Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+        List<Student> students = studentRepository.findAllById(studentIds);
 
-        // Cross-school validation
-        if (!schoolId.equals(student.getSchoolId())) {
-            throw new RuntimeException("Cannot map parent to student from different school");
+        if (students.size() != studentIds.size()) {
+            throw new RuntimeException("One or more students not found");
         }
 
-        // Check if mapping already exists
-        if (parentStudentMapRepository.existsByParentIdAndStudentId(parentId, studentId)) {
-            throw new RuntimeException("Student is already mapped to this parent");
+        for (Student student : students) {
+            // Cross-school validation
+            if (!schoolId.equals(student.getSchoolId())) {
+                throw new RuntimeException("Student " + student.getName() + " does not belong to this school");
+            }
+
+            // Check if mapping already exists
+            if (parentStudentMapRepository.existsByParentIdAndStudentId(parentId, student.getId())) {
+                continue; // Skip if already mapped
+            }
+
+            // Create mapping
+            ParentStudentMap mapping = new ParentStudentMap(
+                    parentId,
+                    student.getId(),
+                    schoolId,
+                    parent.getRelation() != null ? parent.getRelation().name() : null,
+                    createdBy);
+
+            parentStudentMapRepository.save(mapping);
+
+            // Update student guardian info
+            student.setGuardian(parent.getName());
+            student.setGuardianPhone(parent.getPhoneNumber());
+            student.setGuardianEmail(parent.getEmail());
+            studentRepository.save(student);
+
+            // Log in audit (individual log for granularity, or one bulk log? Request says
+            // "Log mapping action".
+            // Existing audit service is granular. Let's log per student for now as it's
+            // safer for audit trails)
+            auditService.logParentStudentMapped(createdBy, parentId, student.getId(), schoolId);
         }
-
-        // Create mapping
-        ParentStudentMap mapping = new ParentStudentMap(
-                parentId,
-                studentId,
-                schoolId,
-                parent.getRelation() != null ? parent.getRelation().name() : null,
-                createdBy);
-
-        parentStudentMapRepository.save(mapping);
-
-        // Update student guardian info
-        student.setGuardian(parent.getName());
-        student.setGuardianPhone(parent.getPhoneNumber());
-        student.setGuardianEmail(parent.getEmail());
-        studentRepository.save(student);
-
-        // Log in audit
-        auditService.logParentStudentMapped(createdBy, parentId, studentId, schoolId);
     }
 
     /**
@@ -339,6 +356,40 @@ public class ParentService {
         }
 
         auditService.logParentUnblocked(unblockedBy, parentId, schoolId);
+    }
+
+    /**
+     * Update parent status (Generic method)
+     */
+    @Transactional
+    public void updateParentStatus(String parentId, String statusStr, String updatedBy, String schoolId) {
+        if ("BLOCKED".equalsIgnoreCase(statusStr)) {
+            blockParent(parentId, updatedBy, schoolId);
+            return;
+        }
+
+        Parent.Status status;
+        try {
+            status = Parent.Status.valueOf(statusStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid status: " + statusStr);
+        }
+
+        if (status == Parent.Status.ACTIVE) {
+            unblockParent(parentId, updatedBy, schoolId);
+        } else if (status == Parent.Status.SUSPENDED) {
+            blockParent(parentId, updatedBy, schoolId);
+        } else {
+            // Handle other statuses if necessary, e.g., INACTIVE
+            // For now, let's just update the parent entity status for others without side
+            // effects
+            Parent parent = parentRepository.findByIdAndSchoolId(parentId, schoolId)
+                    .orElseThrow(() -> new RuntimeException("Parent not found in this school"));
+            parent.setStatus(status);
+            parentRepository.save(parent);
+            auditService.logSchoolAction(updatedBy, "UPDATE_PARENT_STATUS", "PARENT", parentId, schoolId,
+                    Map.of("status", status), "Updated parent status to " + status);
+        }
     }
 
     /**

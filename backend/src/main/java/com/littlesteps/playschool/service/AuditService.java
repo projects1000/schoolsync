@@ -231,7 +231,33 @@ public class AuditService {
     }
 
     public void logParentCreated(String username, String parentId, Map<String, Object> parentData) {
-        logAction(username, "CREATE", "PARENT", parentId, parentData, "New parent created");
+        logAction(username, "CREATE_PARENT", "PARENT", parentId, parentData, "New parent created");
+    }
+
+    public void logParentUpdated(String username, String parentId) {
+        logAction(username, "UPDATE_PARENT", "PARENT", parentId, null, "Parent information updated");
+    }
+
+    public void logParentStudentMapped(String username, String parentId, String studentId, String schoolId) {
+        logSchoolAction(username, "MAP_PARENT_STUDENT", "PARENT", parentId, schoolId, Map.of("studentId", studentId),
+                "Student mapped to parent");
+    }
+
+    public void logParentStudentUnmapped(String username, String parentId, String studentId, String schoolId) {
+        logSchoolAction(username, "UNMAP_PARENT_STUDENT", "PARENT", parentId, schoolId, Map.of("studentId", studentId),
+                "Student unmapped from parent");
+    }
+
+    public void logParentBlocked(String username, String parentId, String schoolId) {
+        logSchoolAction(username, "BLOCK_PARENT", "PARENT", parentId, schoolId, null, "Parent blocked");
+    }
+
+    public void logParentUnblocked(String username, String parentId, String schoolId) {
+        logSchoolAction(username, "UNBLOCK_PARENT", "PARENT", parentId, schoolId, null, "Parent unblocked");
+    }
+
+    public void logParentPasswordReset(String username, String parentId, String schoolId) {
+        logSchoolAction(username, "RESET_PARENT_PASSWORD", "PARENT", parentId, schoolId, null, "Parent password reset");
     }
 
     /**

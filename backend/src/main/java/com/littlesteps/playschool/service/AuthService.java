@@ -85,6 +85,27 @@ public class AuthService {
             }
         }
 
+        // Additional checks for PARENT role
+        if (user.getRole() == User.Role.PARENT) {
+            // Check User Status
+            if (user.getStatus() != User.Status.ACTIVE) {
+                throw new RuntimeException("Your account is not active. Please contact your school administrator.");
+            }
+
+            // Check School Assignment
+            if (user.getSchoolId() == null || user.getSchoolId().isEmpty()) {
+                throw new RuntimeException("No school assigned to this parent account.");
+            }
+
+            // Check School Status
+            com.littlesteps.playschool.entity.School school = schoolRepository.findById(user.getSchoolId())
+                    .orElseThrow(() -> new RuntimeException("Associated school not found"));
+
+            if (school.getStatus() != com.littlesteps.playschool.entity.School.Status.ACTIVE) {
+                throw new RuntimeException("Your school is currently inactive. Please contact the administration.");
+            }
+        }
+
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name(), user.getId(), user.getSchoolId());
 
         return new LoginResponse(

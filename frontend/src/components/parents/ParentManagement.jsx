@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Users, Mail, Phone, Link2 } from 'lucide-react';
+import { Plus, Search, Edit2, Users, Mail, Phone, Link2, Copy, Check, Lock, Ban, CheckCircle, Eye } from 'lucide-react';
 import adminService from '@/services/adminService';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Table,
@@ -40,19 +41,31 @@ const ParentManagement = () => {
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [currentParent, setCurrentParent] = useState(null);
+  const [editingParentId, setEditingParentId] = useState(null);
+  const [viewingParent, setViewingParent] = useState(null);
+  const [viewingChildren, setViewingChildren] = useState([]);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
+  // Credentials State
+  const [createdCredentials, setCreatedCredentials] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phoneNumber: '',
+    phone: '',
+    password: '',
     address: '',
     occupation: '',
     relation: 'FATHER'
   });
 
-  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [selectedStudentIds, setSelectedStudentIds] = useState([]);
+  const [mappedStudentIds, setMappedStudentIds] = useState([]);
+  const [isMapLoading, setIsMapLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -80,39 +93,136 @@ const ParentManagement = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleCreateSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await adminService.createParent(formData);
-      toast({ title: "Success", description: "Parent created successfully" });
-      setIsAddModalOpen(false);
-      fetchData();
-      setFormData({
-        name: '', email: '', phoneNumber: '', address: '', occupation: '', relation: 'FATHER'
-      });
+      if (editingParentId) {
+        await adminService.updateParent(editingParentId, formData);
+        toast({ title: "Success", description: "Parent updated successfully" });
+        setIsAddModalOpen(false);
+        fetchData();
+      } else {
+        const response = await adminService.createParent(formData);
+        // Response contains: { parent, password, userId }
+        setCreatedCredentials({
+          email: response.parent.email,
+          password: response.password
+        });
+        setIsAddModalOpen(false);
+        setIsSuccessModalOpen(true);
+        fetchData();
+      }
+      resetForm();
     } catch (error) {
-      toast({ title: "Error", description: error.response?.data?.message || "Failed to create parent", variant: "destructive" });
+      toast({ title: "Error", description: error.response?.data?.error || "Operation failed", variant: "destructive" });
     }
   };
 
-  const handleMapClick = (parent) => {
+  const resetForm = () => {
+    setFormData({
+      name: '', email: '', phone: '', password: '', address: '', occupation: '', relation: 'FATHER'
+    });
+    setEditingParentId(null);
+  };
+
+  const handleAddClick = () => {
+    resetForm();
+    setIsAddModalOpen(true);
+  };
+
+  const handleEditClick = (parent) => {
+    setEditingParentId(parent.id);
+    setFormData({
+      name: parent.name,
+      email: parent.email,
+      phone: parent.phone || parent.phoneNumber || '',
+      password: '',
+      address: parent.address || '',
+      occupation: parent.occupation || '',
+      relation: parent.relation || 'FATHER'
+    });
+    setIsAddModalOpen(true);
+  };
+
+  const handleStatusChange = async (parent, newStatus) => {
+    try {
+      await adminService.updateParentStatus(parent.id, newStatus);
+      toast({ title: "Success", description: `Parent ${newStatus.toLowerCase()}` });
+      fetchData();
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to update status", variant: "destructive" });
+    }
+  };
+
+  const handleResetPassword = async (parent) => {
+    if (!window.confirm(`Reset password for ${parent.name}?`)) return;
+    try {
+      const result = await adminService.resetParentPassword(parent.id);
+      setCreatedCredentials({ email: parent.email, password: result.password });
+      setIsSuccessModalOpen(true);
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to reset password", variant: "destructive" });
+    }
+  };
+
+  const handleViewChildren = async (parent) => {
+    setViewingParent(parent);
+    setViewingChildren([]);
+    setIsViewModalOpen(true);
+    try {
+      const children = await adminService.getParentChildren(parent.id);
+      setViewingChildren(children);
+    } catch (error) {
+      console.error("Failed to fetch children");
+    }
+  };
+
+  const copyToClipboard = () => {
+    if (createdCredentials) {
+      const text = `Email: ${createdCredentials.email}\nPassword: ${createdCredentials.password}`;
+      navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast({ title: "Copied", description: "Credentials copied to clipboard" });
+    }
+  };
+
+  const handleMapClick = async (parent) => {
     setCurrentParent(parent);
-    setSelectedStudentId('');
+    setSelectedStudentIds([]);
+    setMappedStudentIds([]);
     setIsMapModalOpen(true);
+    setIsMapLoading(true);
+    try {
+      const children = await adminService.getParentChildren(parent.id);
+      setMappedStudentIds(children.map(s => s.id));
+    } catch (error) {
+      console.error("Failed to load parent children", error);
+    } finally {
+      setIsMapLoading(false);
+    }
+  };
+
+  const handleStudentToggle = (studentId) => {
+    setSelectedStudentIds(prev =>
+      prev.includes(studentId)
+        ? prev.filter(id => id !== studentId)
+        : [...prev, studentId]
+    );
   };
 
   const handleMapSubmit = async () => {
-    if (!selectedStudentId) {
-      toast({ title: "Error", description: "Please select a student", variant: "destructive" });
+    if (selectedStudentIds.length === 0) {
+      toast({ title: "Error", description: "Please select at least one student", variant: "destructive" });
       return;
     }
     try {
-      await adminService.mapStudentToParent(currentParent.id, selectedStudentId);
-      toast({ title: "Success", description: "Student mapped to parent" });
+      await adminService.mapStudentsToParent(currentParent.id, selectedStudentIds);
+      toast({ title: "Success", description: "Students mapped to parent" });
       setIsMapModalOpen(false);
       fetchData();
     } catch (error) {
-      toast({ title: "Error", description: "Student may already be mapped or an error occurred", variant: "destructive" });
+      toast({ title: "Error", description: error.response?.data?.error || "Failed to map students", variant: "destructive" });
     }
   };
 
@@ -130,18 +240,16 @@ const ParentManagement = () => {
           <h1 className="text-2xl font-bold text-gray-800">Parent Management</h1>
           <p className="text-gray-500">Manage parents and link them to students</p>
         </div>
+        <Button onClick={handleAddClick} className="bg-pink-600 hover:bg-pink-700">
+          <Plus className="w-4 h-4 mr-2" />
+          Add Parent
+        </Button>
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-pink-600 hover:bg-pink-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Parent
-            </Button>
-          </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>New Parent</DialogTitle>
+              <DialogTitle>{editingParentId ? 'Edit Parent' : 'New Parent'}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleCreateSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <Input id="name" name="name" value={formData.name} onChange={handleInputChange} required />
@@ -149,13 +257,19 @@ const ParentManagement = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required />
+                  <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required disabled={!!editingParentId} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phoneNumber">Phone</Label>
-                  <Input id="phoneNumber" name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} required />
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input id="phone" name="phone" value={formData.phone} onChange={handleInputChange} required />
                 </div>
               </div>
+              {!editingParentId && (
+                <div className="space-y-2">
+                  <Label htmlFor="password">Temporary Password</Label>
+                  <Input id="password" name="password" value={formData.password} onChange={handleInputChange} placeholder="Leave blank to auto-generate" />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="relation">Relation</Label>
                 <Select value={formData.relation} onValueChange={(val) => setFormData(p => ({ ...p, relation: val }))}>
@@ -173,7 +287,7 @@ const ParentManagement = () => {
               </div>
               <div className="pt-4 flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
-                <Button type="submit">Create Parent</Button>
+                <Button type="submit">{editingParentId ? 'Update Parent' : 'Create Parent'}</Button>
               </div>
             </form>
           </DialogContent>
@@ -225,7 +339,7 @@ const ParentManagement = () => {
                   <TableCell>
                     <div className="flex flex-col text-sm text-gray-500 space-y-1">
                       <div className="flex items-center"><Mail className="w-3 h-3 mr-1" /> {parent.email}</div>
-                      <div className="flex items-center"><Phone className="w-3 h-3 mr-1" /> {parent.phoneNumber}</div>
+                      <div className="flex items-center"><Phone className="w-3 h-3 mr-1" /> {parent.phone}</div>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -240,13 +354,28 @@ const ParentManagement = () => {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleMapClick(parent)} title="Map Student">
-                        <Link2 className="w-4 h-4 text-blue-500" />
+                    <div className="flex items-center justify-end space-x-1">
+                      <Button variant="ghost" size="icon" onClick={() => handleViewChildren(parent)} title="View Students">
+                        <Eye className="w-4 h-4 text-blue-500" />
                       </Button>
-                      <Button variant="ghost" size="sm" title="Edit">
+                      <Button variant="ghost" size="icon" onClick={() => handleMapClick(parent)} title="Map Student">
+                        <Link2 className="w-4 h-4 text-green-500" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleEditClick(parent)} title="Edit">
                         <Edit2 className="w-4 h-4 text-gray-500" />
                       </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleResetPassword(parent)} title="Reset Password">
+                        <Lock className="w-4 h-4 text-orange-500" />
+                      </Button>
+                      {parent.status === 'ACTIVE' ? (
+                        <Button variant="ghost" size="icon" onClick={() => handleStatusChange(parent, 'BLOCKED')} title="Block">
+                          <Ban className="w-4 h-4 text-red-500" />
+                        </Button>
+                      ) : (
+                        <Button variant="ghost" size="icon" onClick={() => handleStatusChange(parent, 'ACTIVE')} title="Unblock">
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -263,23 +392,96 @@ const ParentManagement = () => {
             <DialogTitle>Map Student to {currentParent?.name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <p className="text-sm text-gray-500">Select a student to link to this parent.</p>
-            <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Student" />
-              </SelectTrigger>
-              <SelectContent>
-                {students.map(s => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.name} ({s.admissionNo})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <p className="text-sm text-gray-500">Select students to link to this parent</p>
+            <div className="border rounded-md max-h-60 overflow-y-auto p-2 space-y-2">
+              {isMapLoading ? (
+                <p className="text-sm p-2 text-center text-gray-500">Loading mapped students...</p>
+              ) : (
+                students.map(student => {
+                  const isMapped = mappedStudentIds.includes(student.id);
+                  return (
+                    <div key={student.id} className={`flex items-center space-x-2 p-2 rounded hover:bg-gray-50 ${isMapped ? 'opacity-50' : ''}`}>
+                      <input
+                        type="checkbox"
+                        id={`student-${student.id}`}
+                        checked={selectedStudentIds.includes(student.id) || isMapped}
+                        onChange={() => !isMapped && handleStudentToggle(student.id)}
+                        disabled={isMapped}
+                        className="h-4 w-4 text-pink-600 rounded border-gray-300 focus:ring-pink-500 disabled:cursor-not-allowed"
+                      />
+                      <label htmlFor={`student-${student.id}`} className={`flex-1 text-sm cursor-pointer select-none ${isMapped ? 'cursor-not-allowed' : ''}`}>
+                        <div className="font-medium">{student.name}</div>
+                        <div className="text-xs text-gray-500">{student.admissionNo} - {student.className}</div>
+                      </label>
+                      {isMapped && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Linked</span>}
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsMapModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleMapSubmit} disabled={!selectedStudentId}>Link Student</Button>
+            <Button onClick={handleMapSubmit} disabled={selectedStudentIds.length === 0}>Link Students</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Success Credentials Modal */}
+      <Dialog open={isSuccessModalOpen} onOpenChange={setIsSuccessModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-green-600">Parent Account Created</DialogTitle>
+            <DialogDescription>
+              Please share these credentials with the parent. They will need them to log in.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-gray-50 p-4 rounded-md space-y-3 mt-2 border border-gray-200">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-500">Email:</span>
+              <span className="font-mono text-sm">{createdCredentials?.email}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-500">Password:</span>
+              <span className="font-mono text-sm font-bold">{createdCredentials?.password}</span>
+            </div>
+          </div>
+          <DialogFooter className="sm:justify-between">
+            <Button variant="outline" onClick={copyToClipboard} className="flex items-center">
+              {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+              {copied ? "Copied" : "Copy Credentials"}
+            </Button>
+            <Button onClick={() => setIsSuccessModalOpen(false)}>
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Children Modal */}
+      <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Students Linked to {viewingParent?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {viewingChildren.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center">No students linked.</p>
+            ) : (
+              <div className="space-y-2">
+                {viewingChildren.map(child => (
+                  <div key={child.id} className="flex justify-between items-center p-3 bg-gray-50 rounded border">
+                    <div>
+                      <div className="font-medium text-sm">{child.name}</div>
+                      <div className="text-xs text-gray-500">{child.admissionNo} - {child.className}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setIsViewModalOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

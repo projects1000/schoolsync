@@ -33,6 +33,6 @@ public interface ParentRepository extends MongoRepository<Parent, String> {
 
     boolean existsByEmail(String email);
 
-    @Query("{ 'user.id': ?0 }")
+    @Query("{ 'userId': ?0 }")
     Optional<Parent> findByUserId(String userId);
 }

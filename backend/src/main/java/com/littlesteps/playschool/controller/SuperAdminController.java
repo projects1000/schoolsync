@@ -20,6 +20,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/superadmin")
+@CrossOrigin(origins = "*", maxAge = 3600)
 @PreAuthorize("hasRole('SUPERADMIN')")
 public class SuperAdminController {
 

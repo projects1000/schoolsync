@@ -28,8 +28,11 @@ const SuperAdminDashboard = ({ currentUser }) => {
     const [stats, setStats] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(new Date());
 
+    const [error, setError] = useState(null);
+
     const fetchDashboardData = async () => {
         try {
+            setError(null);
             const response = await SuperAdminService.getDashboardData();
             if (response.data) {
                 const data = response.data;
@@ -82,7 +85,7 @@ const SuperAdminDashboard = ({ currentUser }) => {
             }
         } catch (error) {
             console.error('Failed to fetch dashboard data:', error);
-            // Optional: Set empty state or error state
+            setError(error.message || 'Failed to load dashboard data');
         }
         setLastUpdated(new Date());
         setIsLoading(false);
@@ -97,7 +100,7 @@ const SuperAdminDashboard = ({ currentUser }) => {
         fetchDashboardData();
     };
 
-    if (isLoading || !stats) {
+    if (isLoading) {
         return (
             <div className="flex items-center justify-center h-96">
                 <div className="text-center">
@@ -107,6 +110,26 @@ const SuperAdminDashboard = ({ currentUser }) => {
             </div>
         );
     }
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="text-center">
+                    <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                    <h2 className="text-xl font-semibold text-gray-800 mb-2">Error Loading Dashboard</h2>
+                    <p className="text-gray-500 mb-4">{error}</p>
+                    <button
+                        onClick={handleRefresh}
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                    >
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!stats) return null;
 
     const kpiCards = [
         {
