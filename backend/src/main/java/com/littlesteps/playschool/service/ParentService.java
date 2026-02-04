@@ -10,6 +10,7 @@ import com.littlesteps.playschool.repository.ParentRepository;
 import com.littlesteps.playschool.repository.ParentStudentMapRepository;
 import com.littlesteps.playschool.repository.StudentRepository;
 import com.littlesteps.playschool.repository.UserRepository;
+import com.littlesteps.playschool.service.AttendanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -42,6 +43,18 @@ public class ParentService {
 
     @Autowired
     private AuditService auditService;
+
+    @Autowired
+    private AttendanceService attendanceService;
+
+    @Autowired
+    private com.littlesteps.playschool.repository.MessageRepository messageRepository;
+
+    @Autowired
+    private com.littlesteps.playschool.repository.AssignmentRepository assignmentRepository;
+
+    @Autowired
+    private com.littlesteps.playschool.repository.StudyMaterialRepository studyMaterialRepository;
 
     private static final String ALLOWED_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
 
@@ -474,6 +487,86 @@ public class ParentService {
         dto.setAddress(student.getAddress());
         dto.setStatus(student.getStatus() != null ? student.getStatus().name() : null);
         return dto;
+    }
+
+    /**
+     * Get student attendance records
+     */
+    public List<?> getStudentAttendance(String studentId, String startDate, String endDate) {
+        if (startDate != null && endDate != null) {
+            java.time.LocalDate start = java.time.LocalDate.parse(startDate);
+            java.time.LocalDate end = java.time.LocalDate.parse(endDate);
+            return attendanceService.getStudentAttendanceByDateRange(studentId, start, end);
+        }
+        return attendanceService.getStudentAttendance(studentId);
+    }
+
+    /**
+     * Get messages for a parent (broadcast + individual messages)
+     */
+    public List<com.littlesteps.playschool.entity.Message> getParentMessages(String parentId,
+            List<StudentDTO> children) {
+        List<com.littlesteps.playschool.entity.Message> messages = new java.util.ArrayList<>();
+
+        // Get all student IDs
+        List<String> studentIds = children.stream()
+                .map(StudentDTO::getId)
+                .collect(java.util.stream.Collectors.toList());
+
+        // For each student, get messages where recipientId is "ALL" or the student's ID
+        for (String studentId : studentIds) {
+            // Get broadcast messages (recipientId = "ALL")
+            List<com.littlesteps.playschool.entity.Message> broadcastMessages = messageRepository
+                    .findByRecipientId("ALL");
+            messages.addAll(broadcastMessages);
+
+            // Get individual messages for this student
+            List<com.littlesteps.playschool.entity.Message> individualMessages = messageRepository
+                    .findByRecipientId(studentId);
+            messages.addAll(individualMessages);
+        }
+
+        // Remove duplicates and sort by date (newest first)
+        return messages.stream()
+                .distinct()
+                .sorted((m1, m2) -> m2.getCreatedAt().compareTo(m1.getCreatedAt()))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * Get assignments for a student's class
+     */
+    public List<com.littlesteps.playschool.entity.Assignment> getStudentAssignments(String studentId) {
+        // Get student to find their classId
+        com.littlesteps.playschool.entity.Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        // Fetch assignments for the student's class
+        List<com.littlesteps.playschool.entity.Assignment> assignments = assignmentRepository
+                .findByClassId(student.getClassId());
+
+        // Sort by due date (nearest first)
+        return assignments.stream()
+                .sorted((a1, a2) -> a1.getDueDate().compareTo(a2.getDueDate()))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * Get study materials for a student's class
+     */
+    public List<com.littlesteps.playschool.entity.StudyMaterial> getStudentStudyMaterials(String studentId) {
+        // Get student to find their classId
+        com.littlesteps.playschool.entity.Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        // Fetch study materials for the student's class
+        List<com.littlesteps.playschool.entity.StudyMaterial> materials = studyMaterialRepository
+                .findByClassId(student.getClassId());
+
+        // Sort by created date (newest first)
+        return materials.stream()
+                .sorted((m1, m2) -> m2.getCreatedAt().compareTo(m1.getCreatedAt()))
+                .collect(java.util.stream.Collectors.toList());
     }
 
     // Legacy method for backward compatibility

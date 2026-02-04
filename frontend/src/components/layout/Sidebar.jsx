@@ -12,6 +12,7 @@ import {
   School,
   Heart,
   MessageSquare,
+  FileText,
   X,
   BookOpen,
   UserPlus,
@@ -21,7 +22,8 @@ import {
   UserCog,
   Database,
   Building,
-  Box
+  Box,
+  User
 } from 'lucide-react';
 
 const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose }) => {
@@ -35,19 +37,30 @@ const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose }) => {
     { id: 'security-logs', label: 'Security & Logs', icon: Shield, roles: ['superadmin'] },
     { id: 'system-health', label: 'System Health', icon: Activity, roles: ['superadmin'] },
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin'] },
-    { id: 'teacher-portal', label: 'Teacher Portal', icon: LayoutDashboard, roles: ['teacher'] },
+    { id: 'teacher-dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['teacher'] },
+    { id: 'teacher-classes', label: 'My Classes', icon: GraduationCap, roles: ['teacher'] },
+    { id: 'attendance', label: 'Attendance', icon: Calendar, roles: ['admin', 'teacher'] },
+    { id: 'teacher-assignments', label: 'Assignments', icon: FileText, roles: ['teacher'] },
+    { id: 'teacher-communications', label: 'Messages', icon: MessageSquare, roles: ['teacher'] },
+    { id: 'teacher-profile', label: 'My Profile', icon: User, roles: ['teacher'] },
+    { id: 'teacher-academics', label: 'Academics', icon: BookOpen, roles: ['teacher'] },
+    { id: 'teacher-course-progress', label: 'Course Progress', icon: UserCheck, roles: ['teacher'] },
+    { id: 'teacher-resources', label: 'Resources', icon: BookOpen, roles: ['teacher'] },
     { id: 'students', label: 'Students', icon: Users, roles: ['superadmin', 'admin'] },
     { id: 'teachers', label: 'Teachers', icon: GraduationCap, roles: ['superadmin', 'admin'] },
     { id: 'parents', label: 'Parents', icon: Heart, roles: ['admin'] },
     { id: 'parent-registrations', label: 'Parent Registrations', icon: UserPlus, roles: ['admin'] },
     { id: 'school-profile', label: 'School Profile', icon: Building, roles: ['admin'] },
     { id: 'classes', label: 'Class Management', icon: Box, roles: ['admin'] },
-    { id: 'attendance', label: 'Attendance', icon: Calendar, roles: ['admin'] },
     { id: 'fees', label: 'Fees & Billing', icon: CreditCard, roles: ['superadmin', 'admin'] },
-    { id: 'timetable', label: 'Timetable', icon: BookOpen, roles: ['admin'] },
+    { id: 'timetable', label: 'Timetable', icon: BookOpen, roles: ['admin', 'teacher'] },
     { id: 'announcements', label: 'Announcements', icon: MessageSquare, roles: ['superadmin', 'admin'] },
-    { id: 'communications', label: 'Communications', icon: MessageSquare, roles: ['superadmin', 'admin'] },
-    { id: 'parent-portal', label: 'Parent Portal', icon: UserCheck, roles: ['parent'] },
+    { id: 'parent-overview', label: 'Dashboard', icon: LayoutDashboard, roles: ['parent'] },
+    { id: 'parent-attendance', label: 'Attendance', icon: Calendar, roles: ['parent'] },
+    { id: 'parent-fees', label: 'Fees', icon: CreditCard, roles: ['parent'] },
+    { id: 'parent-messages', label: 'Messages', icon: MessageSquare, roles: ['parent'] },
+    { id: 'parent-assignments', label: 'Assignments', icon: FileText, roles: ['parent'] },
+    { id: 'parent-study-materials', label: 'Study Materials', icon: BookOpen, roles: ['parent'] },
     { id: 'settings', label: 'Settings', icon: Settings, roles: ['superadmin', 'admin', 'teacher', 'parent'] }
   ];
 
