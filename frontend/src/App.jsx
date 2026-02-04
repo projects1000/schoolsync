@@ -12,14 +12,26 @@ import StudentManagement from '@/components/students/StudentManagement';
 import TeacherManagement from '@/components/teachers/TeacherManagement';
 import AttendanceManagement from '@/components/attendance/AttendanceManagement';
 import FeesManagement from '@/components/fees/FeesManagement';
-import ParentPortal from '@/components/parent/ParentPortal';
+import ParentOverview from '@/components/parent/ParentOverview';
+import ParentAttendance from '@/components/parent/ParentAttendance';
+import ParentFees from '@/components/parent/ParentFees';
+import ParentMessages from '@/components/parent/ParentMessages';
+import ParentAssignments from '@/components/parent/ParentAssignments';
+import ParentStudyMaterials from '@/components/parent/ParentStudyMaterials';
 import Settings from '@/components/settings/Settings';
 import ParentManagement from '@/components/parents/ParentManagement';
 import ParentRegistrationManagement from '@/components/admin/ParentRegistrationManagement';
 import AnnouncementManagement from '@/components/announcements/AnnouncementManagement';
 import Communications from '@/components/communications/Communications';
-import TeacherPortal from '@/components/teacher/TeacherPortal';
 import TimetableManagement from '@/components/timetable/TimetableManagement';
+import TeacherDashboard from '@/components/teacher/TeacherDashboard';
+import MyClasses from '@/components/teacher/MyClasses';
+import TeacherAcademics from '@/components/teacher/TeacherAcademics';
+import CourseProgress from '@/components/teacher/CourseProgress';
+import LearningResources from '@/components/teacher/LearningResources';
+import Assignments from '@/components/teacher/Assignments';
+import TeacherCommunications from '@/components/teacher/TeacherCommunications';
+import TeacherProfile from '@/components/teacher/TeacherProfile';
 import AdminManagement from '@/components/superadmin/AdminManagement';
 import SuperAdminDashboard from '@/components/superadmin/SuperAdminDashboard';
 import SchoolManagement from '@/components/superadmin/SchoolManagement';
@@ -47,9 +59,9 @@ function App() {
       const parsedUser = JSON.parse(user);
       setCurrentUser(parsedUser);
       if (parsedUser.role === 'teacher') {
-        setActiveModule('teacher-portal');
+        setActiveModule('teacher-dashboard');
       } else if (parsedUser.role === 'parent') {
-        setActiveModule('parent-portal');
+        setActiveModule('parent-overview');
       } else if (parsedUser.role === 'superadmin') {
         setActiveModule('super-admin-dashboard');
       } else {
@@ -68,9 +80,9 @@ function App() {
       description: `Logged in as ${userData.name}`,
     });
     if (userData.role === 'teacher') {
-      setActiveModule('teacher-portal');
+      setActiveModule('teacher-dashboard');
     } else if (userData.role === 'parent') {
-      setActiveModule('parent-portal');
+      setActiveModule('parent-overview');
     } else if (userData.role === 'superadmin') {
       setActiveModule('super-admin-dashboard');
     } else {
@@ -91,13 +103,6 @@ function App() {
   };
 
   const renderActiveModule = () => {
-    if (currentUser?.role === 'teacher') {
-      return <TeacherPortal currentUser={currentUser} setActiveModule={setActiveModule} />;
-    }
-    if (currentUser?.role === 'parent') {
-      return <ParentPortal currentUser={currentUser} />;
-    }
-
     switch (activeModule) {
       case 'dashboard':
         return <Dashboard currentUser={currentUser} setActiveModule={setActiveModule} />;
@@ -135,14 +140,40 @@ function App() {
         return <Communications currentUser={currentUser} />;
       case 'timetable':
         return <TimetableManagement currentUser={currentUser} />;
-      case 'parent-portal':
-        return <ParentPortal currentUser={currentUser} />;
       case 'settings':
         return <Settings currentUser={currentUser} />;
       case 'school-profile':
         return <SchoolProfile />;
       case 'classes':
         return <ClassManagement />;
+      case 'teacher-dashboard':
+        return <TeacherDashboard setActiveTab={setActiveModule} />;
+      case 'teacher-classes':
+        return <MyClasses setActiveTab={setActiveModule} />;
+      case 'teacher-academics':
+        return <TeacherAcademics currentUser={currentUser} />;
+      case 'teacher-course-progress':
+        return <CourseProgress />;
+      case 'teacher-resources':
+        return <LearningResources />;
+      case 'teacher-assignments':
+        return <Assignments currentUser={currentUser} />;
+      case 'teacher-communications':
+        return <TeacherCommunications currentUser={currentUser} />;
+      case 'teacher-profile':
+        return <TeacherProfile />;
+      case 'parent-overview':
+        return <ParentOverview currentUser={currentUser} />;
+      case 'parent-attendance':
+        return <ParentAttendance currentUser={currentUser} />;
+      case 'parent-fees':
+        return <ParentFees currentUser={currentUser} />;
+      case 'parent-messages':
+        return <ParentMessages currentUser={currentUser} />;
+      case 'parent-assignments':
+        return <ParentAssignments currentUser={currentUser} />;
+      case 'parent-study-materials':
+        return <ParentStudyMaterials currentUser={currentUser} />;
       default:
         return <Dashboard currentUser={currentUser} setActiveModule={setActiveModule} />;
     }
