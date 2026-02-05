@@ -58,6 +58,23 @@ public class AttendanceService {
                                 .collect(Collectors.toList());
         }
 
+        public List<AttendanceDTO> getAttendanceByDateRange(LocalDate startDate, LocalDate endDate) {
+                // Fetch all within range. filtering by class logic happens in Service layer if
+                // needed.
+                // Assuming repository has findByAttendanceDateBetween or we use findAll
+                // filtering.
+                // Repository usually has findAll or we can use custom query.
+                // Let's use filter on findAll for now to match analytics implementation style,
+                // or if repository has method. Analytics used findAll().filter range.
+                List<Attendance> attendances = attendanceRepository.findAll().stream()
+                                .filter(a -> !a.getAttendanceDate().isBefore(startDate) &&
+                                                !a.getAttendanceDate().isAfter(endDate))
+                                .collect(Collectors.toList());
+                return attendances.stream()
+                                .map(this::convertToDTO)
+                                .collect(Collectors.toList());
+        }
+
         public List<AttendanceDTO> saveAttendance(List<AttendanceDTO> attendanceDTOs) {
                 List<Attendance> attendances = attendanceDTOs.stream()
                                 .map(this::convertToEntity)

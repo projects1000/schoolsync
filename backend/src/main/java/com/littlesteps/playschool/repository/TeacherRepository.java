@@ -31,4 +31,6 @@ public interface TeacherRepository extends MongoRepository<Teacher, String> {
     long countBySchoolIdAndStatus(String schoolId, Teacher.Status status);
 
     long countBySchoolId(String schoolId);
+
+    Optional<Teacher> findByUser(com.littlesteps.playschool.entity.User user);
 }

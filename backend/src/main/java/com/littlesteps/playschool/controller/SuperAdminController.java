@@ -24,25 +24,48 @@ import java.util.Map;
 @PreAuthorize("hasRole('SUPERADMIN')")
 public class SuperAdminController {
 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SuperAdminController.class);
+
     @Autowired
     private SuperAdminService superAdminService;
 
     @GetMapping("/schools")
     public ResponseEntity<List<SchoolResponse>> getAllSchools() {
-        List<SchoolResponse> schools = superAdminService.getAllSchools();
-        return ResponseEntity.ok(schools);
+        try {
+            logger.info("Fetching all schools...");
+            List<SchoolResponse> schools = superAdminService.getAllSchools();
+            logger.info("Successfully fetched {} schools", schools.size());
+            return ResponseEntity.ok(schools);
+        } catch (Exception e) {
+            logger.error("Error fetching schools: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     @GetMapping("/admins")
     public ResponseEntity<List<AdminResponse>> getAllAdmins() {
-        List<AdminResponse> admins = superAdminService.getAllAdmins();
-        return ResponseEntity.ok(admins);
+        try {
+            logger.info("Fetching all admins...");
+            List<AdminResponse> admins = superAdminService.getAllAdmins();
+            logger.info("Successfully fetched {} admins", admins.size());
+            return ResponseEntity.ok(admins);
+        } catch (Exception e) {
+            logger.error("Error fetching admins: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     @GetMapping("/dashboard")
     public ResponseEntity<com.littlesteps.playschool.dto.DashboardStats> getDashboardData() {
-        com.littlesteps.playschool.dto.DashboardStats stats = superAdminService.getDashboardData();
-        return ResponseEntity.ok(stats);
+        try {
+            logger.info("Fetching dashboard data...");
+            com.littlesteps.playschool.dto.DashboardStats stats = superAdminService.getDashboardData();
+            logger.info("Successfully fetched dashboard data");
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            logger.error("Error fetching dashboard data: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     @PostMapping("/admins")

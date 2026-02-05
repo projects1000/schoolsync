@@ -2,13 +2,47 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 const SchoolDistributionChart = ({ schools }) => {
+    // Handle empty or invalid data
+    if (!schools || schools.length === 0) {
+        return (
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-800">Student Distribution</h3>
+                        <p className="text-sm text-gray-500">Students per school</p>
+                    </div>
+                </div>
+                <div className="h-36 flex items-center justify-center text-gray-400">
+                    No data available
+                </div>
+            </div>
+        );
+    }
+
     // Sort by students descending and take top schools
     const sortedSchools = [...schools]
         .filter(s => s.status === 'active')
-        .sort((a, b) => b.students - a.students);
+        .sort((a, b) => (b.students || 0) - (a.students || 0));
 
-    const maxStudents = Math.max(...sortedSchools.map(s => s.students));
-    const totalStudents = sortedSchools.reduce((sum, s) => sum + s.students, 0);
+    // Handle case where no active schools
+    if (sortedSchools.length === 0) {
+        return (
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-800">Student Distribution</h3>
+                        <p className="text-sm text-gray-500">Students per school</p>
+                    </div>
+                </div>
+                <div className="h-36 flex items-center justify-center text-gray-400">
+                    No active schools
+                </div>
+            </div>
+        );
+    }
+
+    const maxStudents = Math.max(...sortedSchools.map(s => s.students || 0), 1);
+    const totalStudents = sortedSchools.reduce((sum, s) => sum + (s.students || 0), 0);
 
     const colors = [
         'from-violet-500 to-purple-600',
@@ -34,12 +68,12 @@ const SchoolDistributionChart = ({ schools }) => {
 
             <div className="space-y-3">
                 {sortedSchools.map((school, index) => {
-                    const percentage = Math.round((school.students / totalStudents) * 100);
-                    const barWidth = (school.students / maxStudents) * 100;
+                    const percentage = totalStudents > 0 ? Math.round(((school.students || 0) / totalStudents) * 100) : 0;
+                    const barWidth = maxStudents > 0 ? ((school.students || 0) / maxStudents) * 100 : 0;
 
                     return (
                         <motion.div
-                            key={school.id}
+                            key={school.id || index}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.08 }}
@@ -53,7 +87,7 @@ const SchoolDistributionChart = ({ schools }) => {
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm font-semibold text-gray-800">{school.students}</span>
+                                    <span className="text-sm font-semibold text-gray-800">{school.students || 0}</span>
                                     <span className="text-xs text-gray-400">({percentage}%)</span>
                                 </div>
                             </div>
@@ -73,7 +107,7 @@ const SchoolDistributionChart = ({ schools }) => {
             <div className="mt-4 pt-4 border-t border-gray-100">
                 <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-500">{sortedSchools.length} active schools</span>
-                    <span className="text-gray-500">Avg: {Math.round(totalStudents / sortedSchools.length)} per school</span>
+                    <span className="text-gray-500">Avg: {sortedSchools.length > 0 ? Math.round(totalStudents / sortedSchools.length) : 0} per school</span>
                 </div>
             </div>
         </div>

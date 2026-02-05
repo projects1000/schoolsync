@@ -1,16 +1,9 @@
 package com.littlesteps.playschool.dto;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class ParentRegistrationRequest {
 
     @NotBlank(message = "Parent name is required")
@@ -30,19 +23,55 @@ public class ParentRegistrationRequest {
     @NotBlank(message = "Student class is required")
     private String studentClass;
 
-    // Manual getters and setters (in case Lombok isn't working)
-    public String getParentName() { return parentName; }
-    public void setParentName(String parentName) { this.parentName = parentName; }
+    public ParentRegistrationRequest() {
+    }
 
-    public String getParentEmail() { return parentEmail; }
-    public void setParentEmail(String parentEmail) { this.parentEmail = parentEmail; }
+    public ParentRegistrationRequest(String parentName, String parentEmail, String parentPhone, String studentName,
+            String studentClass) {
+        this.parentName = parentName;
+        this.parentEmail = parentEmail;
+        this.parentPhone = parentPhone;
+        this.studentName = studentName;
+        this.studentClass = studentClass;
+    }
 
-    public String getParentPhone() { return parentPhone; }
-    public void setParentPhone(String parentPhone) { this.parentPhone = parentPhone; }
+    public String getParentName() {
+        return parentName;
+    }
 
-    public String getStudentName() { return studentName; }
-    public void setStudentName(String studentName) { this.studentName = studentName; }
+    public void setParentName(String parentName) {
+        this.parentName = parentName;
+    }
 
-    public String getStudentClass() { return studentClass; }
-    public void setStudentClass(String studentClass) { this.studentClass = studentClass; }
+    public String getParentEmail() {
+        return parentEmail;
+    }
+
+    public void setParentEmail(String parentEmail) {
+        this.parentEmail = parentEmail;
+    }
+
+    public String getParentPhone() {
+        return parentPhone;
+    }
+
+    public void setParentPhone(String parentPhone) {
+        this.parentPhone = parentPhone;
+    }
+
+    public String getStudentName() {
+        return studentName;
+    }
+
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
+
+    public String getStudentClass() {
+        return studentClass;
+    }
+
+    public void setStudentClass(String studentClass) {
+        this.studentClass = studentClass;
+    }
 }

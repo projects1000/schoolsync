@@ -1,59 +1,16 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Users, Calendar, BookOpen, MessageSquare, Send, X, Plus, Edit, Trash2, Folder, BarChart, CheckSquare } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, BookOpen, MessageSquare, Send, X, Plus, Edit, Trash2, Folder, BarChart, CheckSquare, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import AttendanceManagement from '@/components/attendance/AttendanceManagement';
 import Communications from '@/components/communications/Communications';
 import TimetableManagement from '@/components/timetable/TimetableManagement';
-
-const TeacherDashboard = ({ teacher, students, attendance, academics, setActiveTab }) => {
-  const myStudents = students.filter(s => teacher.classes.includes(s.class));
-  const today = new Date().toISOString().split('T')[0];
-  const todayAttendance = attendance[today] || {};
-  
-  let presentCount = 0;
-  teacher.classes.forEach(cls => {
-    if (todayAttendance[cls]) {
-      presentCount += todayAttendance[cls].filter(s => s.status === 'present' || s.status === 'late').length;
-    }
-  });
-
-  const attendancePercentage = myStudents.length > 0 ? Math.round((presentCount / myStudents.length) * 100) : 0;
-  const recentAcademics = academics.filter(a => myStudents.some(s => s.id === a.studentId)).slice(0, 3);
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div className="md:col-span-2 space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-blue-50 rounded-lg p-4 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setActiveTab('my-students')}><div className="flex items-center space-x-3"><Users className="w-8 h-8 text-blue-600" /><div><p className="text-sm text-blue-600">Total Students</p><p className="text-2xl font-bold text-blue-800">{myStudents.length}</p></div></div></div>
-          <div className="bg-green-50 rounded-lg p-4 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setActiveTab('attendance')}><div className="flex items-center space-x-3"><Calendar className="w-8 h-8 text-green-600" /><div><p className="text-sm text-green-600">Today's Attendance</p><p className="text-2xl font-bold text-green-800">{attendancePercentage}%</p></div></div></div>
-          <div className="bg-purple-50 rounded-lg p-4"><div className="flex items-center space-x-3"><BookOpen className="w-8 h-8 text-purple-600" /><div><p className="text-sm text-purple-600">Classes Assigned</p><p className="text-2xl font-bold text-purple-800">{teacher.classes.length}</p></div></div></div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">My Classes</h3>
-          <div className="flex flex-wrap gap-2">
-            {teacher.classes.map(cls => <span key={cls} className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">{cls}</span>)}
-          </div>
-        </div>
-      </div>
-      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Academic Updates</h3>
-        <div className="space-y-3">
-          {recentAcademics.map(item => (
-            <div key={item.id} className="p-3 bg-gray-50 rounded-lg">
-              <p className="font-medium text-sm text-gray-700">{students.find(s=>s.id === item.studentId)?.name}</p>
-              <p className="text-xs text-gray-500">{item.type === 'result' ? `Result: ${item.subject}` : 'Suggestion'}</p>
-            </div>
-          ))}
-          {recentAcademics.length === 0 && <p className="text-sm text-gray-500">No recent updates.</p>}
-        </div>
-      </div>
-    </div>
-  );
-};
+import TeacherDashboard from './TeacherDashboard';
+import TeacherCourseHandouts from './TeacherCourseHandouts';
+import CreateCourseHandout from './CreateCourseHandout';
 
 const MyStudents = ({ teacher, students }) => {
   const myStudents = students.filter(s => teacher.classes.includes(s.class));
@@ -195,20 +152,20 @@ const TeacherPortal = ({ currentUser, setActiveModule }) => {
   const [attendance] = useLocalStorage('attendance', {});
   const [users] = useLocalStorage('users', []);
 
-  const teacher = useMemo(() => teachers.find(t => t.id === currentUser.id) || users.find(u => u.id === currentUser.id), [teachers, users, currentUser]);
+  const teacher = useMemo(() => teachers.find(t => t.id === currentUser.id) || users.find(u => u.id === currentUser.id) || { ...currentUser, classes: [] }, [teachers, users, currentUser]);
 
   if (!teacher) {
     return <div>Loading teacher data...</div>;
   }
-  
+
   if (!teacher.classes) {
-      teacher.classes = [];
+    teacher.classes = [];
   }
 
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <TeacherDashboard teacher={teacher} students={students} attendance={attendance} academics={academics} setActiveTab={setActiveTab} />;
+        return <TeacherDashboard setActiveTab={setActiveTab} />;
       case 'my-students':
         return <MyStudents teacher={teacher} students={students} />;
       case 'attendance':
@@ -217,14 +174,16 @@ const TeacherPortal = ({ currentUser, setActiveModule }) => {
         return <AcademicsManagement teacher={teacher} students={students} academics={academics} setAcademics={setAcademics} />;
       case 'timetable':
         return <TimetableManagement currentUser={currentUser} />;
-      case 'course-progress':
-        return <CourseProgress teacher={teacher} students={students} />;
+      case 'course-handouts':
+        return <TeacherCourseHandouts currentUser={currentUser} onCreateNew={() => setActiveTab('create-handout')} />;
+      case 'create-handout':
+        return <CreateCourseHandout currentUser={currentUser} onBack={() => setActiveTab('course-handouts')} onSuccess={() => setActiveTab('course-handouts')} />;
       case 'resources':
         return <LearningResources teacher={teacher} students={students} />;
       case 'communications':
         return <Communications currentUser={currentUser} />;
       default:
-        return <TeacherDashboard teacher={teacher} students={students} attendance={attendance} academics={academics} setActiveTab={setActiveTab} />;
+        return <TeacherDashboard setActiveTab={setActiveTab} />;
     }
   };
 
@@ -245,7 +204,7 @@ const TeacherPortal = ({ currentUser, setActiveModule }) => {
               { id: 'attendance', label: 'Attendance', icon: Calendar },
               { id: 'timetable', label: 'Timetable', icon: BookOpen },
               { id: 'academics', label: 'Academics', icon: BarChart },
-              { id: 'course-progress', label: 'Course Progress', icon: CheckSquare },
+              { id: 'course-handouts', label: 'Course Handouts', icon: FileText },
               { id: 'resources', label: 'Resources', icon: Folder },
               { id: 'communications', label: 'Communications', icon: MessageSquare },
             ].map(tab => {
