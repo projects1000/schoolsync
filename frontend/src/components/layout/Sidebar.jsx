@@ -23,7 +23,8 @@ import {
   Database,
   Building,
   Box,
-  User
+  User,
+  TrendingUp
 } from 'lucide-react';
 
 const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose }) => {
@@ -43,8 +44,7 @@ const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose }) => {
     { id: 'teacher-assignments', label: 'Assignments', icon: FileText, roles: ['teacher'] },
     { id: 'teacher-communications', label: 'Messages', icon: MessageSquare, roles: ['teacher'] },
     { id: 'teacher-profile', label: 'My Profile', icon: User, roles: ['teacher'] },
-    { id: 'teacher-academics', label: 'Academics', icon: BookOpen, roles: ['teacher'] },
-    { id: 'teacher-course-progress', label: 'Course Progress', icon: UserCheck, roles: ['teacher'] },
+    { id: 'teacher-course-handouts', label: 'Course Handouts', icon: FileText, roles: ['teacher'] },
     { id: 'teacher-resources', label: 'Resources', icon: BookOpen, roles: ['teacher'] },
     { id: 'students', label: 'Students', icon: Users, roles: ['superadmin', 'admin'] },
     { id: 'teachers', label: 'Teachers', icon: GraduationCap, roles: ['superadmin', 'admin'] },
@@ -61,6 +61,7 @@ const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose }) => {
     { id: 'parent-messages', label: 'Messages', icon: MessageSquare, roles: ['parent'] },
     { id: 'parent-assignments', label: 'Assignments', icon: FileText, roles: ['parent'] },
     { id: 'parent-study-materials', label: 'Study Materials', icon: BookOpen, roles: ['parent'] },
+    { id: 'parent-course-handouts', label: 'Course Progress', icon: TrendingUp, roles: ['parent'] },
     { id: 'settings', label: 'Settings', icon: Settings, roles: ['superadmin', 'admin', 'teacher', 'parent'] }
   ];
 

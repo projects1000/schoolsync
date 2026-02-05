@@ -1,14 +1,7 @@
 package com.littlesteps.playschool.dto;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
 import java.time.LocalDateTime;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class ParentRegistrationResponse {
     private String id;
     private String parentName;
@@ -23,12 +16,23 @@ public class ParentRegistrationResponse {
     private String createdBy;
     private String schoolId;
 
-    // Manual getters and setters (in case Lombok isn't working)
-    public String getSchoolId() {
-        return schoolId;
+    public ParentRegistrationResponse() {
     }
 
-    public void setSchoolId(String schoolId) {
+    public ParentRegistrationResponse(String id, String parentName, String parentEmail, String parentPhone,
+            String studentName, String studentClass, String registrationCode, String status, LocalDateTime createdAt,
+            LocalDateTime usedAt, String createdBy, String schoolId) {
+        this.id = id;
+        this.parentName = parentName;
+        this.parentEmail = parentEmail;
+        this.parentPhone = parentPhone;
+        this.studentName = studentName;
+        this.studentClass = studentClass;
+        this.registrationCode = registrationCode;
+        this.status = status;
+        this.createdAt = createdAt;
+        this.usedAt = usedAt;
+        this.createdBy = createdBy;
         this.schoolId = schoolId;
     }
 
@@ -118,5 +122,13 @@ public class ParentRegistrationResponse {
 
     public void setCreatedBy(String createdBy) {
         this.createdBy = createdBy;
+    }
+
+    public String getSchoolId() {
+        return schoolId;
+    }
+
+    public void setSchoolId(String schoolId) {
+        this.schoolId = schoolId;
     }
 }

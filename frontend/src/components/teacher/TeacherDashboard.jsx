@@ -1,0 +1,148 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Loader2, Users, Calendar, BookOpen, FileText } from 'lucide-react';
+
+const TeacherDashboard = ({ setActiveTab }) => {
+    const [dashboardData, setDashboardData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchDashboard = async () => {
+            try {
+                const token = localStorage.getItem('authToken');
+                // Ensure we handle the case where token might be missing or expired
+                if (!token) {
+                    setError("Not authenticated");
+                    setLoading(false);
+                    return;
+                }
+
+                const response = await axios.get('http://localhost:8082/api/teacher/dashboard', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setDashboardData(response.data);
+            } catch (err) {
+                console.error("Error fetching dashboard:", err);
+                // Fallback for demo if backend is not reachable immediately
+                setError("Failed to load dashboard data. Please check your connection.");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchDashboard();
+    }, []);
+
+    if (loading) return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
+
+    if (error) return (
+        <div className="bg-red-50 text-red-600 p-6 rounded-xl border border-red-200">
+            <p className="font-semibold">Error loading dashboard</p>
+            <p>{error}</p>
+        </div>
+    );
+
+    if (!dashboardData) return null;
+
+    return (
+        <div className="space-y-6">
+            {/* Profile Summary */}
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-800">Welcome, {dashboardData.teacherName || 'Teacher'}!</h2>
+                        <p className="text-gray-500 mt-1">{dashboardData.schoolName || 'Little Steps Playschool'}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
+                        <span className="bg-blue-50 text-blue-700 px-4 py-2 rounded-full text-sm font-medium border border-blue-100">
+                            Department: {dashboardData.department || 'General'}
+                        </span>
+                        <span className="bg-purple-50 text-purple-700 px-4 py-2 rounded-full text-sm font-medium border border-purple-100">
+                            {dashboardData.assignedClassesCount || 0} Classes Assigned
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Quick Stats / Links */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <QuickLinkCard
+                    icon={Users}
+                    title="My Students"
+                    count="View All"
+                    color="blue"
+                    onClick={() => setActiveTab('teacher-classes')}
+                />
+                <QuickLinkCard
+                    icon={Calendar}
+                    title="Attendance"
+                    count="Mark Now"
+                    color="green"
+                    onClick={() => setActiveTab('attendance')}
+                />
+                <QuickLinkCard
+                    icon={FileText}
+                    title="Assignments"
+                    count="Manage"
+                    color="orange"
+                    onClick={() => setActiveTab('teacher-assignments')}
+                />
+                <QuickLinkCard
+                    icon={BookOpen}
+                    title="Communications"
+                    count="Inbox"
+                    color="purple"
+                    onClick={() => setActiveTab('teacher-communications')}
+                />
+            </div>
+
+            {/* Assigned Classes List */}
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-semibold text-gray-800">My Assigned Classes</h3>
+                    <span className="text-sm text-gray-500">{dashboardData.assignedClasses?.length || 0} Total</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {dashboardData.assignedClasses && dashboardData.assignedClasses.map((cls, index) => (
+                        <div key={index} className="p-4 border border-gray-200 rounded-xl bg-gray-50 hover:bg-white hover:shadow-md transition-all flex justify-between items-center group">
+                            <div>
+                                <p className="font-bold text-gray-800 text-lg">{cls.name}</p>
+                                <p className="text-sm text-gray-500">{cls.grade} • Section {cls.section}</p>
+                            </div>
+                            <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Active</span>
+                        </div>
+                    ))}
+                    {(!dashboardData.assignedClasses || dashboardData.assignedClasses.length === 0) && (
+                        <div className="col-span-full py-8 text-center text-gray-500 italic">
+                            No classes currently assigned to you.
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const QuickLinkCard = ({ icon: Icon, title, count, color, onClick }) => {
+    const colors = {
+        blue: "bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100",
+        green: "bg-green-50 text-green-600 border-green-100 hover:bg-green-100",
+        orange: "bg-orange-50 text-orange-600 border-orange-100 hover:bg-orange-100",
+        purple: "bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100"
+    };
+
+    return (
+        <div onClick={onClick} className={`${colors[color]} border p-5 rounded-xl cursor-pointer transition-all flex items-center space-x-4`}>
+            <div className="p-3 bg-white rounded-full shadow-sm bg-opacity-80">
+                <Icon className="w-6 h-6" />
+            </div>
+            <div>
+                <p className="text-sm font-medium opacity-80">{title}</p>
+                <p className="text-lg font-bold">{count}</p>
+            </div>
+        </div>
+    );
+};
+
+export default TeacherDashboard;

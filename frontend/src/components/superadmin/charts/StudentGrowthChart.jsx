@@ -2,17 +2,36 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 const StudentGrowthChart = ({ data }) => {
-    const maxStudents = Math.max(...data.map(d => d.students));
-    const minStudents = Math.min(...data.map(d => d.students));
-    const range = maxStudents - minStudents;
+    // Handle empty or invalid data
+    if (!data || data.length === 0) {
+        return (
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-800">Student Growth</h3>
+                        <p className="text-sm text-gray-500">Year-over-year trend</p>
+                    </div>
+                </div>
+                <div className="h-44 flex items-center justify-center text-gray-400">
+                    No data available
+                </div>
+            </div>
+        );
+    }
+
+    const maxStudents = Math.max(...data.map(d => d.students || 0));
+    const minStudents = Math.min(...data.map(d => d.students || 0));
+    // Prevent division by zero when all values are the same or only one data point
+    const range = maxStudents - minStudents || 1;
     const chartHeight = 140;
     const chartWidth = 100;
 
     // Calculate points for the line
     const points = data.map((item, index) => {
-        const x = (index / (data.length - 1)) * chartWidth;
-        const y = chartHeight - ((item.students - minStudents) / range) * chartHeight;
-        return { x, y, ...item };
+        // Handle single data point case - center it
+        const x = data.length === 1 ? chartWidth / 2 : (index / (data.length - 1)) * chartWidth;
+        const y = chartHeight - ((((item.students || 0) - minStudents) / range) * chartHeight);
+        return { x: isNaN(x) ? 0 : x, y: isNaN(y) ? chartHeight / 2 : y, ...item };
     });
 
     // Create SVG path
@@ -112,10 +131,14 @@ const StudentGrowthChart = ({ data }) => {
 
             <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
                 <div className="text-sm text-gray-500">
-                    Growth: <span className="font-semibold text-emerald-600">+{Math.round(((data[data.length - 1].students - data[0].students) / data[0].students) * 100)}%</span>
+                    Growth: <span className="font-semibold text-emerald-600">
+                        {data.length >= 2 && (data[0]?.students || 0) > 0
+                            ? `+${Math.round((((data[data.length - 1]?.students || 0) - (data[0]?.students || 0)) / (data[0]?.students || 1)) * 100)}%`
+                            : 'N/A'}
+                    </span>
                 </div>
                 <span className="text-sm font-semibold text-gray-800">
-                    Current: {data[data.length - 1].students.toLocaleString()} students
+                    Current: {(data[data.length - 1]?.students || 0).toLocaleString()} students
                 </span>
             </div>
         </div>

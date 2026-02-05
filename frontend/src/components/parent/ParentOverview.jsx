@@ -7,8 +7,9 @@ import parentService from '@/services/parentService';
 import api from '@/services/api';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import CourseProgressWidget from './CourseProgressWidget';
 
-const ParentOverview = ({ currentUser }) => {
+const ParentOverview = ({ currentUser, setActiveTab }) => {
     const { toast } = useToast();
     const [children, setChildren] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -148,7 +149,10 @@ const ParentOverview = ({ currentUser }) => {
                     </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-sm">
+                <div
+                    className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => setActiveTab && setActiveTab('parent-attendance')}
+                >
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-green-600 text-sm font-medium">Attendance</p>
@@ -158,7 +162,10 @@ const ParentOverview = ({ currentUser }) => {
                     </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-sm">
+                <div
+                    className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => setActiveTab && setActiveTab('parent-messages')}
+                >
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-purple-600 text-sm font-medium">Messages</p>
@@ -168,6 +175,20 @@ const ParentOverview = ({ currentUser }) => {
                     </div>
                 </div>
             </motion.div>
+
+            {/* Course Progress Widget */}
+            {child && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                >
+                    <CourseProgressWidget
+                        studentId={child.id}
+                        onViewAll={() => setActiveTab && setActiveTab('parent-course-handouts')}
+                    />
+                </motion.div>
+            )}
         </div>
     );
 };

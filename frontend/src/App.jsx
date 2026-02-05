@@ -18,6 +18,7 @@ import ParentFees from '@/components/parent/ParentFees';
 import ParentMessages from '@/components/parent/ParentMessages';
 import ParentAssignments from '@/components/parent/ParentAssignments';
 import ParentStudyMaterials from '@/components/parent/ParentStudyMaterials';
+import ParentCourseHandouts from '@/components/parent/ParentCourseHandouts';
 import Settings from '@/components/settings/Settings';
 import ParentManagement from '@/components/parents/ParentManagement';
 import ParentRegistrationManagement from '@/components/admin/ParentRegistrationManagement';
@@ -26,8 +27,8 @@ import Communications from '@/components/communications/Communications';
 import TimetableManagement from '@/components/timetable/TimetableManagement';
 import TeacherDashboard from '@/components/teacher/TeacherDashboard';
 import MyClasses from '@/components/teacher/MyClasses';
-import TeacherAcademics from '@/components/teacher/TeacherAcademics';
-import CourseProgress from '@/components/teacher/CourseProgress';
+import TeacherCourseHandouts from '@/components/teacher/TeacherCourseHandouts';
+import CreateCourseHandout from '@/components/teacher/CreateCourseHandout';
 import LearningResources from '@/components/teacher/LearningResources';
 import Assignments from '@/components/teacher/Assignments';
 import TeacherCommunications from '@/components/teacher/TeacherCommunications';
@@ -150,10 +151,10 @@ function App() {
         return <TeacherDashboard setActiveTab={setActiveModule} />;
       case 'teacher-classes':
         return <MyClasses setActiveTab={setActiveModule} />;
-      case 'teacher-academics':
-        return <TeacherAcademics currentUser={currentUser} />;
-      case 'teacher-course-progress':
-        return <CourseProgress />;
+      case 'teacher-course-handouts':
+        return <TeacherCourseHandouts currentUser={currentUser} onCreateNew={() => setActiveModule('teacher-create-handout')} />;
+      case 'teacher-create-handout':
+        return <CreateCourseHandout currentUser={currentUser} onBack={() => setActiveModule('teacher-course-handouts')} onSuccess={() => setActiveModule('teacher-course-handouts')} />;
       case 'teacher-resources':
         return <LearningResources />;
       case 'teacher-assignments':
@@ -163,7 +164,7 @@ function App() {
       case 'teacher-profile':
         return <TeacherProfile />;
       case 'parent-overview':
-        return <ParentOverview currentUser={currentUser} />;
+        return <ParentOverview currentUser={currentUser} setActiveTab={setActiveModule} />;
       case 'parent-attendance':
         return <ParentAttendance currentUser={currentUser} />;
       case 'parent-fees':
@@ -174,6 +175,8 @@ function App() {
         return <ParentAssignments currentUser={currentUser} />;
       case 'parent-study-materials':
         return <ParentStudyMaterials currentUser={currentUser} />;
+      case 'parent-course-handouts':
+        return <ParentCourseHandouts currentUser={currentUser} />;
       default:
         return <Dashboard currentUser={currentUser} setActiveModule={setActiveModule} />;
     }

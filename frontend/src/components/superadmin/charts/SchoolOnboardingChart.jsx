@@ -2,7 +2,24 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 const SchoolOnboardingChart = ({ data }) => {
-    const maxSchools = Math.max(...data.map(d => d.schools), 1);
+    // Handle empty or invalid data
+    if (!data || data.length === 0) {
+        return (
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-800">School Onboarding</h3>
+                        <p className="text-sm text-gray-500">Monthly growth trend</p>
+                    </div>
+                </div>
+                <div className="h-40 flex items-center justify-center text-gray-400">
+                    No data available
+                </div>
+            </div>
+        );
+    }
+
+    const maxSchools = Math.max(...data.map(d => d.schools || 0), 1);
     const barMaxHeight = 120;
 
     return (
@@ -21,7 +38,7 @@ const SchoolOnboardingChart = ({ data }) => {
             <div className="flex items-end justify-between h-40 gap-1">
                 {data.map((item, index) => (
                     <motion.div
-                        key={item.month}
+                        key={item.month || index}
                         className="flex-1 flex flex-col items-center"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -31,10 +48,10 @@ const SchoolOnboardingChart = ({ data }) => {
                             <motion.div
                                 className="w-8 rounded-t-md bg-gradient-to-t from-indigo-500 to-purple-500 relative"
                                 initial={{ height: 0 }}
-                                animate={{ height: `${Math.max((item.schools / maxSchools) * barMaxHeight, item.schools > 0 ? 20 : 4)}px` }}
+                                animate={{ height: `${Math.max(((item.schools || 0) / maxSchools) * barMaxHeight, (item.schools || 0) > 0 ? 20 : 4)}px` }}
                                 transition={{ delay: index * 0.05, duration: 0.6, ease: "easeOut" }}
                             >
-                                {item.schools > 0 && (
+                                {(item.schools || 0) > 0 && (
                                     <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs font-bold text-indigo-600">
                                         {item.schools}
                                     </div>
@@ -49,7 +66,7 @@ const SchoolOnboardingChart = ({ data }) => {
             <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
                 <span className="text-sm text-gray-500">Last 12 months</span>
                 <span className="text-sm font-semibold text-gray-800">
-                    Total: {data.reduce((sum, d) => sum + d.schools, 0)} schools
+                    Total: {data.reduce((sum, d) => sum + (d.schools || 0), 0)} schools
                 </span>
             </div>
         </div>

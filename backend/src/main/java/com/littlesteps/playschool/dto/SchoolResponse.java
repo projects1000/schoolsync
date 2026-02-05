@@ -1,11 +1,8 @@
 package com.littlesteps.playschool.dto;
 
 import com.littlesteps.playschool.entity.School;
-import lombok.Data;
-
 import java.time.LocalDateTime;
 
-@Data
 public class SchoolResponse {
     private String id;
     private String code;
@@ -23,8 +20,152 @@ public class SchoolResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private AdminSummary admin;
-    private int students; // Frontend seems to expect this too
-    private int teachers; // Frontend seems to expect this too
+    private int students;
+    private int teachers;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public String getPincode() {
+        return pincode;
+    }
+
+    public void setPincode(String pincode) {
+        this.pincode = pincode;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getTimings() {
+        return timings;
+    }
+
+    public void setTimings(String timings) {
+        this.timings = timings;
+    }
+
+    public String getLogo() {
+        return logo;
+    }
+
+    public void setLogo(String logo) {
+        this.logo = logo;
+    }
+
+    public School.Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(School.Status status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getEstablishedDate() {
+        return establishedDate;
+    }
+
+    public void setEstablishedDate(LocalDateTime establishedDate) {
+        this.establishedDate = establishedDate;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public AdminSummary getAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(AdminSummary admin) {
+        this.admin = admin;
+    }
+
+    public int getStudents() {
+        return students;
+    }
+
+    public void setStudents(int students) {
+        this.students = students;
+    }
+
+    public int getTeachers() {
+        return teachers;
+    }
+
+    public void setTeachers(int teachers) {
+        this.teachers = teachers;
+    }
 
     public static SchoolResponse fromEntity(School school, AdminSummary admin, int studentCount, int teacherCount) {
         SchoolResponse response = new SchoolResponse();

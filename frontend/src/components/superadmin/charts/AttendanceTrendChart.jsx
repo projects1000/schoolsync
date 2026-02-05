@@ -2,8 +2,26 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 const AttendanceTrendChart = ({ data }) => {
+    // Handle empty or invalid data
+    if (!data || data.length === 0) {
+        return (
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-800">Attendance Trend</h3>
+                        <p className="text-sm text-gray-500">Platform-wide average</p>
+                    </div>
+                </div>
+                <div className="h-36 flex items-center justify-center text-gray-400">
+                    No data available
+                </div>
+            </div>
+        );
+    }
+
     const maxPercentage = 100;
     const chartHeight = 120;
+    const avgPercentage = Math.round(data.reduce((sum, d) => sum + (d.percentage || 0), 0) / data.length);
 
     return (
         <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
@@ -19,7 +37,7 @@ const AttendanceTrendChart = ({ data }) => {
                     </div>
                     <div className="px-2 py-1 bg-emerald-50 rounded-full">
                         <span className="text-xs font-semibold text-emerald-600">
-                            Avg: {Math.round(data.reduce((sum, d) => sum + d.percentage, 0) / data.length)}%
+                            Avg: {avgPercentage}%
                         </span>
                     </div>
                 </div>
@@ -28,14 +46,14 @@ const AttendanceTrendChart = ({ data }) => {
             <div className="flex items-end justify-between h-36 gap-3">
                 {data.map((item, index) => (
                     <motion.div
-                        key={item.day}
+                        key={item.day || index}
                         className="flex-1 flex flex-col items-center"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.08 }}
                     >
                         <div className="relative w-full flex justify-center mb-1">
-                            <span className="text-xs font-semibold text-gray-600">{item.percentage}%</span>
+                            <span className="text-xs font-semibold text-gray-600">{item.percentage || 0}%</span>
                         </div>
                         <div className="relative w-full flex justify-center">
                             <motion.div
@@ -48,7 +66,7 @@ const AttendanceTrendChart = ({ data }) => {
                                 <motion.div
                                     className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-amber-500 to-orange-400 rounded-lg"
                                     initial={{ height: 0 }}
-                                    animate={{ height: `${(item.percentage / maxPercentage) * 100}%` }}
+                                    animate={{ height: `${((item.percentage || 0) / maxPercentage) * 100}%` }}
                                     transition={{ delay: index * 0.08 + 0.3, duration: 0.6, ease: "easeOut" }}
                                 />
                             </motion.div>
