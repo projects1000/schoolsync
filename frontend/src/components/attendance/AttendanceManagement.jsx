@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Search, Edit2, CheckCircle, XCircle, Clock, BarChart2, CalendarDays, ArrowLeft, Download } from 'lucide-react';
+import { Calendar, Search, Edit2, CheckCircle, XCircle, Clock, BarChart2, CalendarDays, ArrowLeft, Download, User } from 'lucide-react';
 import adminService from '@/services/adminService';
 import api from '@/services/api';
 import { useToast } from '@/components/ui/use-toast';
@@ -50,27 +50,48 @@ const AttendanceManagement = ({ currentUser }) => {
   // Shared Filters
   const [selectedClassId, setSelectedClassId] = useState('all');
 
-  // Report View State: Single Date
-  const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
+  // Report View State: Date Range for class
+  const [classStartDate, setClassStartDate] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 7);
+    return date.toISOString().split('T')[0];
+  });
+  const [classEndDate, setClassEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [reportData, setReportData] = useState([]);
+  const [classDailyStats, setClassDailyStats] = useState([]); // [ { date, total, present, absent, percentage } ]
+
+  // Student Attendance View State (new)
+  const [reportSubView, setReportSubView] = useState('class'); // 'class' or 'student'
+  const [allStudents, setAllStudents] = useState([]);
+  const [studentClassFilter, setStudentClassFilter] = useState('all'); // Filter students by class
+  const [selectedStudentId, setSelectedStudentId] = useState('none');
+  const [studentStartDate, setStudentStartDate] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date.toISOString().split('T')[0];
+  });
+  const [studentEndDate, setStudentEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [studentAttendanceData, setStudentAttendanceData] = useState([]);
+  const [studentStats, setStudentStats] = useState({ total: 0, present: 0, absent: 0, percentage: 0 });
 
   // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentRecord, setCurrentRecord] = useState(null);
   const [editStatus, setEditStatus] = useState('');
   const [editReason, setEditReason] = useState('');
+  const [isEditWithinWindow, setIsEditWithinWindow] = useState(true); // Track if within 24-hour edit window
 
   useEffect(() => {
     fetchClasses();
+    fetchAllStudents();
   }, []);
 
   useEffect(() => {
     if (view === 'daily' && selectedDate) {
       fetchDailyAttendance();
-    } else if (view === 'report' && isTeacher && selectedClassId !== 'all') {
-      fetchReport();
     }
-  }, [selectedDate, selectedClassId, view, reportDate]);
+    // Class report now uses Search button, no auto-fetch needed
+  }, [selectedDate, selectedClassId, view]);
 
   const fetchClasses = async () => {
     try {
@@ -84,6 +105,20 @@ const AttendanceManagement = ({ currentUser }) => {
       setClasses(data);
     } catch (error) {
       console.error("Failed to fetch classes", error);
+    }
+  };
+
+  const fetchAllStudents = async () => {
+    try {
+      let response;
+      if (isTeacher) {
+        response = await api.get('/teacher/students');
+      } else {
+        response = await api.get('/admin/students');
+      }
+      setAllStudents(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch students", error);
     }
   };
 
@@ -112,13 +147,37 @@ const AttendanceManagement = ({ currentUser }) => {
   };
 
   const fetchReport = async () => {
+    if (selectedClassId === 'all') return;
     setLoading(true);
     try {
-      // Pass same date for start and end to get single day history
-      const res = await api.get(`/teacher/attendance/history/${selectedClassId}`, {
-        params: { startDate: reportDate, endDate: reportDate }
-      });
-      setReportData(res.data);
+      const dates = getDatesInRange(classStartDate, classEndDate);
+      const dailyStats = [];
+
+      // Fetch attendance for each date in the range
+      for (const date of dates) {
+        let res;
+        if (isTeacher) {
+          res = await api.get(`/teacher/attendance/history/${selectedClassId}`, {
+            params: { startDate: date, endDate: date }
+          });
+        } else {
+          const className = classes.find(c => c.id === selectedClassId)?.name;
+          res = await api.get('/admin/attendance', {
+            params: { date, className }
+          });
+        }
+
+        const dayData = res.data || [];
+        const total = dayData.length;
+        const present = dayData.filter(r => r.status === 'PRESENT').length;
+        const absent = total - present;
+        const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+
+        dailyStats.push({ date, total, present, absent, percentage });
+      }
+
+      setClassDailyStats(dailyStats);
+      setReportData([]); // Clear old data
     } catch (err) {
       console.error(err);
     } finally {
@@ -126,15 +185,52 @@ const AttendanceManagement = ({ currentUser }) => {
     }
   };
 
+  const fetchStudentAttendance = async () => {
+    if (!selectedStudentId || selectedStudentId === 'none') {
+      toast({ title: "Error", description: "Please select a student", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await api.get(`/attendance/student/${selectedStudentId}`, {
+        params: { startDate: studentStartDate, endDate: studentEndDate }
+      });
+      const data = response.data || [];
+      setStudentAttendanceData(data);
+
+      // Calculate stats
+      const total = data.length;
+      const present = data.filter(r => r.status === 'PRESENT').length;
+      const absent = data.filter(r => r.status === 'ABSENT').length;
+      const percentage = total > 0 ? ((present / total) * 100).toFixed(1) : 0;
+      setStudentStats({ total, present, absent, percentage });
+    } catch (error) {
+      console.error("Failed to fetch student attendance", error);
+      toast({ title: "Error", description: "Failed to fetch student attendance", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleEditClick = (record) => {
     const recordDate = new Date(record.attendanceDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
 
-    if (recordDate > today) {
+    // Set record date to end of that day (11:59:59 PM)
+    const recordEndOfDay = new Date(recordDate);
+    recordEndOfDay.setHours(23, 59, 59, 999);
+
+    // Calculate 24 hours after the end of the attendance date
+    const editDeadline = new Date(recordEndOfDay.getTime() + 24 * 60 * 60 * 1000);
+
+    if (recordDate > now) {
       toast({ title: "Error", description: "Cannot edit future attendance records", variant: "destructive" });
       return;
     }
+
+    // Check if within edit window but still open modal
+    const withinWindow = now <= editDeadline;
+    setIsEditWithinWindow(withinWindow);
 
     setCurrentRecord(record);
     setEditStatus(record.status);
@@ -179,7 +275,17 @@ const AttendanceManagement = ({ currentUser }) => {
     );
   };
 
-  const statusOptions = ['PRESENT', 'ABSENT', 'LATE', 'HALF_DAY'];
+  const statusOptions = ['PRESENT', 'ABSENT'];
+
+  // Helper to format date as DD-MM-YYYY
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
 
   // Helper to get dates in range
   const getDatesInRange = (startDate, endDate) => {
@@ -194,7 +300,7 @@ const AttendanceManagement = ({ currentUser }) => {
     return dates;
   };
 
-  const reportDates = getDatesInRange(reportDate, reportDate);
+  const reportDates = getDatesInRange(classStartDate, classEndDate);
 
   const renderStatusCell = (status) => {
     if (!status) return <span className="text-gray-200 text-[10px]">•</span>;
@@ -219,7 +325,7 @@ const AttendanceManagement = ({ currentUser }) => {
           <p className="text-gray-500">Track and manage student attendance</p>
         </div>
 
-        {isTeacher && view !== 'mark' && (
+        {view !== 'mark' && (
           <div className="flex bg-gray-100 p-1 rounded-lg">
             <Button
               variant={view === 'daily' ? 'white' : 'ghost'}
@@ -249,96 +355,243 @@ const AttendanceManagement = ({ currentUser }) => {
 
       {view === 'mark' ? (
         <MarkAttendance onBack={() => { setView('daily'); fetchDailyAttendance(); }} onSuccess={() => { setView('daily'); fetchDailyAttendance(); }} />
-      ) : view === 'report' && isTeacher ? (
+      ) : view === 'report' ? (
         <div className="space-y-4">
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-wrap gap-4 items-center">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-600">Date:</span>
-              <Input
-                type="date"
-                value={reportDate}
-                onChange={(e) => setReportDate(e.target.value)}
-                className="w-40"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-600">Class:</span>
-              <Select value={selectedClassId} onValueChange={setSelectedClassId}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select Class" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Select Class...</SelectItem>
-                  {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Sub-tab toggle for Class vs Student attendance */}
+          <div className="flex bg-gray-100 p-1 rounded-lg w-fit">
+            <Button
+              variant={reportSubView === 'class' ? 'white' : 'ghost'}
+              size="sm"
+              onClick={() => setReportSubView('class')}
+              className={reportSubView === 'class' ? 'bg-white shadow-sm' : ''}
+            >
+              <CalendarDays className="w-4 h-4 mr-2" /> Class Attendance
+            </Button>
+            <Button
+              variant={reportSubView === 'student' ? 'white' : 'ghost'}
+              size="sm"
+              onClick={() => setReportSubView('student')}
+              className={reportSubView === 'student' ? 'bg-white shadow-sm' : ''}
+            >
+              <User className="w-4 h-4 mr-2" /> Student Attendance
+            </Button>
           </div>
 
-          {selectedClassId === 'all' ? (
-            <div className="text-center py-20 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-              <p className="text-gray-500">Please select a class to view attendance history.</p>
+          {reportSubView === 'student' ? (
+            /* Student Attendance View */
+            <div className="space-y-4">
+              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-wrap gap-4 items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-600">Class:</span>
+                  <Select value={studentClassFilter} onValueChange={(val) => { setStudentClassFilter(val); setSelectedStudentId('none'); }}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filter by Class" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Classes</SelectItem>
+                      {classes.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-600">Student:</span>
+                  <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
+                    <SelectTrigger className="w-[220px]">
+                      <SelectValue placeholder="Select Student" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Select Student...</SelectItem>
+                      {allStudents
+                        .filter(s => studentClassFilter === 'all' || s.className === studentClassFilter)
+                        .map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({s.className})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-600">From:</span>
+                  <Input
+                    type="date"
+                    value={studentStartDate}
+                    onChange={(e) => setStudentStartDate(e.target.value)}
+                    className="w-40"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-600">To:</span>
+                  <Input
+                    type="date"
+                    value={studentEndDate}
+                    onChange={(e) => setStudentEndDate(e.target.value)}
+                    className="w-40"
+                  />
+                </div>
+                <Button onClick={fetchStudentAttendance} className="bg-blue-600 hover:bg-blue-700">
+                  <Search className="w-4 h-4 mr-2" /> Search
+                </Button>
+              </div>
+
+              {/* Student Attendance Summary */}
+              {studentAttendanceData.length > 0 && (
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                  <div className="grid grid-cols-4 gap-4 text-center">
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <p className="text-2xl font-bold text-gray-800">{studentStats.total}</p>
+                      <p className="text-xs text-gray-500">Total Days</p>
+                    </div>
+                    <div className="p-3 bg-green-50 rounded-lg">
+                      <p className="text-2xl font-bold text-green-600">{studentStats.present}</p>
+                      <p className="text-xs text-gray-500">Present</p>
+                    </div>
+                    <div className="p-3 bg-red-50 rounded-lg">
+                      <p className="text-2xl font-bold text-red-600">{studentStats.absent}</p>
+                      <p className="text-xs text-gray-500">Absent</p>
+                    </div>
+                    <div className="p-3 bg-blue-50 rounded-lg">
+                      <p className="text-2xl font-bold text-blue-600">{studentStats.percentage}%</p>
+                      <p className="text-xs text-gray-500">Attendance</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Student Attendance Table */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gray-50">
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Notes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center py-10">Loading attendance...</TableCell>
+                      </TableRow>
+                    ) : studentAttendanceData.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center py-10 text-gray-500">
+                          {selectedStudentId && selectedStudentId !== 'none' ? 'No attendance records found for this date range.' : 'Please select a student and click Search.'}
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      studentAttendanceData.map((record) => (
+                        <TableRow key={record.id}>
+                          <TableCell className="font-medium">{formatDate(record.attendanceDate)}</TableCell>
+                          <TableCell>{getStatusBadge(record.status)}</TableCell>
+                          <TableCell className="text-sm text-gray-500 max-w-xs truncate">
+                            {record.notes || '-'}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           ) : (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              {/* Native Scroll Container */}
-              <div className="w-full whitespace-nowrap rounded-md border overflow-x-auto">
-                <div className="flex w-full space-x-4">
+            /* Class Attendance View with Date Range */
+            <>
+              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-wrap gap-4 items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-600">Class:</span>
+                  <Select value={selectedClassId} onValueChange={setSelectedClassId}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select Class" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Select Class...</SelectItem>
+                      {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-600">From:</span>
+                  <Input
+                    type="date"
+                    value={classStartDate}
+                    onChange={(e) => setClassStartDate(e.target.value)}
+                    className="w-40"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-600">To:</span>
+                  <Input
+                    type="date"
+                    value={classEndDate}
+                    onChange={(e) => setClassEndDate(e.target.value)}
+                    className="w-40"
+                  />
+                </div>
+                <Button onClick={fetchReport} disabled={selectedClassId === 'all' || loading} className="bg-blue-600 hover:bg-blue-700">
+                  <Search className="w-4 h-4 mr-2" /> Search
+                </Button>
+              </div>
+
+              {selectedClassId === 'all' ? (
+                <div className="text-center py-20 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                  <p className="text-gray-500">Please select a class to view attendance history.</p>
+                </div>
+              ) : (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-gray-50 border-b border-gray-200">
-                        <TableHead className="w-[200px] sticky left-0 bg-gray-50 z-20 shadow-[1px_0_0_0_#eee]">Student Name</TableHead>
-                        {reportDates.map(d => (
-                          <TableHead key={d} className="w-[40px] p-0 text-center text-xs text-gray-500 font-medium border-l border-gray-100">
-                            {formatDateHeader(d)}
-                          </TableHead>
-                        ))}
-                        <TableHead className="w-[50px] text-center text-xs font-bold text-green-600 border-l border-gray-100">P</TableHead>
-                        <TableHead className="w-[50px] text-center text-xs font-bold text-red-500">A</TableHead>
-                        <TableHead className="w-[50px] text-center text-xs font-bold text-gray-600">%</TableHead>
+                        <TableHead className="w-[120px]">Date</TableHead>
+                        <TableHead className="w-[100px] text-center">Total Students</TableHead>
+                        <TableHead className="w-[100px] text-center text-green-600">Present</TableHead>
+                        <TableHead className="w-[100px] text-center text-red-500">Absent</TableHead>
+                        <TableHead className="w-[120px] text-center">Attendance %</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {loading ? (
                         <TableRow>
-                          <TableCell colSpan={reportDates.length + 4} className="text-center py-10">Loading report...</TableCell>
+                          <TableCell colSpan={5} className="text-center py-10">Loading report...</TableCell>
                         </TableRow>
-                      ) : reportData.map((row) => (
-                        <TableRow key={row.studentId} className="hover:bg-blue-50/20">
-                          <TableCell className="font-medium text-gray-800 sticky left-0 bg-white z-10 shadow-[1px_0_0_0_#eee]">
-                            <div className="flex flex-col py-1">
-                              <span>{row.name}</span>
-                              <span className="text-[10px] text-gray-400">{row.admissionNo}</span>
-                            </div>
-                          </TableCell>
-                          {reportDates.map(d => {
-                            const status = row.dailyRecord ? row.dailyRecord[d] : null;
-                            return (
-                              <TableCell key={d} className="p-0 text-center border-l border-gray-50 min-w-[40px]">
-                                {renderStatusCell(status)}
-                              </TableCell>
-                            );
-                          })}
-                          <TableCell className="text-center text-green-600 font-bold text-sm bg-green-50/30 border-l border-gray-100">{row.present}</TableCell>
-                          <TableCell className="text-center text-red-500 font-bold text-sm bg-red-50/30">{row.absent}</TableCell>
-                          <TableCell className="text-center text-xs font-medium">
-                            {row.percentage}%
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {reportData.length === 0 && !loading && (
+                      ) : classDailyStats.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={reportDates.length + 4} className="text-center py-10 text-gray-500">
-                            No data available for this range.
+                          <TableCell colSpan={5} className="text-center py-10 text-gray-500">
+                            Click Search to load attendance data for the selected date range.
                           </TableCell>
                         </TableRow>
+                      ) : (
+                        classDailyStats.map((day) => (
+                          <TableRow key={day.date} className="hover:bg-gray-50">
+                            <TableCell className="font-medium">{formatDate(day.date)}</TableCell>
+                            <TableCell className="text-center text-gray-600">{day.total}</TableCell>
+                            <TableCell className="text-center">
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                                <CheckCircle className="w-3 h-3" /> {day.present}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-600 rounded-full text-sm font-medium">
+                                <XCircle className="w-3 h-3" /> {day.absent}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <div className="flex items-center gap-2 justify-center">
+                                <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full ${day.percentage >= 80 ? 'bg-green-500' : day.percentage >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                    style={{ width: `${day.percentage}%` }}
+                                  />
+                                </div>
+                                <span className={`font-bold ${day.percentage >= 80 ? 'text-green-600' : day.percentage >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                  {day.percentage}%
+                                </span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
                       )}
                     </TableBody>
                   </Table>
                 </div>
-              </div>
-            </div>
+              )}
+            </>
           )}
         </div>
       ) : (
@@ -395,7 +648,7 @@ const AttendanceManagement = ({ currentUser }) => {
                   <TableRow key={record.id}>
                     <TableCell className="font-medium">{record.studentName}</TableCell>
                     <TableCell>{record.className}</TableCell>
-                    <TableCell>{record.attendanceDate}</TableCell>
+                    <TableCell>{formatDate(record.attendanceDate)}</TableCell>
                     <TableCell>{getStatusBadge(record.status)}</TableCell>
                     <TableCell className="text-sm text-gray-500 max-w-xs truncate">
                       {record.notes || '-'}
@@ -421,9 +674,17 @@ const AttendanceManagement = ({ currentUser }) => {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <p className="text-sm text-gray-500">Edit Status for <strong>{currentRecord?.studentName}</strong></p>
+
+            {!isEditWithinWindow && (
+              <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg text-orange-700 text-sm">
+                <Clock className="w-4 h-4 flex-shrink-0" />
+                <span>Editing is only allowed within 24 hours of the attendance date. This record can no longer be modified.</span>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>Status</Label>
-              <Select value={editStatus} onValueChange={setEditStatus}>
+              <Select value={editStatus} onValueChange={setEditStatus} disabled={!isEditWithinWindow}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -439,12 +700,15 @@ const AttendanceManagement = ({ currentUser }) => {
                 onChange={(e) => setEditReason(e.target.value)}
                 placeholder="Reason for change..."
                 rows={3}
+                disabled={!isEditWithinWindow}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleEditSubmit} disabled={!editReason.trim()}>Save</Button>
+            <Button onClick={handleEditSubmit} disabled={!isEditWithinWindow || !editReason.trim()}>
+              {isEditWithinWindow ? 'Save' : 'Locked'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
