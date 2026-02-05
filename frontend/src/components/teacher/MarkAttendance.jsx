@@ -16,8 +16,9 @@ const MarkAttendance = ({ onBack, onSuccess }) => {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
     const [students, setStudents] = useState([]);
-    const [attendanceData, setAttendanceData] = useState({}); // { studentId: { status, notes } }
+    const [attendanceData, setAttendanceData] = useState({}); // { studentId: { status, notes, id } }
     const [existingAttendance, setExistingAttendance] = useState(false);
+    const [isWithinEditWindow, setIsWithinEditWindow] = useState(false); // Can edit within 24 hours
 
     useEffect(() => {
         const fetchClasses = async () => {
@@ -46,15 +47,26 @@ const MarkAttendance = ({ onBack, onSuccess }) => {
 
             if (response.data && response.data.length > 0) {
                 setExistingAttendance(true);
+
+                // Check if within 24-hour edit window
+                const attendanceDate = new Date(selectedDate);
+                const now = new Date();
+                const attendanceEndOfDay = new Date(attendanceDate);
+                attendanceEndOfDay.setHours(23, 59, 59, 999);
+                const editDeadline = new Date(attendanceEndOfDay.getTime() + 24 * 60 * 60 * 1000);
+                const canEdit = now <= editDeadline;
+                setIsWithinEditWindow(canEdit);
+
                 const map = {};
                 response.data.forEach(r => {
-                    map[r.studentId] = { status: r.status, notes: r.notes };
+                    map[r.studentId] = { status: r.status, notes: r.notes, id: r.id };
                 });
                 setAttendanceData(map);
                 setStudents(response.data.map(r => ({ ...r, id: r.studentId, name: r.studentName })));
 
             } else {
                 setExistingAttendance(false);
+                setIsWithinEditWindow(true);
                 const studentRes = await api.get('/teacher/students');
                 const classStudents = studentRes.data.filter(s => s.className === selectedClass.name);
                 setStudents(classStudents);
@@ -75,7 +87,7 @@ const MarkAttendance = ({ onBack, onSuccess }) => {
     };
 
     const handleMark = (studentId, isPresent) => {
-        if (existingAttendance) return;
+        if (existingAttendance && !isWithinEditWindow) return;
         setAttendanceData(prev => ({
             ...prev,
             [studentId]: { ...prev[studentId], status: isPresent ? 'PRESENT' : 'ABSENT' }
@@ -83,7 +95,7 @@ const MarkAttendance = ({ onBack, onSuccess }) => {
     };
 
     const markAllPresent = () => {
-        if (existingAttendance) return;
+        if (existingAttendance && !isWithinEditWindow) return;
         const newData = { ...attendanceData };
         students.forEach(s => {
             newData[s.id] = { ...newData[s.id], status: 'PRESENT' };
@@ -92,7 +104,7 @@ const MarkAttendance = ({ onBack, onSuccess }) => {
     };
 
     const markAllAbsent = () => {
-        if (existingAttendance) return;
+        if (existingAttendance && !isWithinEditWindow) return;
         const newData = { ...attendanceData };
         students.forEach(s => {
             newData[s.id] = { ...newData[s.id], status: 'ABSENT' };
@@ -101,7 +113,7 @@ const MarkAttendance = ({ onBack, onSuccess }) => {
     };
 
     const handleNote = (studentId, notes) => {
-        if (existingAttendance) return;
+        if (existingAttendance && !isWithinEditWindow) return;
         setAttendanceData(prev => ({
             ...prev,
             [studentId]: { ...prev[studentId], notes }
@@ -109,7 +121,7 @@ const MarkAttendance = ({ onBack, onSuccess }) => {
     };
 
     const handleSubmit = async () => {
-        if (existingAttendance) return;
+        if (existingAttendance && !isWithinEditWindow) return;
         if (new Date(selectedDate) > new Date()) {
             toast({ title: "Error", description: "Cannot mark future attendance", variant: "destructive" });
             return;
@@ -117,17 +129,34 @@ const MarkAttendance = ({ onBack, onSuccess }) => {
 
         setLoading(true);
         try {
-            const payload = students.map(s => ({
-                studentId: s.id,
-                studentName: s.name,
-                attendanceDate: selectedDate,
-                className: selectedClass.name,
-                status: attendanceData[s.id]?.status || 'ABSENT',
-                notes: attendanceData[s.id]?.notes || ''
-            }));
+            if (existingAttendance && isWithinEditWindow) {
+                // Update existing attendance records
+                const updatePromises = students.map(s => {
+                    const record = attendanceData[s.id];
+                    if (record && record.id) {
+                        return api.put(`/teacher/attendance/${record.id}`, {
+                            status: record.status,
+                            reason: 'Updated within 24-hour window'
+                        });
+                    }
+                    return Promise.resolve();
+                });
+                await Promise.all(updatePromises);
+                toast({ title: "Success", description: "Attendance updated successfully" });
+            } else {
+                // Create new attendance records
+                const payload = students.map(s => ({
+                    studentId: s.id,
+                    studentName: s.name,
+                    attendanceDate: selectedDate,
+                    className: selectedClass.name,
+                    status: attendanceData[s.id]?.status || 'ABSENT',
+                    notes: attendanceData[s.id]?.notes || ''
+                }));
 
-            await api.post('/teacher/attendance', payload);
-            toast({ title: "Success", description: "Attendance submitted successfully" });
+                await api.post('/teacher/attendance', payload);
+                toast({ title: "Success", description: "Attendance submitted successfully" });
+            }
             setExistingAttendance(true);
             if (onSuccess) onSuccess();
         } catch (err) {
@@ -177,17 +206,17 @@ const MarkAttendance = ({ onBack, onSuccess }) => {
                             <Users className="w-5 h-5 text-gray-500" />
                             <span className="font-semibold text-gray-700">{students.length} Students</span>
                         </div>
-                        {!existingAttendance ? (
+                        {(!existingAttendance || isWithinEditWindow) ? (
                             <div className="flex gap-2">
                                 <Button variant="outline" size="sm" onClick={markAllAbsent}>Uncheck All</Button>
                                 <Button variant="outline" size="sm" onClick={markAllPresent}>Mark All Present</Button>
                                 <Button onClick={handleSubmit} disabled={loading} className="bg-blue-600 ml-2">
-                                    {loading ? 'Submitting...' : 'Submit Attendance'}
+                                    {loading ? 'Submitting...' : (existingAttendance ? 'Update Attendance' : 'Submit Attendance')}
                                 </Button>
                             </div>
                         ) : (
                             <span className="flex items-center gap-2 text-orange-600 font-medium">
-                                <Lock className="w-4 h-4" /> Attendance Locked
+                                <Lock className="w-4 h-4" /> Attendance Locked (24hrs passed)
                             </span>
                         )}
                     </div>
@@ -221,7 +250,7 @@ const MarkAttendance = ({ onBack, onSuccess }) => {
                                                     type="checkbox"
                                                     checked={attendanceData[student.id]?.status === 'PRESENT'}
                                                     onChange={(e) => handleMark(student.id, e.target.checked)}
-                                                    disabled={existingAttendance}
+                                                    disabled={existingAttendance && !isWithinEditWindow}
                                                     className="w-6 h-6 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                                                 />
                                             </div>
@@ -231,7 +260,7 @@ const MarkAttendance = ({ onBack, onSuccess }) => {
                                                 placeholder="Note..."
                                                 value={attendanceData[student.id]?.notes || ''}
                                                 onChange={(e) => handleNote(student.id, e.target.value)}
-                                                disabled={existingAttendance}
+                                                disabled={existingAttendance && !isWithinEditWindow}
                                                 className="h-8 text-sm"
                                             />
                                         </td>
