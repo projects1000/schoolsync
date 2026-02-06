@@ -59,6 +59,7 @@ const AttendanceManagement = ({ currentUser }) => {
   const [classEndDate, setClassEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [reportData, setReportData] = useState([]);
   const [classDailyStats, setClassDailyStats] = useState([]); // [ { date, total, present, absent, percentage } ]
+  const [singleDayStudents, setSingleDayStudents] = useState([]); // Detailed student list for single day view
 
   // Student Attendance View State (new)
   const [reportSubView, setReportSubView] = useState('class'); // 'class' or 'student'
@@ -149,31 +150,81 @@ const AttendanceManagement = ({ currentUser }) => {
   const fetchReport = async () => {
     if (selectedClassId === 'all') return;
     setLoading(true);
+    setSingleDayStudents([]); // Clear single day data
     try {
       const dates = getDatesInRange(classStartDate, classEndDate);
       const dailyStats = [];
+      const isSingleDay = classStartDate === classEndDate;
 
-      // Fetch attendance for each date in the range
-      for (const date of dates) {
-        let res;
-        if (isTeacher) {
-          res = await api.get(`/teacher/attendance/history/${selectedClassId}`, {
-            params: { startDate: date, endDate: date }
+      if (isTeacher) {
+        // Teacher API returns aggregated data per student with dailyRecord map
+        const res = await api.get(`/teacher/attendance/history/${selectedClassId}`, {
+          params: { startDate: classStartDate, endDate: classEndDate }
+        });
+        const studentData = res.data || [];
+
+        // If single day, prepare detailed student list
+        if (isSingleDay && studentData.length > 0) {
+          const detailedList = studentData.map(student => {
+            const dailyRecord = student.dailyRecord || {};
+            const status = dailyRecord[classStartDate] || 'NOT_MARKED';
+            return {
+              id: student.studentId,
+              name: student.name,
+              admissionNo: student.admissionNo,
+              status
+            };
           });
-        } else {
-          const className = classes.find(c => c.id === selectedClassId)?.name;
-          res = await api.get('/admin/attendance', {
-            params: { date, className }
-          });
+          setSingleDayStudents(detailedList);
         }
 
-        const dayData = res.data || [];
-        const total = dayData.length;
-        const present = dayData.filter(r => r.status === 'PRESENT').length;
-        const absent = total - present;
-        const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+        // Calculate daily stats from the aggregated student data
+        for (const date of dates) {
+          let present = 0;
+          let absent = 0;
 
-        dailyStats.push({ date, total, present, absent, percentage });
+          for (const student of studentData) {
+            const dailyRecord = student.dailyRecord || {};
+            const status = dailyRecord[date];
+            if (status === 'PRESENT' || status === 'LATE') {
+              present++;
+            } else if (status === 'ABSENT' || status === 'HALF_DAY') {
+              absent++;
+            }
+          }
+
+          const total = present + absent;
+          const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+          dailyStats.push({ date, total, present, absent, percentage });
+        }
+      } else {
+        // Admin API - fetch attendance for each date
+        for (const date of dates) {
+          const className = classes.find(c => c.id === selectedClassId)?.name;
+          const res = await api.get('/admin/attendance', {
+            params: { date, className }
+          });
+
+          const dayData = res.data || [];
+
+          // If single day, prepare detailed student list
+          if (isSingleDay) {
+            const detailedList = dayData.map(record => ({
+              id: record.id,
+              name: record.studentName,
+              admissionNo: record.admissionNo || '-',
+              status: record.status
+            }));
+            setSingleDayStudents(detailedList);
+          }
+
+          const total = dayData.length;
+          const present = dayData.filter(r => r.status === 'PRESENT').length;
+          const absent = total - present;
+          const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+
+          dailyStats.push({ date, total, present, absent, percentage });
+        }
       }
 
       setClassDailyStats(dailyStats);
@@ -535,60 +586,112 @@ const AttendanceManagement = ({ currentUser }) => {
                 </div>
               ) : (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-gray-50 border-b border-gray-200">
-                        <TableHead className="w-[120px]">Date</TableHead>
-                        <TableHead className="w-[100px] text-center">Total Students</TableHead>
-                        <TableHead className="w-[100px] text-center text-green-600">Present</TableHead>
-                        <TableHead className="w-[100px] text-center text-red-500">Absent</TableHead>
-                        <TableHead className="w-[120px] text-center">Attendance %</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {loading ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center py-10">Loading report...</TableCell>
+                  {/* Show detailed student list for single day, or summary stats for date range */}
+                  {classStartDate === classEndDate && singleDayStudents.length > 0 ? (
+                    <>
+                      {/* Summary Stats for Single Day */}
+                      <div className="p-4 border-b bg-gray-50">
+                        <div className="grid grid-cols-4 gap-4 text-center">
+                          <div className="p-3 bg-white rounded-lg shadow-sm">
+                            <p className="text-2xl font-bold text-gray-800">{singleDayStudents.length}</p>
+                            <p className="text-xs text-gray-500">Total Students</p>
+                          </div>
+                          <div className="p-3 bg-green-50 rounded-lg">
+                            <p className="text-2xl font-bold text-green-600">{singleDayStudents.filter(s => s.status === 'PRESENT').length}</p>
+                            <p className="text-xs text-gray-500">Present</p>
+                          </div>
+                          <div className="p-3 bg-red-50 rounded-lg">
+                            <p className="text-2xl font-bold text-red-600">{singleDayStudents.filter(s => s.status === 'ABSENT').length}</p>
+                            <p className="text-xs text-gray-500">Absent</p>
+                          </div>
+                          <div className="p-3 bg-blue-50 rounded-lg">
+                            <p className="text-2xl font-bold text-blue-600">
+                              {singleDayStudents.length > 0 ? Math.round((singleDayStudents.filter(s => s.status === 'PRESENT').length / singleDayStudents.length) * 100) : 0}%
+                            </p>
+                            <p className="text-xs text-gray-500">Attendance</p>
+                          </div>
+                        </div>
+                      </div>
+                      {/* Detailed Student List */}
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-gray-50 border-b border-gray-200">
+                            <TableHead className="w-[50px]">#</TableHead>
+                            <TableHead>Student Name</TableHead>
+                            <TableHead>Admission No.</TableHead>
+                            <TableHead className="w-[120px] text-center">Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {singleDayStudents.map((student, index) => (
+                            <TableRow key={student.id} className="hover:bg-gray-50">
+                              <TableCell className="text-gray-500">{index + 1}</TableCell>
+                              <TableCell className="font-medium">{student.name}</TableCell>
+                              <TableCell className="text-gray-500">{student.admissionNo}</TableCell>
+                              <TableCell className="text-center">
+                                {getStatusBadge(student.status)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-gray-50 border-b border-gray-200">
+                          <TableHead className="w-[120px]">Date</TableHead>
+                          <TableHead className="w-[100px] text-center">Total Students</TableHead>
+                          <TableHead className="w-[100px] text-center text-green-600">Present</TableHead>
+                          <TableHead className="w-[100px] text-center text-red-500">Absent</TableHead>
+                          <TableHead className="w-[120px] text-center">Attendance %</TableHead>
                         </TableRow>
-                      ) : classDailyStats.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center py-10 text-gray-500">
-                            Click Search to load attendance data for the selected date range.
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        classDailyStats.map((day) => (
-                          <TableRow key={day.date} className="hover:bg-gray-50">
-                            <TableCell className="font-medium">{formatDate(day.date)}</TableCell>
-                            <TableCell className="text-center text-gray-600">{day.total}</TableCell>
-                            <TableCell className="text-center">
-                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                                <CheckCircle className="w-3 h-3" /> {day.present}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-600 rounded-full text-sm font-medium">
-                                <XCircle className="w-3 h-3" /> {day.absent}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <div className="flex items-center gap-2 justify-center">
-                                <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                  <div
-                                    className={`h-full rounded-full ${day.percentage >= 80 ? 'bg-green-500' : day.percentage >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                                    style={{ width: `${day.percentage}%` }}
-                                  />
-                                </div>
-                                <span className={`font-bold ${day.percentage >= 80 ? 'text-green-600' : day.percentage >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
-                                  {day.percentage}%
-                                </span>
-                              </div>
+                      </TableHeader>
+                      <TableBody>
+                        {loading ? (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-10">Loading report...</TableCell>
+                          </TableRow>
+                        ) : classDailyStats.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-10 text-gray-500">
+                              Click Search to load attendance data for the selected date range.
                             </TableCell>
                           </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
+                        ) : (
+                          classDailyStats.map((day) => (
+                            <TableRow key={day.date} className="hover:bg-gray-50">
+                              <TableCell className="font-medium">{formatDate(day.date)}</TableCell>
+                              <TableCell className="text-center text-gray-600">{day.total}</TableCell>
+                              <TableCell className="text-center">
+                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                                  <CheckCircle className="w-3 h-3" /> {day.present}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-600 rounded-full text-sm font-medium">
+                                  <XCircle className="w-3 h-3" /> {day.absent}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <div className="flex items-center gap-2 justify-center">
+                                  <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div
+                                      className={`h-full rounded-full ${day.percentage >= 80 ? 'bg-green-500' : day.percentage >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                      style={{ width: `${day.percentage}%` }}
+                                    />
+                                  </div>
+                                  <span className={`font-bold ${day.percentage >= 80 ? 'text-green-600' : day.percentage >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                    {day.percentage}%
+                                  </span>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  )}
                 </div>
               )}
             </>
