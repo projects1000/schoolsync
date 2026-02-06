@@ -5,7 +5,7 @@ import com.littlesteps.playschool.dto.SchoolUpdateDTO;
 import com.littlesteps.playschool.entity.School;
 import com.littlesteps.playschool.entity.User;
 import com.littlesteps.playschool.repository.SchoolRepository;
-import com.littlesteps.playschool.repository.StudentRepository;
+
 import com.littlesteps.playschool.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,9 +23,6 @@ public class SchoolService {
 
     @Autowired
     private SchoolRepository schoolRepository;
-
-    @Autowired
-    private StudentRepository studentRepository;
 
     @Autowired
     private UserRepository userRepository;

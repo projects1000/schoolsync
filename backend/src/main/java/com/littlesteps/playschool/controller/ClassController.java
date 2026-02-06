@@ -20,11 +20,14 @@ public class ClassController {
     private ClassService classService;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
     public ResponseEntity<List<Classes>> getClasses() {
         String schoolId = SchoolContext.getSchoolId();
         if (schoolId == null) {
-            return ResponseEntity.badRequest().build();
+            // For SuperAdmin without a specific school context, return empty list or all
+            // classes
+            // Returning empty list prevents 400 Bad Request which breaks the UI
+            return ResponseEntity.ok(java.util.Collections.emptyList());
         }
         return ResponseEntity.ok(classService.getClassesBySchoolId(schoolId));
     }

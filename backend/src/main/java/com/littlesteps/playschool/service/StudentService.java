@@ -22,9 +22,6 @@ public class StudentService {
     @Autowired
     private com.littlesteps.playschool.repository.ClassesRepository classesRepository;
 
-    @Autowired
-    private com.littlesteps.playschool.repository.SectionRepository sectionRepository;
-
     public List<StudentDTO> getAllStudents(String schoolId) {
         return studentRepository.findBySchoolId(schoolId)
                 .stream()

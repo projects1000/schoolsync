@@ -5,7 +5,7 @@ import com.littlesteps.playschool.entity.Attendance;
 import com.littlesteps.playschool.entity.AuditLog;
 import com.littlesteps.playschool.entity.FeeInvoice;
 import com.littlesteps.playschool.repository.AttendanceRepository;
-import com.littlesteps.playschool.repository.AuditLogRepository;
+
 import com.littlesteps.playschool.repository.FeeInvoiceRepository;
 import com.littlesteps.playschool.repository.StudentRepository;
 import com.littlesteps.playschool.repository.TeacherRepository;
@@ -35,9 +35,6 @@ public class AdminDashboardService {
 
         @Autowired
         private FeeInvoiceRepository feeInvoiceRepository;
-
-        @Autowired
-        private AuditLogRepository auditLogRepository;
 
         @Autowired
         private MongoTemplate mongoTemplate;

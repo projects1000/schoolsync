@@ -258,7 +258,7 @@ public class ParentService {
      */
     @Transactional
     public void unmapStudentFromParent(String parentId, String studentId, String removedBy, String schoolId) {
-        Parent parent = parentRepository.findByIdAndSchoolId(parentId, schoolId)
+        parentRepository.findByIdAndSchoolId(parentId, schoolId)
                 .orElseThrow(() -> new RuntimeException("Parent not found in this school"));
 
         // Verify mapping exists

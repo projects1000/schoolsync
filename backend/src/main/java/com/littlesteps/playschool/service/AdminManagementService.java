@@ -11,7 +11,7 @@ import com.littlesteps.playschool.dto.AdminResponseDTO;
 import com.littlesteps.playschool.entity.School;
 import com.littlesteps.playschool.repository.SchoolRepository;
 import java.util.List;
-import java.util.Optional;
+
 import java.util.stream.Collectors;
 
 @Service

@@ -1,6 +1,5 @@
 package com.littlesteps.playschool.controller;
 
-import com.littlesteps.playschool.dto.ParentDTO;
 import com.littlesteps.playschool.dto.StudentDTO;
 import com.littlesteps.playschool.service.ParentService;
 import com.littlesteps.playschool.entity.User;
