@@ -85,6 +85,7 @@ const MyClasses = () => {
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-gray-50 hover:bg-gray-50">
+                                    <TableHead className="w-[80px]">Roll No</TableHead>
                                     <TableHead className="w-[100px]">ID</TableHead>
                                     <TableHead>Student Name</TableHead>
                                     <TableHead>Guardian</TableHead>
@@ -93,29 +94,32 @@ const MyClasses = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredStudents.map(student => (
-                                    <TableRow key={student.id} className="hover:bg-blue-50/50 transition-colors">
-                                        <TableCell className="font-medium text-gray-500">{student.admissionNo}</TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs uppercase">
-                                                    {student.name.charAt(0)}
+                                {filteredStudents
+                                    .sort((a, b) => (parseInt(a.rollNo) || 0) - (parseInt(b.rollNo) || 0))
+                                    .map(student => (
+                                        <TableRow key={student.id} className="hover:bg-blue-50/50 transition-colors">
+                                            <TableCell className="font-semibold text-gray-700">{student.rollNo || '-'}</TableCell>
+                                            <TableCell className="font-medium text-gray-500">{student.admissionNo}</TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs uppercase">
+                                                        {student.name.charAt(0)}
+                                                    </div>
+                                                    <span className="font-semibold text-gray-700">{student.name}</span>
                                                 </div>
-                                                <span className="font-semibold text-gray-700">{student.name}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>{student.guardian || '-'}</TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col text-sm">
-                                                <span>{student.guardianPhone || '-'}</span>
-                                                <span className="text-xs text-gray-400">{student.guardianEmail}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">View Profile</Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                            </TableCell>
+                                            <TableCell>{student.guardian || '-'}</TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-col text-sm">
+                                                    <span>{student.guardianPhone || '-'}</span>
+                                                    <span className="text-xs text-gray-400">{student.guardianEmail}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">View Profile</Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
                                 {filteredStudents.length === 0 && (
                                     <TableRow>
                                         <TableCell colSpan={5} className="text-center py-12 text-gray-500">
@@ -142,9 +146,15 @@ const MyClasses = () => {
                 {classes.map(cls => (
                     <Card key={cls.id} onClick={() => handleClassClick(cls)} className="hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-blue-500 hover:scale-105 group bg-white">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-xl font-bold text-gray-800 group-hover:text-blue-700 transition-colors">
-                                {cls.name}
-                            </CardTitle>
+                            <div className="flex justify-between items-start">
+                                <CardTitle className="text-xl font-bold text-gray-800 group-hover:text-blue-700 transition-colors">
+                                    {cls.name}
+                                </CardTitle>
+                                <span className={`text-xs px-2 py-1 rounded-full font-medium ${cls.role === 'Class Teacher' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'
+                                    }`}>
+                                    {cls.role}
+                                </span>
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">
@@ -156,6 +166,12 @@ const MyClasses = () => {
                                     <span className="text-sm text-gray-500">Section</span>
                                     <span className="font-semibold text-gray-700">{cls.section || 'N/A'}</span>
                                 </div>
+                                {cls.subject && (
+                                    <div className="flex justify-between items-center bg-purple-50 p-2 rounded">
+                                        <span className="text-sm text-purple-600">Subject</span>
+                                        <span className="font-semibold text-purple-700">{cls.subject}</span>
+                                    </div>
+                                )}
                                 <div className="pt-2 flex items-center justify-end text-blue-600 text-sm font-medium">
                                     <Users className="w-4 h-4 mr-1" /> View Student List &rarr;
                                 </div>

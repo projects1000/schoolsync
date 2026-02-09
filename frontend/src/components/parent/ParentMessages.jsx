@@ -2,21 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { MessageSquare } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useParent } from '@/context/ParentContext';
 import api from '@/services/api';
 
 const ParentMessages = ({ currentUser }) => {
     const { toast } = useToast();
+    const { selectedChild } = useParent();
     const [messages, setMessages] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        fetchMessages();
-    }, []);
+        if (selectedChild) {
+            fetchMessages();
+        }
+    }, [selectedChild]);
 
     const fetchMessages = async () => {
         try {
             setIsLoading(true);
-            const response = await api.get('/parent/messages');
+            const response = await api.get(`/parent/messages/${selectedChild.id}`);
             setMessages(response.data || []);
         } catch (error) {
             console.error('Error fetching messages:', error);
@@ -45,6 +49,10 @@ const ParentMessages = ({ currentUser }) => {
         }
     };
 
+    if (!selectedChild) {
+        return null; // ParentProvider handles selection screen
+    }
+
     if (isLoading) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -63,7 +71,7 @@ const ParentMessages = ({ currentUser }) => {
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-800">Messages</h1>
-                        <p className="text-gray-600 mt-1">Communicate with Test Student's teacher</p>
+                        <p className="text-gray-600 mt-1">Communicate with {selectedChild.name}'s teacher</p>
                     </div>
                 </div>
             </motion.div>

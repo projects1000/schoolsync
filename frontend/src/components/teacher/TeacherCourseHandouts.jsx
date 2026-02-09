@@ -37,8 +37,8 @@ const TeacherCourseHandouts = ({ currentUser, onCreateNew }) => {
 
     const fetchAssignedClasses = async () => {
         try {
-            const response = await api.get('/teacher/profile');
-            setAssignedClasses(response.data.assignedClasses || []);
+            const response = await api.get('/teacher/classes');
+            setAssignedClasses(response.data || []);
         } catch (error) {
             console.error('Error fetching assigned classes:', error);
         }

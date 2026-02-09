@@ -100,6 +100,10 @@ const AttendanceManagement = ({ currentUser }) => {
       if (isTeacher) {
         const response = await api.get('/teacher/attendance/classes');
         data = response.data;
+        // Auto-select the first (and only) class for teachers
+        if (data && data.length > 0) {
+          setSelectedClassId(data[0].id);
+        }
       } else {
         data = await adminService.getClasses();
       }
@@ -434,15 +438,21 @@ const AttendanceManagement = ({ currentUser }) => {
               <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-wrap gap-4 items-center">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-gray-600">Class:</span>
-                  <Select value={studentClassFilter} onValueChange={(val) => { setStudentClassFilter(val); setSelectedStudentId('none'); }}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Filter by Class" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Classes</SelectItem>
-                      {classes.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  {isTeacher ? (
+                    <div className="px-4 py-2 bg-blue-50 rounded-lg border border-blue-200">
+                      <span className="text-sm font-medium text-blue-700">{classes[0]?.name || 'No class assigned'}</span>
+                    </div>
+                  ) : (
+                    <Select value={studentClassFilter} onValueChange={(val) => { setStudentClassFilter(val); setSelectedStudentId('none'); }}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Filter by Class" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Classes</SelectItem>
+                        {classes.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-gray-600">Student:</span>
@@ -547,15 +557,21 @@ const AttendanceManagement = ({ currentUser }) => {
               <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-wrap gap-4 items-center">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-gray-600">Class:</span>
-                  <Select value={selectedClassId} onValueChange={setSelectedClassId}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select Class" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Select Class...</SelectItem>
-                      {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  {isTeacher ? (
+                    <div className="px-4 py-2 bg-blue-50 rounded-lg border border-blue-200">
+                      <span className="text-sm font-medium text-blue-700">{classes[0]?.name || 'No class assigned'}</span>
+                    </div>
+                  ) : (
+                    <Select value={selectedClassId} onValueChange={setSelectedClassId}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select Class" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Select Class...</SelectItem>
+                        {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-gray-600">From:</span>
@@ -710,15 +726,28 @@ const AttendanceManagement = ({ currentUser }) => {
                 className="w-44"
               />
             </div>
-            <Select value={selectedClassId} onValueChange={setSelectedClassId}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by Class" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Classes</SelectItem>
-                {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            {/* Show class name directly for teachers (they can only be class teacher of one class) */}
+            {isTeacher ? (
+              classes.length > 0 ? (
+                <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg border border-blue-200">
+                  <span className="text-sm font-medium text-blue-700">{classes[0]?.name}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                  <span className="text-sm text-gray-500">No class assigned</span>
+                </div>
+              )
+            ) : (
+              <Select value={selectedClassId} onValueChange={setSelectedClassId}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by Class" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Classes</SelectItem>
+                  {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
             <Button onClick={fetchDailyAttendance} variant="outline" size="icon">
               <Search className="w-4 h-4" />
             </Button>

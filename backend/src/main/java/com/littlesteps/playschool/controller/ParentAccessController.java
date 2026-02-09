@@ -1,6 +1,7 @@
 package com.littlesteps.playschool.controller;
 
 import com.littlesteps.playschool.dto.StudentDTO;
+import com.littlesteps.playschool.dto.ParentAssignmentDTO;
 import com.littlesteps.playschool.service.ParentService;
 import com.littlesteps.playschool.entity.User;
 import com.littlesteps.playschool.repository.UserRepository;
@@ -103,8 +104,30 @@ public class ParentAccessController {
                 return ResponseEntity.ok(parentService.getParentMessages(parent.getId(), children));
         }
 
+        @GetMapping("/messages/{studentId}")
+        public ResponseEntity<List<com.littlesteps.playschool.entity.Message>> getChildMessages(
+                        @PathVariable String studentId,
+                        Authentication authentication) {
+                String email = authentication.getName();
+                User user = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+
+                com.littlesteps.playschool.entity.Parent parent = parentRepository.findByUserId(user.getId())
+                                .orElseThrow(() -> new RuntimeException("Parent profile not found"));
+
+                // Verify that the student belongs to this parent
+                List<StudentDTO> children = parentService.getStudentsByParentId(parent.getId(), parent.getSchoolId());
+                StudentDTO targetStudent = children.stream()
+                                .filter(child -> child.getId().equals(studentId))
+                                .findFirst()
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Unauthorized: You are not the parent of this student"));
+
+                return ResponseEntity.ok(parentService.getChildMessages(studentId, targetStudent.getClassId()));
+        }
+
         @GetMapping("/assignments/{studentId}")
-        public ResponseEntity<?> getChildAssignments(
+        public ResponseEntity<List<com.littlesteps.playschool.dto.ParentAssignmentDTO>> getChildAssignments(
                         @PathVariable String studentId,
                         Authentication authentication) {
 

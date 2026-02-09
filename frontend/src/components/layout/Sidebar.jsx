@@ -8,7 +8,7 @@ import {
   Calendar,
   CreditCard,
   UserCheck,
-  Settings,
+
   School,
   Heart,
   MessageSquare,
@@ -43,7 +43,7 @@ const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose }) => {
     { id: 'attendance', label: 'Attendance', icon: Calendar, roles: ['admin', 'teacher'] },
     { id: 'teacher-assignments', label: 'Assignments', icon: FileText, roles: ['teacher'] },
     { id: 'teacher-communications', label: 'Messages', icon: MessageSquare, roles: ['teacher'] },
-    { id: 'teacher-profile', label: 'My Profile', icon: User, roles: ['teacher'] },
+
     { id: 'teacher-course-handouts', label: 'Course Handouts', icon: FileText, roles: ['teacher'] },
     { id: 'teacher-resources', label: 'Resources', icon: BookOpen, roles: ['teacher'] },
     { id: 'teachers', label: 'Teachers', icon: UserCheck, roles: ['admin'] },
@@ -58,13 +58,14 @@ const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose }) => {
     { id: 'timetable', label: 'Timetable', icon: BookOpen, roles: ['admin', 'teacher'] },
     { id: 'announcements', label: 'Announcements', icon: MessageSquare, roles: ['superadmin', 'admin'] },
     { id: 'parent-overview', label: 'Dashboard', icon: LayoutDashboard, roles: ['parent'] },
+    { id: 'parent-academics', label: 'Academic Details', icon: GraduationCap, roles: ['parent'] },
     { id: 'parent-attendance', label: 'Attendance', icon: Calendar, roles: ['parent'] },
-    { id: 'parent-fees', label: 'Fees', icon: CreditCard, roles: ['parent'] },
     { id: 'parent-messages', label: 'Messages', icon: MessageSquare, roles: ['parent'] },
     { id: 'parent-assignments', label: 'Assignments', icon: FileText, roles: ['parent'] },
     { id: 'parent-study-materials', label: 'Study Materials', icon: BookOpen, roles: ['parent'] },
     { id: 'parent-course-handouts', label: 'Course Progress', icon: TrendingUp, roles: ['parent'] },
-    { id: 'settings', label: 'Settings', icon: Settings, roles: ['superadmin', 'admin', 'teacher', 'parent'] }
+    { id: 'parent-fees', label: 'Fees', icon: CreditCard, roles: ['parent'] },
+    { id: 'teacher-profile', label: 'My Profile', icon: User, roles: ['teacher'] }
   ];
 
   const filteredMenuItems = menuItems.filter(item =>

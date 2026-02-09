@@ -3,12 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, ChevronDown, ChevronUp, CheckCircle2, Circle, Calendar, Filter, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { useParent } from '@/context/ParentContext';
 import api from '@/services/api';
-import parentService from '@/services/parentService';
 
 const ParentCourseHandouts = ({ currentUser, onBack }) => {
-    const [children, setChildren] = useState([]);
-    const [selectedChild, setSelectedChild] = useState(null);
+    const { selectedChild } = useParent();
     const [handouts, setHandouts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [expandedHandout, setExpandedHandout] = useState(null);
@@ -19,27 +18,10 @@ const ParentCourseHandouts = ({ currentUser, onBack }) => {
     const uniqueSubjects = [...new Set(handouts.map(h => h.subject))];
 
     useEffect(() => {
-        fetchChildren();
-    }, []);
-
-    useEffect(() => {
         if (selectedChild) {
             fetchHandouts();
         }
     }, [selectedChild]);
-
-    const fetchChildren = async () => {
-        try {
-            const childrenData = await parentService.getMyChildren();
-            setChildren(childrenData);
-            if (childrenData.length > 0) {
-                setSelectedChild(childrenData[0]);
-            }
-        } catch (error) {
-            console.error('Error fetching children:', error);
-            toast({ title: 'Failed to load children', variant: 'destructive' });
-        }
-    };
 
     const fetchHandouts = async () => {
         try {
@@ -72,6 +54,10 @@ const ParentCourseHandouts = ({ currentUser, onBack }) => {
         ? handouts.filter(h => h.subject === filterSubject)
         : handouts;
 
+    if (!selectedChild) {
+        return null; // ParentProvider handles selection screen
+    }
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -86,22 +72,9 @@ const ParentCourseHandouts = ({ currentUser, onBack }) => {
                         )}
                         <div>
                             <h2 className="text-2xl font-bold text-gray-800">Course Handouts</h2>
-                            <p className="text-gray-500">View your child's syllabus and progress</p>
+                            <p className="text-gray-500">View {selectedChild?.name}'s syllabus and progress</p>
                         </div>
                     </div>
-
-                    {/* Child Selector */}
-                    {children.length > 1 && (
-                        <select
-                            value={selectedChild?.id || ''}
-                            onChange={(e) => setSelectedChild(children.find(c => c.id === e.target.value))}
-                            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                        >
-                            {children.map(child => (
-                                <option key={child.id} value={child.id}>{child.name}</option>
-                            ))}
-                        </select>
-                    )}
                 </div>
             </div>
 
@@ -217,8 +190,8 @@ const ParentCourseHandouts = ({ currentUser, onBack }) => {
                                                 <div
                                                     key={topic.id || index}
                                                     className={`p-4 rounded-lg border ${topic.completed
-                                                            ? 'bg-green-50 border-green-200'
-                                                            : 'bg-white border-gray-200'
+                                                        ? 'bg-green-50 border-green-200'
+                                                        : 'bg-white border-gray-200'
                                                         }`}
                                                 >
                                                     <div className="flex items-start gap-3">
