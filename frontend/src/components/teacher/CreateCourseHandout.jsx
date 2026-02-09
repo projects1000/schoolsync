@@ -8,7 +8,6 @@ import api from '@/services/api';
 const CreateCourseHandout = ({ currentUser, onBack, onSuccess }) => {
     const [formData, setFormData] = useState({
         classId: '',
-        section: '',
         subject: '',
         academicYear: '',
         topics: [{ title: '', description: '' }]
@@ -24,10 +23,10 @@ const CreateCourseHandout = ({ currentUser, onBack, onSuccess }) => {
 
     const fetchAssignedClasses = async () => {
         try {
-            // Fetch teacher profile to get assigned classes
-            const response = await api.get('/teacher/profile');
-            if (response.data?.assignedClasses) {
-                setAssignedClasses(response.data.assignedClasses);
+            // Fetch all assigned classes (subject teacher + class teacher)
+            const response = await api.get('/teacher/classes');
+            if (response.data) {
+                setAssignedClasses(response.data);
             }
         } catch (error) {
             console.error('Error fetching assigned classes:', error);
@@ -72,10 +71,7 @@ const CreateCourseHandout = ({ currentUser, onBack, onSuccess }) => {
             toast({ title: 'Please select a class', variant: 'destructive' });
             return false;
         }
-        if (!formData.section.trim()) {
-            toast({ title: 'Please enter section', variant: 'destructive' });
-            return false;
-        }
+
         if (!formData.subject.trim()) {
             toast({ title: 'Please enter subject', variant: 'destructive' });
             return false;
@@ -160,42 +156,24 @@ const CreateCourseHandout = ({ currentUser, onBack, onSuccess }) => {
                             <select
                                 value={formData.classId}
                                 onChange={(e) => {
-                                    const selectedClass = assignedClasses.find(c => (c.id || c.name || c) === e.target.value);
+                                    const selectedClass = assignedClasses.find(c => c.id === e.target.value);
                                     handleInputChange('classId', e.target.value);
-                                    // Auto-fill section if available from class object
-                                    if (selectedClass && selectedClass.section) {
-                                        handleInputChange('section', selectedClass.section);
-                                    }
+                                    // Auto-fill subject from selected class
+                                    handleInputChange('subject', selectedClass?.subject || '');
                                 }}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 disabled={fetchingClasses}
                             >
                                 <option value="">Select Class</option>
-                                {assignedClasses.map((cls, index) => {
-                                    // Handle both string and object formats
-                                    const classId = typeof cls === 'object' ? (cls.id || cls.name || `${cls.grade}-${cls.section}`) : cls;
-                                    const classLabel = typeof cls === 'object'
-                                        ? `${cls.grade || cls.name}${cls.section ? ` - ${cls.section}` : ''}`
-                                        : cls;
-                                    return (
-                                        <option key={classId || index} value={classId}>{classLabel}</option>
-                                    );
-                                })}
+                                {assignedClasses.map((cls) => (
+                                    <option key={cls.id} value={cls.id}>
+                                        {cls.name}{cls.subject ? ` - ${cls.subject}` : ''}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Section <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                value={formData.section}
-                                onChange={(e) => handleInputChange('section', e.target.value)}
-                                placeholder="e.g., A, B, C"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                        </div>
+
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -206,7 +184,9 @@ const CreateCourseHandout = ({ currentUser, onBack, onSuccess }) => {
                                 value={formData.subject}
                                 onChange={(e) => handleInputChange('subject', e.target.value)}
                                 placeholder="e.g., Mathematics, Science"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                readOnly={!!assignedClasses.find(c => c.id === formData.classId)?.subject}
+                                className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${assignedClasses.find(c => c.id === formData.classId)?.subject ? 'bg-gray-100 cursor-not-allowed' : ''
+                                    }`}
                             />
                         </div>
 

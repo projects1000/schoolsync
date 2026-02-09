@@ -19,7 +19,9 @@ import ParentMessages from '@/components/parent/ParentMessages';
 import ParentAssignments from '@/components/parent/ParentAssignments';
 import ParentStudyMaterials from '@/components/parent/ParentStudyMaterials';
 import ParentCourseHandouts from '@/components/parent/ParentCourseHandouts';
-import Settings from '@/components/settings/Settings';
+import ParentAcademicDetails from '@/components/parent/ParentAcademicDetails';
+import { ParentProvider } from '@/context/ParentContext';
+
 import ParentManagement from '@/components/parents/ParentManagement';
 import ParentRegistrationManagement from '@/components/admin/ParentRegistrationManagement';
 import AnnouncementManagement from '@/components/announcements/AnnouncementManagement';
@@ -142,8 +144,7 @@ function App() {
         return <Communications currentUser={currentUser} />;
       case 'timetable':
         return <TimetableManagement currentUser={currentUser} />;
-      case 'settings':
-        return <Settings currentUser={currentUser} />;
+
       case 'school-profile':
         return <SchoolProfile />;
       case 'classes':
@@ -180,6 +181,8 @@ function App() {
         return <ParentStudyMaterials currentUser={currentUser} />;
       case 'parent-course-handouts':
         return <ParentCourseHandouts currentUser={currentUser} />;
+      case 'parent-academics':
+        return <ParentAcademicDetails currentUser={currentUser} />;
       default:
         return <Dashboard currentUser={currentUser} setActiveModule={setActiveModule} />;
     }
@@ -205,39 +208,41 @@ function App() {
         <meta name="description" content="Complete playschool management solution for administrators, teachers, and parents" />
       </Helmet>
 
-      <div className="flex h-screen bg-gray-50">
-        <AnimatePresence>
-          {sidebarOpen && (
-            <Sidebar
-              activeModule={activeModule}
-              setActiveModule={setActiveModule}
+      <ParentProvider currentUser={currentUser}>
+        <div className="flex h-screen bg-gray-50">
+          <AnimatePresence>
+            {sidebarOpen && (
+              <Sidebar
+                activeModule={activeModule}
+                setActiveModule={setActiveModule}
+                currentUser={currentUser}
+                onClose={() => setSidebarOpen(false)}
+              />
+            )}
+          </AnimatePresence>
+
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <Header
               currentUser={currentUser}
-              onClose={() => setSidebarOpen(false)}
+              onLogout={handleLogout}
+              onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+              sidebarOpen={sidebarOpen}
             />
-          )}
-        </AnimatePresence>
 
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header
-            currentUser={currentUser}
-            onLogout={handleLogout}
-            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-            sidebarOpen={sidebarOpen}
-          />
-
-          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
-            <motion.div
-              key={activeModule}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {renderActiveModule()}
-            </motion.div>
-          </main>
+            <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
+              <motion.div
+                key={activeModule}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {renderActiveModule()}
+              </motion.div>
+            </main>
+          </div>
         </div>
-      </div>
+      </ParentProvider>
 
       <Toaster />
     </HelmetProvider>

@@ -74,18 +74,77 @@ public class TeacherDashboardService {
             }
         }
 
-        // 4. Fetch Assigned Classes
+        // 4. Fetch Assigned Classes (from assignedClasses field, subject teacher
+        // assignments, AND class teacher assignment) with role and subject info
         List<Map<String, String>> assignedClassesList = new ArrayList<>();
-        List<String> classIds = teacher.getAssignedClasses();
 
+        // Map: classId -> {role, subject}
+        java.util.Map<String, java.util.Map<String, String>> classRoleMap = new java.util.HashMap<>();
+
+        // Add classes from assignedClasses field
+        List<String> classIds = teacher.getAssignedClasses();
         if (classIds != null && !classIds.isEmpty()) {
-            List<Classes> classes = classesRepository.findAllById(classIds);
+            for (String classId : classIds) {
+                java.util.Map<String, String> roleInfo = new java.util.HashMap<>();
+                roleInfo.put("role", "Assigned");
+                roleInfo.put("subject", "");
+                classRoleMap.put(classId, roleInfo);
+            }
+        }
+
+        // Add classes where teacher is assigned as subject teacher (with subject name)
+        List<com.littlesteps.playschool.entity.ClassSubject> subjectAssignments = classSubjectRepository
+                .findByTeacherId(teacher.getId());
+        for (com.littlesteps.playschool.entity.ClassSubject cs : subjectAssignments) {
+            String classId = cs.getClassId();
+            // Look up subject name
+            String subjectName = "Unknown Subject";
+            Optional<com.littlesteps.playschool.entity.Subject> subjectOpt = subjectRepository
+                    .findById(cs.getSubjectId());
+            if (subjectOpt.isPresent()) {
+                subjectName = subjectOpt.get().getName();
+            }
+            if (classRoleMap.containsKey(classId)) {
+                java.util.Map<String, String> existing = classRoleMap.get(classId);
+                String existingSubjects = existing.get("subject");
+                if (existingSubjects == null || existingSubjects.isEmpty()) {
+                    existing.put("subject", subjectName);
+                } else if (!existingSubjects.contains(subjectName)) {
+                    existing.put("subject", existingSubjects + ", " + subjectName);
+                }
+                existing.put("role", "Subject Teacher");
+            } else {
+                java.util.Map<String, String> roleInfo = new java.util.HashMap<>();
+                roleInfo.put("role", "Subject Teacher");
+                roleInfo.put("subject", subjectName);
+                classRoleMap.put(classId, roleInfo);
+            }
+        }
+
+        // Add class where teacher is the CLASS TEACHER
+        List<Classes> classTeacherOfList = classesRepository.findByClassTeacherId(teacher.getId());
+        for (Classes cls : classTeacherOfList) {
+            String classId = cls.getId();
+            if (classRoleMap.containsKey(classId)) {
+                classRoleMap.get(classId).put("role", "Class Teacher");
+            } else {
+                java.util.Map<String, String> roleInfo = new java.util.HashMap<>();
+                roleInfo.put("role", "Class Teacher");
+                roleInfo.put("subject", "");
+                classRoleMap.put(classId, roleInfo);
+            }
+        }
+
+        if (!classRoleMap.isEmpty()) {
+            List<Classes> classes = classesRepository.findAllById(new ArrayList<>(classRoleMap.keySet()));
             for (Classes cls : classes) {
                 Map<String, String> classMap = new HashMap<>();
                 classMap.put("id", cls.getId());
                 classMap.put("name", cls.getName());
                 classMap.put("grade", cls.getGrade());
                 classMap.put("section", cls.getSection());
+                classMap.put("role", classRoleMap.get(cls.getId()).get("role"));
+                classMap.put("subject", classRoleMap.get(cls.getId()).get("subject"));
                 assignedClassesList.add(classMap);
             }
         }
@@ -106,12 +165,33 @@ public class TeacherDashboardService {
         Teacher teacher = teacherRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Teacher profile not found"));
 
+        // Collect all class IDs from assignedClasses, subject teacher assignments, and
+        // class teacher assignment
+        java.util.Set<String> allClassIds = new java.util.HashSet<>();
+
         List<String> classIds = teacher.getAssignedClasses();
-        if (classIds == null || classIds.isEmpty()) {
+        if (classIds != null && !classIds.isEmpty()) {
+            allClassIds.addAll(classIds);
+        }
+
+        // Add classes where teacher is assigned as subject teacher
+        List<com.littlesteps.playschool.entity.ClassSubject> subjectAssignments = classSubjectRepository
+                .findByTeacherId(teacher.getId());
+        for (com.littlesteps.playschool.entity.ClassSubject cs : subjectAssignments) {
+            allClassIds.add(cs.getClassId());
+        }
+
+        // Add class where teacher is the CLASS TEACHER
+        List<Classes> classTeacherOfList = classesRepository.findByClassTeacherId(teacher.getId());
+        for (Classes cls : classTeacherOfList) {
+            allClassIds.add(cls.getId());
+        }
+
+        if (allClassIds.isEmpty()) {
             return new ArrayList<>();
         }
 
-        List<Student> students = studentRepository.findByClassIdIn(classIds);
+        List<Student> students = studentRepository.findByClassIdIn(new ArrayList<>(allClassIds));
 
         // Sort by Roll No ASC
         students.sort((s1, s2) -> {
@@ -147,13 +227,98 @@ public class TeacherDashboardService {
         Teacher teacher = teacherRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Teacher profile not found"));
 
+        // Collect all class IDs with their roles and subjects
+        // Map: classId -> {role: "Class Teacher" or "Subject Teacher", subject:
+        // subjectName}
+        java.util.Map<String, java.util.Map<String, String>> classRoleMap = new java.util.HashMap<>();
+
         List<String> classIds = teacher.getAssignedClasses();
-        if (classIds == null || classIds.isEmpty()) {
+        if (classIds != null && !classIds.isEmpty()) {
+            for (String classId : classIds) {
+                java.util.Map<String, String> roleInfo = new java.util.HashMap<>();
+                roleInfo.put("role", "Assigned");
+                roleInfo.put("subject", "");
+                classRoleMap.put(classId, roleInfo);
+            }
+        }
+
+        // Add classes where teacher is assigned as subject teacher (with subject name)
+        List<com.littlesteps.playschool.entity.ClassSubject> subjectAssignments = classSubjectRepository
+                .findByTeacherId(teacher.getId());
+        for (com.littlesteps.playschool.entity.ClassSubject cs : subjectAssignments) {
+            String classId = cs.getClassId();
+            // Look up subject name from subject repository
+            String subjectName = "Unknown Subject";
+            Optional<com.littlesteps.playschool.entity.Subject> subjectOpt = subjectRepository
+                    .findById(cs.getSubjectId());
+            if (subjectOpt.isPresent()) {
+                subjectName = subjectOpt.get().getName();
+            }
+            if (classRoleMap.containsKey(classId)) {
+                // Already exists, append subject if there's one
+                java.util.Map<String, String> existing = classRoleMap.get(classId);
+                String existingSubjects = existing.get("subject");
+                if (existingSubjects == null || existingSubjects.isEmpty()) {
+                    existing.put("subject", subjectName);
+                } else if (!existingSubjects.contains(subjectName)) {
+                    existing.put("subject", existingSubjects + ", " + subjectName);
+                }
+                existing.put("role", "Subject Teacher");
+            } else {
+                java.util.Map<String, String> roleInfo = new java.util.HashMap<>();
+                roleInfo.put("role", "Subject Teacher");
+                roleInfo.put("subject", subjectName);
+                classRoleMap.put(classId, roleInfo);
+            }
+        }
+
+        // Add class where teacher is the CLASS TEACHER
+        List<Classes> classTeacherOfList = classesRepository.findByClassTeacherId(teacher.getId());
+        for (Classes cls : classTeacherOfList) {
+            String classId = cls.getId();
+            if (classRoleMap.containsKey(classId)) {
+                classRoleMap.get(classId).put("role", "Class Teacher");
+            } else {
+                java.util.Map<String, String> roleInfo = new java.util.HashMap<>();
+                roleInfo.put("role", "Class Teacher");
+                roleInfo.put("subject", "");
+                classRoleMap.put(classId, roleInfo);
+            }
+        }
+
+        if (classRoleMap.isEmpty()) {
             return new ArrayList<>();
         }
 
-        List<Classes> classes = classesRepository.findAllById(classIds);
+        List<Classes> classes = classesRepository.findAllById(new ArrayList<>(classRoleMap.keySet()));
         return classes.stream().map(cls -> {
+            Map<String, String> map = new HashMap<>();
+            map.put("id", cls.getId());
+            map.put("name", cls.getName());
+            map.put("grade", cls.getGrade());
+            map.put("section", cls.getSection());
+            map.put("role", classRoleMap.get(cls.getId()).get("role"));
+            map.put("subject", classRoleMap.get(cls.getId()).get("subject"));
+            return map;
+        }).collect(Collectors.toList());
+    }
+
+    /**
+     * Returns only classes where the teacher is the CLASS TEACHER (not subject
+     * teacher).
+     * This is used for attendance marking which is restricted to class teachers
+     * only.
+     */
+    public List<Map<String, String>> getClassTeacherClasses(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Teacher teacher = teacherRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Teacher profile not found"));
+
+        // Find classes where this teacher is the class teacher
+        List<Classes> classTeacherOfList = classesRepository.findByClassTeacherId(teacher.getId());
+
+        return classTeacherOfList.stream().map(cls -> {
             Map<String, String> map = new HashMap<>();
             map.put("id", cls.getId());
             map.put("name", cls.getName());
@@ -170,26 +335,38 @@ public class TeacherDashboardService {
                 .orElseThrow(() -> new RuntimeException("Teacher profile not found"));
 
         LocalDate date = LocalDate.parse(dateStr);
-        List<String> assignedClasses = teacher.getAssignedClasses(); // IDs
-        // Note: AttendanceService usually works with Class Name or ID.
-        // AdminController usage: getAttendanceByDateAndClass(date, className).
-        // If className is provided, verify it belongs to teacher.
-        // But assignedClasses are IDs. Need to cross reference.
-        // For simplicity: If className is provided, use it. If "all", fetch for all
-        // assigned classes.
 
-        // This logic is complex if we mix IDs and Names.
-        // Let's assume fetching all attendance for the date and filtering by assigned
-        // classes is safer.
+        // Collect all class IDs from all sources (same pattern as other methods)
+        java.util.Set<String> allClassIds = new java.util.HashSet<>();
+
+        List<String> classIds = teacher.getAssignedClasses();
+        if (classIds != null && !classIds.isEmpty()) {
+            allClassIds.addAll(classIds);
+        }
+
+        // Add classes where teacher is assigned as subject teacher
+        List<com.littlesteps.playschool.entity.ClassSubject> subjectAssignments = classSubjectRepository
+                .findByTeacherId(teacher.getId());
+        for (com.littlesteps.playschool.entity.ClassSubject cs : subjectAssignments) {
+            allClassIds.add(cs.getClassId());
+        }
+
+        // Add class where teacher is the CLASS TEACHER
+        List<Classes> classTeacherOfList = classesRepository.findByClassTeacherId(teacher.getId());
+        for (Classes cls : classTeacherOfList) {
+            allClassIds.add(cls.getId());
+        }
+
         List<AttendanceDTO> allAttendance = attendanceService.getAttendanceByDate(date);
 
-        // Filter by assigned classes
-        // Need to know if AttendanceDTO has classId or className.
-        // Usually className.
-
-        // Let's resolve assigned class Names.
-        List<Classes> classes = classesRepository.findAllById(assignedClasses);
-        List<String> assignedClassNames = classes.stream().map(Classes::getName).collect(Collectors.toList());
+        // Get assigned class names (using final variable for lambda)
+        final List<String> assignedClassNames;
+        if (!allClassIds.isEmpty()) {
+            List<Classes> classes = classesRepository.findAllById(new ArrayList<>(allClassIds));
+            assignedClassNames = classes.stream().map(Classes::getName).collect(Collectors.toList());
+        } else {
+            assignedClassNames = new ArrayList<>();
+        }
 
         if (className != null && !className.equals("all")) {
             if (!assignedClassNames.contains(className)) {
@@ -313,7 +490,36 @@ public class TeacherDashboardService {
         Teacher teacher = teacherRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Teacher profile not found"));
 
-        if (!teacher.getAssignedClasses().contains(classId)) {
+        // Check if teacher is assigned to this class (Direct assignment, Class Teacher,
+        // or Subject Teacher)
+        boolean isAuthorized = false;
+
+        // 1. Check direct assignment
+        if (teacher.getAssignedClasses() != null && teacher.getAssignedClasses().contains(classId)) {
+            isAuthorized = true;
+        }
+
+        // 2. Check if Class Teacher
+        if (!isAuthorized) {
+            Optional<Classes> classOpt = classesRepository.findById(classId);
+            if (classOpt.isPresent() && teacher.getId().equals(classOpt.get().getClassTeacherId())) {
+                isAuthorized = true;
+            }
+        }
+
+        // 3. Check if Subject Teacher
+        if (!isAuthorized) {
+            List<com.littlesteps.playschool.entity.ClassSubject> subjectAssignments = classSubjectRepository
+                    .findByTeacherId(teacher.getId());
+            for (com.littlesteps.playschool.entity.ClassSubject cs : subjectAssignments) {
+                if (cs.getClassId().equals(classId)) {
+                    isAuthorized = true;
+                    break;
+                }
+            }
+        }
+
+        if (!isAuthorized) {
             throw new RuntimeException("Unauthorized: Class not assigned to teacher.");
         }
 
@@ -346,7 +552,36 @@ public class TeacherDashboardService {
         Teacher teacher = teacherRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
 
-        if (!teacher.getAssignedClasses().contains(classId)) {
+        // Check if teacher is assigned to this class (Direct assignment, Class Teacher,
+        // or Subject Teacher)
+        boolean isAuthorized = false;
+
+        // 1. Check direct assignment
+        if (teacher.getAssignedClasses() != null && teacher.getAssignedClasses().contains(classId)) {
+            isAuthorized = true;
+        }
+
+        // 2. Check if Class Teacher
+        if (!isAuthorized) {
+            Optional<Classes> classOpt = classesRepository.findById(classId);
+            if (classOpt.isPresent() && teacher.getId().equals(classOpt.get().getClassTeacherId())) {
+                isAuthorized = true;
+            }
+        }
+
+        // 3. Check if Subject Teacher
+        if (!isAuthorized) {
+            List<com.littlesteps.playschool.entity.ClassSubject> subjectAssignments = classSubjectRepository
+                    .findByTeacherId(teacher.getId());
+            for (com.littlesteps.playschool.entity.ClassSubject cs : subjectAssignments) {
+                if (cs.getClassId().equals(classId)) {
+                    isAuthorized = true;
+                    break;
+                }
+            }
+        }
+
+        if (!isAuthorized) {
             throw new RuntimeException("Unauthorized class access");
         }
 

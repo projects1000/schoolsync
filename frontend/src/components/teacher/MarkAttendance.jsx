@@ -25,6 +25,10 @@ const MarkAttendance = ({ onBack, onSuccess }) => {
             try {
                 const response = await api.get('/teacher/attendance/classes');
                 setClasses(response.data);
+                // Auto-select the first (and only) class since teacher can only be class teacher of one class
+                if (response.data && response.data.length > 0) {
+                    setSelectedClass(response.data[0]);
+                }
             } catch (err) {
                 toast({ title: "Error", description: "Failed to load classes", variant: "destructive" });
             }
@@ -180,17 +184,15 @@ const MarkAttendance = ({ onBack, onSuccess }) => {
                 <CardContent className="flex gap-4 flex-wrap">
                     <div className="w-48">
                         <label className="text-sm font-medium mb-1 block">Class</label>
-                        <Select onValueChange={(val) => {
-                            const cls = classes.find(c => c.id === val);
-                            setSelectedClass(cls);
-                        }}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select Class" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
+                        {classes.length > 0 ? (
+                            <div className="px-4 py-2 bg-blue-50 rounded-lg border border-blue-200">
+                                <span className="text-sm font-medium text-blue-700">{selectedClass?.name || classes[0]?.name}</span>
+                            </div>
+                        ) : (
+                            <div className="px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                                <span className="text-sm text-gray-500">No class assigned</span>
+                            </div>
+                        )}
                     </div>
                     <div className="w-48">
                         <label className="text-sm font-medium mb-1 block">Date</label>
@@ -225,50 +227,56 @@ const MarkAttendance = ({ onBack, onSuccess }) => {
                         <table className="w-full">
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
+                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Roll No</th>
                                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Student Name</th>
                                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600 w-32 text-center">Present?</th>
                                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Notes</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {students.map(student => (
-                                    <tr key={student.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
-                                                    {student.name.charAt(0)}
+                                {students
+                                    .sort((a, b) => (parseInt(a.rollNo) || 0) - (parseInt(b.rollNo) || 0))
+                                    .map(student => (
+                                        <tr key={student.id} className="hover:bg-gray-50 transition-colors">
+                                            <td className="px-6 py-4 text-sm text-gray-600 font-medium">
+                                                {student.rollNo || '-'}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
+                                                        {student.name.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium text-gray-900">{student.name}</p>
+                                                        <p className="text-xs text-gray-500">{student.admissionNo}</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <p className="font-medium text-gray-900">{student.name}</p>
-                                                    <p className="text-xs text-gray-500">{student.admissionNo}</p>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <div className="flex justify-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={attendanceData[student.id]?.status === 'PRESENT'}
+                                                        onChange={(e) => handleMark(student.id, e.target.checked)}
+                                                        disabled={existingAttendance && !isWithinEditWindow}
+                                                        className="w-6 h-6 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                    />
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <div className="flex justify-center">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={attendanceData[student.id]?.status === 'PRESENT'}
-                                                    onChange={(e) => handleMark(student.id, e.target.checked)}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <Input
+                                                    placeholder="Note..."
+                                                    value={attendanceData[student.id]?.notes || ''}
+                                                    onChange={(e) => handleNote(student.id, e.target.value)}
                                                     disabled={existingAttendance && !isWithinEditWindow}
-                                                    className="w-6 h-6 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                    className="h-8 text-sm"
                                                 />
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <Input
-                                                placeholder="Note..."
-                                                value={attendanceData[student.id]?.notes || ''}
-                                                onChange={(e) => handleNote(student.id, e.target.value)}
-                                                disabled={existingAttendance && !isWithinEditWindow}
-                                                className="h-8 text-sm"
-                                            />
-                                        </td>
-                                    </tr>
-                                ))}
+                                            </td>
+                                        </tr>
+                                    ))}
                                 {students.length === 0 && (
                                     <tr>
-                                        <td colSpan={3} className="px-6 py-10 text-center text-gray-500">
+                                        <td colSpan={4} className="px-6 py-10 text-center text-gray-500">
                                             No students found for this class.
                                         </td>
                                     </tr>

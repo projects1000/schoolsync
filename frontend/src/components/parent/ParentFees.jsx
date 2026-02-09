@@ -1,54 +1,26 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { CreditCard, DollarSign } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import parentService from '@/services/parentService';
+import { useParent } from '@/context/ParentContext';
 
 const ParentFees = ({ currentUser }) => {
-    const { toast } = useToast();
-    const [children, setChildren] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { selectedChild, isLoading } = useParent();
     const [invoices] = useLocalStorage('invoices', []);
 
-    useEffect(() => {
-        const fetchChildren = async () => {
-            try {
-                setIsLoading(true);
-                const data = await parentService.getMyChildren();
-                setChildren(data);
-            } catch (error) {
-                toast({
-                    title: "Error",
-                    description: "Failed to load children data",
-                    variant: "destructive"
-                });
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchChildren();
-    }, []);
-
-    const child = children[0];
-
     const childInvoices = useMemo(() =>
-        invoices.filter(invoice => invoice.studentId === child?.id),
-        [invoices, child]
+        invoices.filter(invoice => invoice.studentId === selectedChild?.id),
+        [invoices, selectedChild]
     );
+
+    if (!selectedChild) {
+        return null; // ParentProvider handles selection screen
+    }
 
     if (isLoading) {
         return (
             <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-            </div>
-        );
-    }
-
-    if (children.length === 0) {
-        return (
-            <div className="text-center p-10 bg-white rounded-lg shadow-sm">
-                No child assigned to this parent account. Please contact administration.
             </div>
         );
     }
@@ -61,7 +33,7 @@ const ParentFees = ({ currentUser }) => {
                 className="bg-white rounded-xl shadow-sm p-6 border border-gray-200"
             >
                 <h1 className="text-2xl font-bold text-gray-800">Fee History</h1>
-                <p className="text-gray-600 mt-1">View and manage {child?.name}'s fee payments</p>
+                <p className="text-gray-600 mt-1">View and manage {selectedChild?.name}'s fee payments</p>
             </motion.div>
 
             <motion.div
@@ -94,10 +66,10 @@ const ParentFees = ({ currentUser }) => {
                                 <div className="text-right">
                                     <p className="text-2xl font-bold text-gray-900">₹{invoice.amount}</p>
                                     <span className={`inline-block mt-2 px-3 py-1 text-xs font-semibold rounded-full ${invoice.status === 'paid'
-                                            ? 'bg-green-100 text-green-800'
-                                            : invoice.status === 'overdue'
-                                                ? 'bg-red-100 text-red-800'
-                                                : 'bg-yellow-100 text-yellow-800'
+                                        ? 'bg-green-100 text-green-800'
+                                        : invoice.status === 'overdue'
+                                            ? 'bg-red-100 text-red-800'
+                                            : 'bg-yellow-100 text-yellow-800'
                                         }`}>
                                         {invoice.status}
                                     </span>

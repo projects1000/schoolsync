@@ -54,7 +54,9 @@ const Assignments = ({ currentUser }) => {
 
     const fetchClasses = async () => {
         try {
-            const res = await api.get('/teacher/attendance/classes');
+            // Use /teacher/classes which returns ALL assigned classes (subject teacher + class teacher)
+            // instead of /teacher/attendance/classes which only returns class teacher classes
+            const res = await api.get('/teacher/classes');
             setClasses(res.data);
             if (res.data.length > 0) {
                 setSelectedClassId(res.data[0].id);

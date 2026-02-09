@@ -1,6 +1,7 @@
 package com.littlesteps.playschool.service;
 
 import com.littlesteps.playschool.dto.ParentDTO;
+import com.littlesteps.playschool.dto.ParentAssignmentDTO;
 import com.littlesteps.playschool.dto.StudentDTO;
 import com.littlesteps.playschool.entity.Parent;
 import com.littlesteps.playschool.entity.ParentStudentMap;
@@ -517,31 +518,60 @@ public class ParentService {
     /**
      * Get messages for a parent (broadcast + individual messages)
      */
-    public List<com.littlesteps.playschool.entity.Message> getParentMessages(String parentId,
-            List<StudentDTO> children) {
-        List<com.littlesteps.playschool.entity.Message> messages = new java.util.ArrayList<>();
+    public List<com.littlesteps.playschool.entity.Message> getChildMessages(String studentId, String classId) {
+        java.util.Map<String, com.littlesteps.playschool.entity.Message> messageMap = new java.util.LinkedHashMap<>();
 
-        // Get all student IDs
-        List<String> studentIds = children.stream()
-                .map(StudentDTO::getId)
-                .collect(java.util.stream.Collectors.toList());
-
-        // For each student, get messages where recipientId is "ALL" or the student's ID
-        for (String studentId : studentIds) {
-            // Get broadcast messages (recipientId = "ALL")
-            List<com.littlesteps.playschool.entity.Message> broadcastMessages = messageRepository
-                    .findByRecipientId("ALL");
-            messages.addAll(broadcastMessages);
-
-            // Get individual messages for this student
-            List<com.littlesteps.playschool.entity.Message> individualMessages = messageRepository
-                    .findByRecipientId(studentId);
-            messages.addAll(individualMessages);
+        if (classId != null) {
+            // Get broadcast messages for this specific class
+            List<com.littlesteps.playschool.entity.Message> classBroadcasts = messageRepository
+                    .findByClassIdAndRecipientId(classId, "ALL");
+            for (com.littlesteps.playschool.entity.Message msg : classBroadcasts) {
+                messageMap.put(msg.getId(), msg);
+            }
         }
 
-        // Remove duplicates and sort by date (newest first)
-        return messages.stream()
-                .distinct()
+        // Get individual messages for this specific student
+        List<com.littlesteps.playschool.entity.Message> individualMessages = messageRepository
+                .findByRecipientId(studentId);
+        for (com.littlesteps.playschool.entity.Message msg : individualMessages) {
+            messageMap.put(msg.getId(), msg);
+        }
+
+        // Sort by date (newest first) and return
+        return messageMap.values().stream()
+                .sorted((m1, m2) -> m2.getCreatedAt().compareTo(m1.getCreatedAt()))
+                .collect(Collectors.toList());
+    }
+
+    public List<com.littlesteps.playschool.entity.Message> getParentMessages(String parentId,
+            List<StudentDTO> children) {
+        // Use a Set with message ID for deduplication
+        java.util.Map<String, com.littlesteps.playschool.entity.Message> messageMap = new java.util.LinkedHashMap<>();
+
+        // For each child, get messages specific to their class and individually
+        for (StudentDTO child : children) {
+            String studentId = child.getId();
+            String classId = child.getClassId();
+
+            if (classId != null) {
+                // Get broadcast messages for this specific class
+                List<com.littlesteps.playschool.entity.Message> classBroadcasts = messageRepository
+                        .findByClassIdAndRecipientId(classId, "ALL");
+                for (com.littlesteps.playschool.entity.Message msg : classBroadcasts) {
+                    messageMap.put(msg.getId(), msg);
+                }
+            }
+
+            // Get individual messages for this specific student
+            List<com.littlesteps.playschool.entity.Message> individualMessages = messageRepository
+                    .findByRecipientId(studentId);
+            for (com.littlesteps.playschool.entity.Message msg : individualMessages) {
+                messageMap.put(msg.getId(), msg);
+            }
+        }
+
+        // Sort by date (newest first) and return
+        return messageMap.values().stream()
                 .sorted((m1, m2) -> m2.getCreatedAt().compareTo(m1.getCreatedAt()))
                 .collect(java.util.stream.Collectors.toList());
     }
@@ -549,7 +579,7 @@ public class ParentService {
     /**
      * Get assignments for a student's class
      */
-    public List<com.littlesteps.playschool.entity.Assignment> getStudentAssignments(String studentId) {
+    public List<com.littlesteps.playschool.dto.ParentAssignmentDTO> getStudentAssignments(String studentId) {
         // Get student to find their classId
         com.littlesteps.playschool.entity.Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -561,6 +591,22 @@ public class ParentService {
         // Sort by due date (nearest first)
         return assignments.stream()
                 .sorted((a1, a2) -> a1.getDueDate().compareTo(a2.getDueDate()))
+                .map(assignment -> {
+                    String teacherName = "Unknown Teacher";
+                    if (assignment.getTeacherId() != null) {
+                        teacherName = teacherRepository.findById(assignment.getTeacherId())
+                                .map(com.littlesteps.playschool.entity.Teacher::getName)
+                                .orElse("Unknown Teacher");
+                    }
+
+                    return new com.littlesteps.playschool.dto.ParentAssignmentDTO(
+                            assignment.getId(),
+                            assignment.getTitle(),
+                            assignment.getDescription(),
+                            assignment.getDueDate(),
+                            assignment.getAttachmentUrl(),
+                            teacherName);
+                })
                 .collect(java.util.stream.Collectors.toList());
     }
 

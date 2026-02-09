@@ -122,12 +122,18 @@ const TeacherDashboard = ({ setActiveTab }) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {dashboardData.assignedClasses && dashboardData.assignedClasses.map((cls, index) => (
-                        <div key={index} className="p-4 border border-gray-200 rounded-xl bg-gray-50 hover:bg-white hover:shadow-md transition-all flex justify-between items-center group">
-                            <div>
+                        <div key={index} className="p-4 border border-gray-200 rounded-xl bg-gray-50 hover:bg-white hover:shadow-md transition-all group">
+                            <div className="flex justify-between items-start mb-2">
                                 <p className="font-bold text-gray-800 text-lg">{cls.name}</p>
-                                <p className="text-sm text-gray-500">{cls.grade} • Section {cls.section}</p>
+                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${cls.role === 'Class Teacher' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'
+                                    }`}>
+                                    {cls.role}
+                                </span>
                             </div>
-                            <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Active</span>
+                            <p className="text-sm text-gray-500">{cls.grade} • Section {cls.section}</p>
+                            {cls.subject && (
+                                <p className="text-sm text-purple-600 mt-1 font-medium">📚 {cls.subject}</p>
+                            )}
                         </div>
                     ))}
                     {(!dashboardData.assignedClasses || dashboardData.assignedClasses.length === 0) && (

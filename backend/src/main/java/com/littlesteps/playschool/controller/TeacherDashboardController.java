@@ -45,7 +45,9 @@ public class TeacherDashboardController {
     public ResponseEntity<List<Map<String, String>>> getMyClasses() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
-        return ResponseEntity.ok(teacherDashboardService.getAssignedClasses(email));
+        // Only return classes where teacher is the CLASS TEACHER (for attendance
+        // marking)
+        return ResponseEntity.ok(teacherDashboardService.getClassTeacherClasses(email));
     }
 
     @GetMapping("/attendance")
@@ -116,4 +118,5 @@ public class TeacherDashboardController {
         String email = authentication.getName();
         return ResponseEntity.ok(teacherDashboardService.getTeacherRoleInfo(email));
     }
+
 }
