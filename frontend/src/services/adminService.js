@@ -341,6 +341,76 @@ const adminService = {
             throw error;
         }
     },
+
+    // Subject APIs
+    getSubjects: async () => {
+        try {
+            const response = await api.get('/admin/subjects');
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    createSubject: async (data) => {
+        try {
+            const response = await api.post('/admin/subjects', data);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    updateSubject: async (id, data) => {
+        try {
+            const response = await api.put(`/admin/subjects/${id}`, data);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    deleteSubject: async (id) => {
+        try {
+            const response = await api.delete(`/admin/subjects/${id}`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    // Class Subject APIs
+    getClassSubjects: async (classId) => {
+        try {
+            const response = await api.get(`/admin/classes/${classId}/subjects`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    assignSubjectsToClass: async (classId, subjectIds) => {
+        try {
+            const response = await api.post(`/admin/classes/${classId}/subjects`, { subjectIds });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    assignTeacherToSubject: async (classId, subjectId, teacherId) => {
+        try {
+            const response = await api.post('/admin/class-subjects/assign-teacher', { classId, subjectId, teacherId });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    // Class Teacher Assignment
+    assignClassTeacher: async (classId, teacherId) => {
+        try {
+            const response = await api.post(`/admin/classes/${classId}/assign-class-teacher`, { teacherId });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
 };
 
 export default adminService;

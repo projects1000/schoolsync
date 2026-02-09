@@ -15,7 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/students")
 @CrossOrigin(origins = { "http://localhost:3000", "http://localhost:5173" })
-@org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+@org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN', 'TEACHER')")
 public class StudentController {
 
     @Autowired
@@ -23,6 +23,12 @@ public class StudentController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private com.littlesteps.playschool.repository.TeacherRepository teacherRepository;
+
+    @Autowired
+    private com.littlesteps.playschool.repository.ClassesRepository classesRepository;
 
     private String getSchoolId(String email) {
         User user = userRepository.findByEmail(email)
@@ -79,10 +85,39 @@ public class StudentController {
     }
 
     @GetMapping("/class/{className}")
-    public ResponseEntity<List<StudentDTO>> getStudentsByClass(@PathVariable String className,
+    public ResponseEntity<?> getStudentsByClass(@PathVariable String className,
             Authentication authentication) {
-        String schoolId = getSchoolId(authentication.getName());
-        List<StudentDTO> students = studentService.getStudentsByClass(schoolId, className);
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // If Teacher, strict check: Must be Class Teacher of this class
+        if (user.getRole() == User.Role.TEACHER) {
+            // Find class by name (or we should use ID ideally, but existing API uses name)
+            // We need to fetch all classes and filter by name? Or assumes name is unique.
+            // StudentService uses schoolId and className.
+            // Let's verify permission first.
+            com.littlesteps.playschool.entity.Teacher teacher = teacherRepository.findByUser(user)
+                    .orElseThrow(() -> new RuntimeException("Teacher not found"));
+
+            // We need the Class ID to check simple assignedClasses or classTeacherId?
+            // Requirement says "Class Teacher". That means linked in Classes entity as
+            // classTeacherId.
+            // But here we only have className.
+            // We'll trust the service returns students for that class, but we must verify
+            // the teacher owns that "className".
+            // Fetch class by name and schoolId.
+            com.littlesteps.playschool.entity.Classes targetClass = classesRepository
+                    .findBySchoolIdAndName(user.getSchoolId(), className)
+                    .orElseThrow(() -> new RuntimeException("Class not found"));
+
+            if (targetClass.getClassTeacherId() == null || !targetClass.getClassTeacherId().equals(teacher.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Access Denied: You are not the Class Teacher.");
+            }
+        }
+
+        List<StudentDTO> students = studentService.getStudentsByClass(user.getSchoolId(), className);
         return ResponseEntity.ok(students);
     }
 

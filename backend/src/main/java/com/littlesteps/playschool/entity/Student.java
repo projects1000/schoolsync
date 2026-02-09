@@ -5,7 +5,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.index.Indexed;
 import java.time.LocalDateTime;
 
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
+
 @Document(collection = "students")
+@CompoundIndexes({
+        @CompoundIndex(name = "school_class_section_idx", def = "{'schoolId': 1, 'classId': 1, 'sectionId': 1}"),
+        @CompoundIndex(name = "school_class_section_name_idx", def = "{'schoolId': 1, 'classId': 1, 'sectionId': 1, 'name': 1}")
+})
 public class Student {
 
     @Id
@@ -13,6 +20,8 @@ public class Student {
 
     @Indexed(unique = true)
     private String admissionNo;
+
+    private Integer rollNo; // SYSTEM GENERATED
 
     private String name;
 
@@ -96,6 +105,14 @@ public class Student {
 
     public void setAdmissionNo(String admissionNo) {
         this.admissionNo = admissionNo;
+    }
+
+    public Integer getRollNo() {
+        return rollNo;
+    }
+
+    public void setRollNo(Integer rollNo) {
+        this.rollNo = rollNo;
     }
 
     public String getName() {

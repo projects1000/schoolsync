@@ -3,6 +3,8 @@ package com.littlesteps.playschool.dto;
 public class StudentDTO {
     private String id;
     private String admissionNo;
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    private Integer rollNo;
     private String name;
     private Integer age;
     private String className;
@@ -18,11 +20,12 @@ public class StudentDTO {
     public StudentDTO() {
     }
 
-    public StudentDTO(String id, String admissionNo, String name, Integer age,
+    public StudentDTO(String id, String admissionNo, Integer rollNo, String name, Integer age,
             String className, String guardian, String guardianPhone,
             String guardianEmail, String address, String status) {
         this.id = id;
         this.admissionNo = admissionNo;
+        this.rollNo = rollNo;
         this.name = name;
         this.age = age;
         this.className = className;
@@ -48,6 +51,14 @@ public class StudentDTO {
 
     public void setAdmissionNo(String admissionNo) {
         this.admissionNo = admissionNo;
+    }
+
+    public Integer getRollNo() {
+        return rollNo;
+    }
+
+    public void setRollNo(Integer rollNo) {
+        this.rollNo = rollNo;
     }
 
     public String getName() {

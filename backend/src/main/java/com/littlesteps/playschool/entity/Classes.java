@@ -1,12 +1,14 @@
 package com.littlesteps.playschool.entity;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.DBRef;
+
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 
 import java.time.LocalDateTime;
 
 @Document(collection = "classes")
+@CompoundIndex(name = "school_grade_section_idx", def = "{'schoolId': 1, 'grade': 1, 'section': 1}", unique = true)
 public class Classes {
 
     @Id
@@ -18,8 +20,7 @@ public class Classes {
 
     private String section; // e.g., "A", "B", "C"
 
-    @DBRef
-    private Teacher classTeacher;
+    private String classTeacherId;
 
     private Integer capacity; // Maximum number of students
 
@@ -85,12 +86,12 @@ public class Classes {
         this.section = section;
     }
 
-    public Teacher getClassTeacher() {
-        return classTeacher;
+    public String getClassTeacherId() {
+        return classTeacherId;
     }
 
-    public void setClassTeacher(Teacher classTeacher) {
-        this.classTeacher = classTeacher;
+    public void setClassTeacherId(String classTeacherId) {
+        this.classTeacherId = classTeacherId;
     }
 
     public Integer getCapacity() {

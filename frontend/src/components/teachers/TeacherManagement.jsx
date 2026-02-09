@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Plus, Search, Edit2, Mail, BookOpen, CheckCircle,
+  Plus, Search, Edit2, Mail, GraduationCap, BookOpen,
   ShieldOff, ShieldCheck
 } from 'lucide-react';
 
@@ -40,18 +40,18 @@ const TeacherManagement = () => {
   const [loading, setLoading] = useState(true);
   const [teachers, setTeachers] = useState([]);
   const [classes, setClasses] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [classSubjectsMap, setClassSubjectsMap] = useState({}); // classId -> [{subjectId, teacherId}]
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
 
   const [currentTeacher, setCurrentTeacher] = useState(null);
-  const [selectedClasses, setSelectedClasses] = useState([]);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -71,7 +71,7 @@ const TeacherManagement = () => {
     try {
       setLoading(true);
       const data = await adminService.getTeachers();
-      setTeachers(data);
+      setTeachers(data || []);
     } catch (error) {
       console.error("Failed to fetch teachers", error);
       toast({ title: "Error", description: "Failed to load teachers", variant: "destructive" });
@@ -83,16 +83,88 @@ const TeacherManagement = () => {
   const fetchClasses = async () => {
     try {
       const data = await adminService.getClasses();
-      setClasses(data);
+      setClasses(data || []);
+      return data || [];
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  };
+
+  const fetchSubjects = async () => {
+    try {
+      const data = await adminService.getSubjects();
+      setSubjects(data || []);
     } catch (error) {
       console.error(error);
     }
   };
 
+  const fetchAllClassSubjects = async (classesData) => {
+    try {
+      const subjectMap = {};
+      for (const cls of classesData) {
+        try {
+          const classSubjects = await adminService.getClassSubjects(cls.id);
+          subjectMap[cls.id] = classSubjects || [];
+        } catch {
+          subjectMap[cls.id] = [];
+        }
+      }
+      setClassSubjectsMap(subjectMap);
+    } catch (error) {
+      console.error("Failed to fetch class subjects", error);
+    }
+  };
+
   useEffect(() => {
-    fetchTeachers();
-    fetchClasses();
+    const loadData = async () => {
+      const classesData = await fetchClasses();
+      await Promise.all([
+        fetchTeachers(),
+        fetchSubjects(),
+        fetchAllClassSubjects(classesData)
+      ]);
+    };
+    loadData();
   }, []);
+
+  // Compute teacher roles from classes and class subjects
+  const teacherRoles = useMemo(() => {
+    const roles = {};
+
+    // Initialize all teachers
+    teachers.forEach(t => {
+      roles[t.id] = { classTeacherOf: [], subjectsTeaching: [] };
+    });
+
+    // Find class teacher assignments
+    classes.forEach(cls => {
+      if (cls.classTeacherId && roles[cls.classTeacherId]) {
+        const className = cls.grade && cls.section ? `${cls.grade} - ${cls.section}` : cls.name;
+        roles[cls.classTeacherId].classTeacherOf.push(className);
+      }
+    });
+
+    // Find subject teacher assignments
+    Object.entries(classSubjectsMap).forEach(([classId, subjectAssignments]) => {
+      const cls = classes.find(c => c.id === classId);
+      const className = cls ? (cls.grade && cls.section ? `${cls.grade} - ${cls.section}` : cls.name) : classId;
+
+      subjectAssignments.forEach(assignment => {
+        if (assignment.teacherId && roles[assignment.teacherId]) {
+          const subject = subjects.find(s => s.id === assignment.subjectId);
+          const subjectName = subject ? subject.name : 'Unknown Subject';
+          roles[assignment.teacherId].subjectsTeaching.push({
+            subject: subjectName,
+            class: className
+          });
+        }
+      });
+    });
+
+    return roles;
+  }, [teachers, classes, classSubjectsMap, subjects]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -158,31 +230,6 @@ const TeacherManagement = () => {
     }
   };
 
-  const handleAssignClick = (teacher) => {
-    setCurrentTeacher(teacher);
-    setSelectedClasses(teacher.assignedClasses || []);
-    setIsAssignModalOpen(true);
-  };
-
-  const handleAssignSubmit = async () => {
-    try {
-      await adminService.updateTeacherClassAssignments(currentTeacher.id, selectedClasses);
-      toast({ title: "Success", description: "Classes assigned successfully" });
-      setIsAssignModalOpen(false);
-      fetchTeachers();
-    } catch (error) {
-      toast({ title: "Error", description: error.response?.data?.message || "Failed to assign classes", variant: "destructive" });
-    }
-  };
-
-  const toggleClassSelection = (classId) => {
-    setSelectedClasses(prev =>
-      prev.includes(classId)
-        ? prev.filter(id => id !== classId)
-        : [...prev, classId]
-    );
-  };
-
   // Block/Unblock Teacher
   const handleStatusChange = async (teacher, newStatus) => {
     setCurrentTeacher(teacher);
@@ -238,7 +285,7 @@ const TeacherManagement = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Teacher Management</h1>
-          <p className="text-gray-500">Manage teaching staff, classes, and access</p>
+          <p className="text-gray-500">Manage teaching staff and view academic assignments</p>
         </div>
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
           <DialogTrigger asChild>
@@ -326,7 +373,8 @@ const TeacherManagement = () => {
             <TableRow>
               <TableHead>Teacher</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Assigned Classes</TableHead>
+              <TableHead>Class Teacher Of</TableHead>
+              <TableHead>Subjects Teaching</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -334,77 +382,95 @@ const TeacherManagement = () => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                   Loading teachers...
                 </TableCell>
               </TableRow>
             ) : filteredTeachers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                   No teachers found
                 </TableCell>
               </TableRow>
             ) : (
-              filteredTeachers.map((teacher) => (
-                <TableRow key={teacher.id} className={teacher.status === 'BLOCKED' ? 'bg-red-50/50' : ''}>
-                  <TableCell>
-                    <div className="font-medium">{teacher.name}</div>
-                    <div className="text-xs text-gray-500">{teacher.department || 'No department'}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Mail className="w-3 h-3 mr-1" /> {teacher.email}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1 max-w-[200px]">
-                      {teacher.assignedClasses?.length > 0 ? (
-                        teacher.assignedClasses.slice(0, 3).map((clsId, idx) => {
-                          const cls = classes.find(c => c.id === clsId);
-                          return <Badge key={idx} variant="outline" className="text-xs">{cls ? cls.name : clsId}</Badge>
-                        })
+              filteredTeachers.map((teacher) => {
+                const roles = teacherRoles[teacher.id] || { classTeacherOf: [], subjectsTeaching: [] };
+                return (
+                  <TableRow key={teacher.id} className={teacher.status === 'BLOCKED' ? 'bg-red-50/50' : ''}>
+                    <TableCell>
+                      <div className="font-medium">{teacher.name}</div>
+                      <div className="text-xs text-gray-500">{teacher.department || 'No department'}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Mail className="w-3 h-3 mr-1" /> {teacher.email}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {roles.classTeacherOf.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {roles.classTeacherOf.map((cls, idx) => (
+                            <Badge key={idx} className="bg-purple-100 text-purple-800 text-xs">
+                              <GraduationCap className="w-3 h-3 mr-1" />
+                              {cls}
+                            </Badge>
+                          ))}
+                        </div>
                       ) : (
-                        <span className="text-xs text-gray-400">No classes assigned</span>
+                        <span className="text-xs text-gray-400">—</span>
                       )}
-                      {teacher.assignedClasses?.length > 3 && (
-                        <Badge variant="outline" className="text-xs">+{teacher.assignedClasses.length - 3} more</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {roles.subjectsTeaching.length > 0 ? (
+                        <div className="flex flex-wrap gap-1 max-w-[250px]">
+                          {roles.subjectsTeaching.slice(0, 3).map((st, idx) => (
+                            <Badge key={idx} variant="outline" className="text-xs">
+                              <BookOpen className="w-3 h-3 mr-1" />
+                              {st.subject} ({st.class})
+                            </Badge>
+                          ))}
+                          {roles.subjectsTeaching.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{roles.subjectsTeaching.length - 3} more
+                            </Badge>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
                       )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(teacher.status)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end space-x-1">
-                      <Button variant="ghost" size="sm" onClick={() => handleAssignClick(teacher)} title="Assign Classes">
-                        <BookOpen className="w-4 h-4 text-blue-500" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleEditClick(teacher)} title="Edit">
-                        <Edit2 className="w-4 h-4 text-gray-500" />
-                      </Button>
-                      {teacher.status === 'ACTIVE' ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleStatusChange(teacher, 'BLOCKED')}
-                          title="Block Teacher"
-                        >
-                          <ShieldOff className="w-4 h-4 text-red-500" />
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(teacher.status)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end space-x-1">
+                        <Button variant="ghost" size="sm" onClick={() => handleEditClick(teacher)} title="Edit">
+                          <Edit2 className="w-4 h-4 text-gray-500" />
                         </Button>
-                      ) : teacher.status === 'BLOCKED' ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleStatusChange(teacher, 'ACTIVE')}
-                          title="Unblock Teacher"
-                        >
-                          <ShieldCheck className="w-4 h-4 text-green-500" />
-                        </Button>
-                      ) : null}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
+                        {teacher.status === 'ACTIVE' ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleStatusChange(teacher, 'BLOCKED')}
+                            title="Block Teacher"
+                          >
+                            <ShieldOff className="w-4 h-4 text-red-500" />
+                          </Button>
+                        ) : teacher.status === 'BLOCKED' ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleStatusChange(teacher, 'ACTIVE')}
+                            title="Unblock Teacher"
+                          >
+                            <ShieldCheck className="w-4 h-4 text-green-500" />
+                          </Button>
+                        ) : null}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -440,42 +506,6 @@ const TeacherManagement = () => {
               </div>
             </form>
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Assign Classes Modal */}
-      <Dialog open={isAssignModalOpen} onOpenChange={setIsAssignModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Assign Classes to {currentTeacher?.name}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto p-1">
-            {classes.length === 0 ? (
-              <div className="text-center text-gray-500">No classes available.</div>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                {classes.map(cls => (
-                  <div
-                    key={cls.id}
-                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${selectedClasses.includes(cls.id)
-                      ? 'bg-purple-50 border-purple-500 text-purple-700'
-                      : 'hover:bg-gray-50 border-gray-200'
-                      }`}
-                    onClick={() => toggleClassSelection(cls.id)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{cls.name}</span>
-                      {selectedClasses.includes(cls.id) && <CheckCircle className="w-4 h-4" />}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAssignModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleAssignSubmit}>Save Assignments</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 

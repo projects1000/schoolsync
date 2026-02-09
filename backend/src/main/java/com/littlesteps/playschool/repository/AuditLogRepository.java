@@ -48,4 +48,6 @@ public interface AuditLogRepository extends MongoRepository<AuditLog, String> {
     long countSince(LocalDateTime since);
 
     List<AuditLog> findBySchoolId(String schoolId);
+
+    List<AuditLog> findBySchoolIdAndTargetIdAndAction(String schoolId, String targetId, String action);
 }

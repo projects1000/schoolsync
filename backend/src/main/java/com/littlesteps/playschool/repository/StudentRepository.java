@@ -31,4 +31,10 @@ public interface StudentRepository extends MongoRepository<Student, String> {
     List<Student> findByClassIdIn(List<String> classIds);
 
     List<Student> findByClassId(String classId);
+
+    Optional<Student> findTopBySchoolIdAndClassIdAndSectionIdOrderByRollNoDesc(String schoolId, String classId,
+            String sectionId);
+
+    List<Student> findBySchoolIdAndClassIdAndSectionIdAndStatus(String schoolId, String classId, String sectionId,
+            Student.Status status);
 }

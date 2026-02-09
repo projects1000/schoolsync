@@ -42,6 +42,28 @@ public class AdminController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private com.littlesteps.playschool.service.AuditService auditService;
+
+    @GetMapping("/audit-logs")
+    public ResponseEntity<?> getAuditLogs(
+            @RequestParam(required = false) String targetId,
+            @RequestParam(required = false) String action,
+            Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+            String schoolId = user.getSchoolId();
+
+            List<com.littlesteps.playschool.entity.AuditLog> logs = auditService.getAuditLogs(schoolId, targetId,
+                    action);
+            return ResponseEntity.ok(logs);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to fetch audit logs: " + e.getMessage()));
+        }
+    }
+
     @PostMapping("/clear-and-reset-users")
     public ResponseEntity<Map<String, Object>> clearAndResetUsers() {
         // SECURITY: This endpoint is disabled for production safety

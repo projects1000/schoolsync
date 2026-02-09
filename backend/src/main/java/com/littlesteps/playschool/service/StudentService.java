@@ -6,6 +6,7 @@ import com.littlesteps.playschool.repository.StudentRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,31 +36,58 @@ public class StudentService {
         return convertToDTO(student);
     }
 
+    @Transactional
     public StudentDTO createStudent(StudentDTO studentDTO, String schoolId) {
         // Auto-generate Admission No
         String admissionNo = generateAdmissionNo();
 
-        Student student = modelMapper.map(studentDTO, Student.class);
-        student.setAdmissionNo(admissionNo);
-        student.setStatus(Student.Status.ACTIVE); // Default status
-        student.setSchoolId(schoolId);
+        Student newStudent = modelMapper.map(studentDTO, Student.class);
+        newStudent.setAdmissionNo(admissionNo);
+        newStudent.setStatus(Student.Status.ACTIVE); // Default status
+        newStudent.setSchoolId(schoolId);
 
-        // Resolve Class/Section Names if IDs are provided
+        // Resolve Class/Section Name if ID provided
         if (studentDTO.getClassId() != null) {
             classesRepository.findById(studentDTO.getClassId())
-                    .ifPresent(cls -> student.setClassName(cls.getName()));
+                    .ifPresent(cls -> newStudent.setClassName(cls.getName()));
         }
 
-        Student savedStudent = studentRepository.save(student);
-        return convertToDTO(savedStudent);
+        // 1. Fetch existing students
+        // 2. Add new student to list
+        // 3. Sort list alphabetically
+        // 4. Reassign roll numbers
+        // 5. Save (Atomic)
+
+        if (studentDTO.getClassId() != null && studentDTO.getSectionId() != null) {
+            // Save first (without roll no initially or with logic)
+            // But strict rule: "Roll number must be auto-assigned by backend"
+            // We can save with null/default rollNo, then recalculate.
+
+            Student savedStudent = studentRepository.save(newStudent);
+
+            // Recalculate Roll Numbers for the section (includes the new student)
+            recalculateRollNumbers(schoolId, savedStudent.getClassId(), savedStudent.getSectionId());
+
+            // Refetch to get assigned roll number
+            return convertToDTO(studentRepository.findById(savedStudent.getId()).orElse(savedStudent));
+        } else {
+            // Fallback if no class/section assigned
+            Student saved = studentRepository.save(newStudent);
+            return convertToDTO(saved);
+        }
     }
 
+    @Transactional
     public StudentDTO updateStudent(String id, StudentDTO studentDTO) {
         Student existingStudent = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
-        // Don't allow changing admission no manually easily, or check uniqueness if we
-        // do
+        String schoolId = existingStudent.getSchoolId();
+        String oldName = existingStudent.getName();
+        String oldClassId = existingStudent.getClassId();
+        String oldSectionId = existingStudent.getSectionId();
+
+        // Update fields
         if (studentDTO.getAdmissionNo() != null
                 && !existingStudent.getAdmissionNo().equals(studentDTO.getAdmissionNo())) {
             if (studentRepository.existsByAdmissionNo(studentDTO.getAdmissionNo())) {
@@ -89,15 +117,53 @@ public class StudentService {
         }
 
         Student savedStudent = studentRepository.save(existingStudent);
+
+        // Check for Section Change
+        boolean sectionChanged = (studentDTO.getClassId() != null && !studentDTO.getClassId().equals(oldClassId)) ||
+                (studentDTO.getSectionId() != null && !studentDTO.getSectionId().equals(oldSectionId));
+
+        if (sectionChanged) {
+            // Recalc Old Section Logic
+            if (oldClassId != null && oldSectionId != null) {
+                recalculateRollNumbers(schoolId, oldClassId, oldSectionId);
+            }
+            // Recalc New Section Logic
+            recalculateRollNumbers(schoolId, savedStudent.getClassId(), savedStudent.getSectionId());
+
+            // Refetch to ensure we return the latest state
+            savedStudent = studentRepository.findById(savedStudent.getId()).orElse(savedStudent);
+
+        } else if (studentDTO.getName() != null && !studentDTO.getName().equals(oldName)) {
+            // Name Change Logic: Recalculate current section
+            recalculateRollNumbers(savedStudent.getSchoolId(), savedStudent.getClassId(), savedStudent.getSectionId());
+            savedStudent = studentRepository.findById(savedStudent.getId()).orElse(savedStudent);
+        }
+
         return convertToDTO(savedStudent);
     }
 
+    @Transactional
     public void promoteStudent(String id, String newClassId, String newSectionId) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
+        String oldClassId = student.getClassId();
+        String oldSectionId = student.getSectionId();
+        String schoolId = student.getSchoolId();
+
         student.setClassId(newClassId);
         student.setSectionId(newSectionId);
+
+        // Save first to be included in the new section query
+        studentRepository.save(student);
+
+        // Recalculate Roll No for new class/section
+        recalculateRollNumbers(schoolId, newClassId, newSectionId);
+
+        // Recalculate Roll No for old class/section to close gaps
+        if (oldClassId != null && oldSectionId != null) {
+            recalculateRollNumbers(schoolId, oldClassId, oldSectionId);
+        }
 
         // Update class name for display
         classesRepository.findById(newClassId)
@@ -145,9 +211,56 @@ public class StudentService {
         return admissionNo;
     }
 
+    @Autowired
+    private AuditService auditService;
+
+    // ... (existing helper methods)
+
+    private void recalculateRollNumbers(String schoolId, String classId, String sectionId) {
+        List<Student> students = studentRepository.findBySchoolIdAndClassIdAndSectionIdAndStatus(
+                schoolId, classId, sectionId, Student.Status.ACTIVE);
+
+        // Sort alphabetically: Trim spaces, lowercase, A->Z
+        students.sort((s1, s2) -> {
+            String n1 = s1.getName() != null ? s1.getName().trim().toLowerCase() : "";
+            String n2 = s2.getName() != null ? s2.getName().trim().toLowerCase() : "";
+            return n1.compareTo(n2);
+        });
+
+        // Assign Roll Numbers
+        int rollNo = 1;
+        boolean changed = false;
+        List<String> affectedIds = new java.util.ArrayList<>();
+
+        for (Student s : students) {
+            // Optimization: Only save if rollNo changes
+            if (s.getRollNo() == null || s.getRollNo() != rollNo) {
+                s.setRollNo(rollNo);
+                studentRepository.save(s);
+                changed = true;
+            }
+            affectedIds.add(s.getId());
+            rollNo++;
+        }
+
+        if (changed || !affectedIds.isEmpty()) { // Log even if just verification/initial assignment? User requested
+                                                 // "Log roll number changes".
+            // "affectedStudentIds" implies we should log who was in the specific
+            // calculation.
+            // We'll log if we ran the calculation.
+            String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                    .getAuthentication().getName();
+            // Assuming authentication is available (it should be for Admin/Teacher actions)
+            // If triggered by system/startup, might need handling. But requirements say
+            // "Admin login... exists".
+            if (username != null && !username.equals("anonymousUser")) {
+                auditService.logRollNumberRecalculation(username, classId, sectionId, affectedIds, schoolId);
+            }
+        }
+    }
+
     private StudentDTO convertToDTO(Student student) {
         StudentDTO dto = modelMapper.map(student, StudentDTO.class);
-        // Ensure manual mapping if strictness needed, but ModelMapper should handle it
         return dto;
     }
 }

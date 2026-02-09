@@ -287,6 +287,7 @@ const StudentManagement = () => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Roll No</TableHead>
               <TableHead>Admission No</TableHead>
               <TableHead>Student</TableHead>
               <TableHead>Class</TableHead>
@@ -305,6 +306,7 @@ const StudentManagement = () => {
             ) : (
               filteredStudents.map((student) => (
                 <TableRow key={student.id}>
+                  <TableCell className="font-mono text-xs">{student.rollNo}</TableCell>
                   <TableCell className="font-mono text-xs">{student.admissionNo}</TableCell>
                   <TableCell>
                     <div className="font-medium">{student.name}</div>

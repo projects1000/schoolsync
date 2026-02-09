@@ -31,6 +31,9 @@ public class TeacherMaterialService {
     @Autowired
     private StudyMaterialRepository studyMaterialRepository;
 
+    @Autowired
+    private com.littlesteps.playschool.repository.ClassSubjectRepository classSubjectRepository;
+
     private final String uploadDir = "uploads/materials/";
 
     @Transactional
@@ -41,7 +44,10 @@ public class TeacherMaterialService {
         Teacher teacher = teacherRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
 
-        if (!teacher.getAssignedClasses().contains(classId)) {
+        boolean isClassTeacher = teacher.getAssignedClasses() != null && teacher.getAssignedClasses().contains(classId);
+        boolean isSubjectTeacher = classSubjectRepository.existsByClassIdAndTeacherId(classId, teacher.getId());
+
+        if (!isClassTeacher && !isSubjectTeacher) {
             throw new RuntimeException("Unauthorized: Teacher is not assigned to this class.");
         }
 
@@ -78,7 +84,10 @@ public class TeacherMaterialService {
         Teacher teacher = teacherRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
 
-        if (!teacher.getAssignedClasses().contains(classId)) {
+        boolean isClassTeacher = teacher.getAssignedClasses() != null && teacher.getAssignedClasses().contains(classId);
+        boolean isSubjectTeacher = classSubjectRepository.existsByClassIdAndTeacherId(classId, teacher.getId());
+
+        if (!isClassTeacher && !isSubjectTeacher) {
             throw new RuntimeException("Unauthorized access to class materials.");
         }
 

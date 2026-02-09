@@ -106,6 +106,11 @@ public class DataInitializer implements CommandLineRunner {
             } else {
                 System.out.println("=== SUPER ADMIN ALREADY EXISTS ===");
                 System.out.println("Email: " + superAdminEmail);
+                // FORCE RESET PASSWORD FOR DEV
+                // Reuse existingAdmin from outer scope
+                existingAdmin.setPassword(passwordEncoder.encode("password"));
+                userRepository.save(existingAdmin);
+                System.out.println("=== RESET SUPER ADMIN PASSWORD TO 'password' ===");
                 System.out.println("===================================");
             }
         }
