@@ -106,6 +106,11 @@ public class DataInitializer implements CommandLineRunner {
             } else {
                 System.out.println("=== SUPER ADMIN ALREADY EXISTS ===");
                 System.out.println("Email: " + superAdminEmail);
+                // FORCE RESET PASSWORD FOR DEV
+                // Reuse existingAdmin from outer scope
+                existingAdmin.setPassword(passwordEncoder.encode("password"));
+                userRepository.save(existingAdmin);
+                System.out.println("=== RESET SUPER ADMIN PASSWORD TO 'password' ===");
                 System.out.println("===================================");
             }
         }
@@ -213,25 +218,27 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
-    private void initializeSchoolSettings() {
-        if (!schoolSettingsRepository.existsBySchoolNameIsNotNull()) {
-            SchoolSettings settings = new SchoolSettings();
-            settings.setSchoolName("LittleStep Playschool");
-            settings.setSchoolAddress("123, School Street, City");
-            settings.setSchoolPhone("+1 234-567-8900");
-            settings.setSchoolEmail("info@littlesteps.com");
-            settings.setSchoolWebsite("www.littlesteps.com");
-            settings.setEmailNotifications(true);
-            settings.setSmsNotifications(false);
-            settings.setPushNotifications(true);
-            settings.setTheme("light");
-            settings.setLanguage("en");
-            settings.setCurrency("INR");
-            settings.setTimezone("Asia/Kolkata");
-            settings.setAcademicYear("2024-2025");
-            schoolSettingsRepository.save(settings);
-
-            System.out.println("=== INITIALIZED SCHOOL SETTINGS ===");
-        }
-    }
+    /*
+     * private void initializeSchoolSettings() {
+     * if (!schoolSettingsRepository.existsBySchoolNameIsNotNull()) {
+     * SchoolSettings settings = new SchoolSettings();
+     * settings.setSchoolName("LittleStep Playschool");
+     * settings.setSchoolAddress("123, School Street, City");
+     * settings.setSchoolPhone("+1 234-567-8900");
+     * settings.setSchoolEmail("info@littlesteps.com");
+     * settings.setSchoolWebsite("www.littlesteps.com");
+     * settings.setEmailNotifications(true);
+     * settings.setSmsNotifications(false);
+     * settings.setPushNotifications(true);
+     * settings.setTheme("light");
+     * settings.setLanguage("en");
+     * settings.setCurrency("INR");
+     * settings.setTimezone("Asia/Kolkata");
+     * settings.setAcademicYear("2024-2025");
+     * schoolSettingsRepository.save(settings);
+     * 
+     * System.out.println("=== INITIALIZED SCHOOL SETTINGS ===");
+     * }
+     * }
+     */
 }

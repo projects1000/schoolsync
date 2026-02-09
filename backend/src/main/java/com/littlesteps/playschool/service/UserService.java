@@ -66,8 +66,17 @@ public class UserService {
         }
 
         // Generate unique filename
+        // Generate unique filename
         String originalFilename = photo.getOriginalFilename();
-        String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        if (originalFilename == null || originalFilename.isEmpty()) {
+            originalFilename = "uploaded_file";
+        }
+        String fileExtension = "";
+        int lastDotIndex = originalFilename.lastIndexOf(".");
+        if (lastDotIndex != -1) {
+            fileExtension = originalFilename.substring(lastDotIndex);
+        }
+
         String filename = UUID.randomUUID().toString() + fileExtension;
 
         // Save file

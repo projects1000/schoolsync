@@ -1,6 +1,5 @@
 package com.littlesteps.playschool.controller;
 
-import com.littlesteps.playschool.dto.ParentDTO;
 import com.littlesteps.playschool.dto.StudentDTO;
 import com.littlesteps.playschool.service.ParentService;
 import com.littlesteps.playschool.entity.User;
@@ -28,6 +27,11 @@ public class ParentAccessController {
 
         @Autowired
         private ParentRepository parentRepository;
+
+        @GetMapping("/students")
+        public ResponseEntity<List<StudentDTO>> getMyStudents(Authentication authentication) {
+                return getMyChildren(authentication);
+        }
 
         @GetMapping("/me")
         public ResponseEntity<?> getMyProfile(Authentication authentication) {
@@ -145,5 +149,19 @@ public class ParentAccessController {
 
                 // Fetch study materials for the student's class
                 return ResponseEntity.ok(parentService.getStudentStudyMaterials(studentId));
+        }
+
+        @GetMapping("/academic-info")
+        public ResponseEntity<java.util.List<com.littlesteps.playschool.dto.ParentAcademicInfoDTO>> getAcademicInfo(
+                        Authentication authentication) {
+                String email = authentication.getName();
+                User user = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+
+                com.littlesteps.playschool.entity.Parent parent = parentRepository.findByUserId(user.getId())
+                                .orElseThrow(() -> new RuntimeException("Parent profile not found"));
+
+                return ResponseEntity
+                                .ok(parentService.getAcademicInfoForChildren(parent.getId(), parent.getSchoolId()));
         }
 }

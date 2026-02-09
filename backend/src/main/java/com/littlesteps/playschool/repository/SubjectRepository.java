@@ -1,0 +1,17 @@
+package com.littlesteps.playschool.repository;
+
+import com.littlesteps.playschool.entity.Subject;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface SubjectRepository extends MongoRepository<Subject, String> {
+    List<Subject> findBySchoolId(String schoolId);
+
+    Optional<Subject> findBySchoolIdAndName(String schoolId, String name);
+
+    boolean existsBySchoolIdAndName(String schoolId, String name);
+}

@@ -283,4 +283,31 @@ public class AuditService {
             auditLogRepository.save(auditLog);
         }
     }
+
+    public void logRollNumberRecalculation(String username, String classId, String sectionId,
+            List<String> affectedStudentIds, String schoolId) {
+        User actorUser = userRepository.findByEmail(username).orElse(null);
+        AuditLog auditLog = new AuditLog();
+        auditLog.setActorUser(actorUser);
+        auditLog.setAction("ROLL_NO_RECALCULATED");
+        auditLog.setTargetType("CLASS_SECTION");
+        auditLog.setTargetId(classId + ":" + sectionId); // Composite ID for reference
+        auditLog.setClassId(classId);
+        auditLog.setSectionId(sectionId);
+        auditLog.setAffectedStudentIds(affectedStudentIds);
+        auditLog.setSchoolId(schoolId);
+        auditLog.setDescription("Roll numbers recalculated for class " + classId + ", section " + sectionId);
+        auditLog.setCreatedAt(java.time.LocalDateTime.now());
+
+        auditLogRepository.save(auditLog);
+    }
+
+    public List<AuditLog> getAuditLogs(String schoolId, String targetId, String action) {
+        if (targetId != null && action != null) {
+            return auditLogRepository.findBySchoolIdAndTargetIdAndAction(schoolId, targetId, action);
+        } else if (schoolId != null) {
+            return auditLogRepository.findBySchoolId(schoolId);
+        }
+        return java.util.Collections.emptyList();
+    }
 }

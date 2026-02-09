@@ -21,7 +21,13 @@ public class AnnouncementService {
 
     public List<AnnouncementDTO> getAllAnnouncements() {
         String schoolId = SchoolContext.getSchoolId();
-        List<Announcement> announcements = announcementRepository.findBySchoolIdOrderByCreatedAtDesc(schoolId);
+        List<Announcement> announcements;
+        if (schoolId == null) {
+            announcements = announcementRepository.findAll(org.springframework.data.domain.Sort
+                    .by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+        } else {
+            announcements = announcementRepository.findBySchoolIdOrderByCreatedAtDesc(schoolId);
+        }
         return announcements.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 

@@ -56,6 +56,18 @@ public class ParentService {
     @Autowired
     private com.littlesteps.playschool.repository.StudyMaterialRepository studyMaterialRepository;
 
+    @Autowired
+    private com.littlesteps.playschool.repository.ClassesRepository classesRepository;
+
+    @Autowired
+    private com.littlesteps.playschool.repository.TeacherRepository teacherRepository;
+
+    @Autowired
+    private com.littlesteps.playschool.repository.ClassSubjectRepository classSubjectRepository;
+
+    @Autowired
+    private com.littlesteps.playschool.repository.SubjectRepository subjectRepository;
+
     private static final String ALLOWED_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
 
     /**
@@ -258,7 +270,7 @@ public class ParentService {
      */
     @Transactional
     public void unmapStudentFromParent(String parentId, String studentId, String removedBy, String schoolId) {
-        Parent parent = parentRepository.findByIdAndSchoolId(parentId, schoolId)
+        parentRepository.findByIdAndSchoolId(parentId, schoolId)
                 .orElseThrow(() -> new RuntimeException("Parent not found in this school"));
 
         // Verify mapping exists
@@ -476,6 +488,7 @@ public class ParentService {
         StudentDTO dto = new StudentDTO();
         dto.setId(student.getId());
         dto.setAdmissionNo(student.getAdmissionNo());
+        dto.setRollNo(student.getRollNo());
         dto.setName(student.getName());
         dto.setAge(student.getAge());
         dto.setClassName(student.getClassName());
@@ -580,5 +593,70 @@ public class ParentService {
     @Deprecated
     public ParentDTO updateParent(String id, ParentDTO parentDTO, String schoolId) {
         return updateParent(id, parentDTO, null, schoolId);
+    }
+
+    // Get academic info for all children of a parent
+    public java.util.List<com.littlesteps.playschool.dto.ParentAcademicInfoDTO> getAcademicInfoForChildren(
+            String parentId, String schoolId) {
+
+        java.util.List<com.littlesteps.playschool.dto.ParentAcademicInfoDTO> result = new java.util.ArrayList<>();
+
+        // Get all students for this parent
+        java.util.List<StudentDTO> children = getStudentsByParentId(parentId, schoolId);
+
+        for (StudentDTO child : children) {
+            com.littlesteps.playschool.dto.ParentAcademicInfoDTO info = new com.littlesteps.playschool.dto.ParentAcademicInfoDTO();
+            info.setChildId(child.getId());
+            info.setChildName(child.getName());
+
+            // Get class details
+            if (child.getClassId() != null) {
+                classesRepository.findById(child.getClassId()).ifPresent(cls -> {
+                    info.setClassName(cls.getName());
+                    info.setSection(cls.getSection());
+
+                    // Get class teacher name
+                    if (cls.getClassTeacherId() != null) {
+                        teacherRepository.findById(cls.getClassTeacherId()).ifPresent(teacher -> {
+                            info.setClassTeacherName(teacher.getName());
+                        });
+                    }
+                });
+            }
+
+            // Get subjects and their teachers for this class
+            java.util.List<com.littlesteps.playschool.dto.ParentAcademicInfoDTO.SubjectTeacherInfo> subjects = new java.util.ArrayList<>();
+            if (child.getClassId() != null) {
+                java.util.List<com.littlesteps.playschool.entity.ClassSubject> classSubjects = classSubjectRepository
+                        .findByClassId(child.getClassId());
+
+                for (com.littlesteps.playschool.entity.ClassSubject cs : classSubjects) {
+                    String subjectName = "Unknown";
+                    String teacherName = "Not Assigned";
+
+                    java.util.Optional<com.littlesteps.playschool.entity.Subject> subjectOpt = subjectRepository
+                            .findById(cs.getSubjectId());
+                    if (subjectOpt.isPresent()) {
+                        subjectName = subjectOpt.get().getName();
+                    }
+
+                    if (cs.getTeacherId() != null) {
+                        java.util.Optional<com.littlesteps.playschool.entity.Teacher> teacherOpt = teacherRepository
+                                .findById(cs.getTeacherId());
+                        if (teacherOpt.isPresent()) {
+                            teacherName = teacherOpt.get().getName();
+                        }
+                    }
+
+                    subjects.add(new com.littlesteps.playschool.dto.ParentAcademicInfoDTO.SubjectTeacherInfo(
+                            cs.getSubjectId(), subjectName, cs.getTeacherId(), teacherName));
+                }
+            }
+            info.setSubjects(subjects);
+
+            result.add(info);
+        }
+
+        return result;
     }
 }

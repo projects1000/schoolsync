@@ -24,13 +24,19 @@ public class TeacherCommunicationService {
     @Autowired
     private MessageRepository messageRepository;
 
+    @Autowired
+    private com.littlesteps.playschool.repository.ClassSubjectRepository classSubjectRepository;
+
     public Message sendMessage(String email, String classId, String content, String recipientId) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         Teacher teacher = teacherRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
 
-        if (!teacher.getAssignedClasses().contains(classId)) {
+        boolean isClassTeacher = teacher.getAssignedClasses() != null && teacher.getAssignedClasses().contains(classId);
+        boolean isSubjectTeacher = classSubjectRepository.existsByClassIdAndTeacherId(classId, teacher.getId());
+
+        if (!isClassTeacher && !isSubjectTeacher) {
             throw new RuntimeException("Unauthorized: You are not assigned to this class.");
         }
 
@@ -50,7 +56,10 @@ public class TeacherCommunicationService {
         Teacher teacher = teacherRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
 
-        if (!teacher.getAssignedClasses().contains(classId)) {
+        boolean isClassTeacher = teacher.getAssignedClasses() != null && teacher.getAssignedClasses().contains(classId);
+        boolean isSubjectTeacher = classSubjectRepository.existsByClassIdAndTeacherId(classId, teacher.getId());
+
+        if (!isClassTeacher && !isSubjectTeacher) {
             throw new RuntimeException("Unauthorized access to class messages.");
         }
 

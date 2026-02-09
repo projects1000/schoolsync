@@ -42,6 +42,7 @@ import SuperAdminAnnouncements from '@/components/superadmin/SuperAdminAnnouncem
 import SecurityAuditLogs from '@/components/superadmin/SecurityAuditLogs';
 import SystemHealthBackup from '@/components/superadmin/SystemHealthBackup';
 import SchoolProfile from '@/components/admin/SchoolProfile';
+import AcademicsManagement from '@/components/admin/AcademicsManagement';
 import ClassManagement from '@/components/classes/ClassManagement';
 
 function App() {
@@ -147,6 +148,8 @@ function App() {
         return <SchoolProfile />;
       case 'classes':
         return <ClassManagement />;
+      case 'academics':
+        return <AcademicsManagement />;
       case 'teacher-dashboard':
         return <TeacherDashboard setActiveTab={setActiveModule} />;
       case 'teacher-classes':

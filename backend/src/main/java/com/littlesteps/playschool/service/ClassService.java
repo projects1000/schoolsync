@@ -20,6 +20,9 @@ public class ClassService {
     @Autowired
     private AuditService auditService;
 
+    @Autowired
+    private com.littlesteps.playschool.repository.TeacherRepository teacherRepository;
+
     public List<Classes> getClassesBySchoolId(String schoolId) {
         return classesRepository.findBySchoolId(schoolId);
     }
@@ -35,7 +38,16 @@ public class ClassService {
         }
 
         Classes newClass = new Classes();
-        newClass.setName(classDTO.getName());
+        newClass.setGrade(classDTO.getGrade());
+        newClass.setSection(classDTO.getSection());
+
+        // Generate name automatically: "Grade - Section"
+        String className = classDTO.getGrade();
+        if (classDTO.getSection() != null && !classDTO.getSection().isEmpty()) {
+            className += " - " + classDTO.getSection();
+        }
+        newClass.setName(className);
+
         newClass.setCapacity(classDTO.getCapacity());
         newClass.setRoom(classDTO.getRoom());
         newClass.setSchoolId(schoolId);
@@ -44,11 +56,10 @@ public class ClassService {
         newClass.setCreatedAt(LocalDateTime.now());
         newClass.setUpdatedAt(LocalDateTime.now());
 
-        // For Backward Compatibility or if Grade/Section is still needed by other parts
-        // but not UI
-        // We can just set them to name or empty
-        newClass.setGrade(classDTO.getName());
-        newClass.setSection("");
+        // Handle Class Teacher Assignment
+        if (classDTO.getClassTeacherId() != null && !classDTO.getClassTeacherId().isEmpty()) {
+            assignClassTeacher(newClass, classDTO.getClassTeacherId(), schoolId);
+        }
 
         Classes savedClass = classesRepository.save(newClass);
         auditService.logAction(createdBy, "CREATE_CLASS", "CLASS", savedClass.getId(), classDTO,
@@ -65,8 +76,20 @@ public class ClassService {
             throw new IllegalStateException("Cannot edit a locked class");
         }
 
-        if (classDTO.getName() != null)
-            existingClass.setName(classDTO.getName());
+        if (classDTO.getGrade() != null)
+            existingClass.setGrade(classDTO.getGrade());
+        if (classDTO.getSection() != null)
+            existingClass.setSection(classDTO.getSection());
+
+        // Regenerate name if grade or section changed
+        if (classDTO.getGrade() != null || classDTO.getSection() != null) {
+            String className = existingClass.getGrade();
+            if (existingClass.getSection() != null && !existingClass.getSection().isEmpty()) {
+                className += " - " + existingClass.getSection();
+            }
+            existingClass.setName(className);
+        }
+
         if (classDTO.getCapacity() != null) {
             if (classDTO.getCapacity() <= 0)
                 throw new IllegalArgumentException("Capacity must be greater than zero");
@@ -77,6 +100,17 @@ public class ClassService {
         if (classDTO.getLocked() != null)
             existingClass.setLocked(classDTO.getLocked());
 
+        // Handle Class Teacher Assignment
+        if (classDTO.getClassTeacherId() != null) {
+            if (classDTO.getClassTeacherId().isEmpty()) {
+                // Remove class teacher
+                existingClass.setClassTeacherId(null);
+            } else {
+                // Assign new class teacher
+                assignClassTeacher(existingClass, classDTO.getClassTeacherId(), existingClass.getSchoolId());
+            }
+        }
+
         existingClass.setUpdatedAt(LocalDateTime.now());
 
         Classes updatedClass = classesRepository.save(existingClass);
@@ -85,6 +119,59 @@ public class ClassService {
         return updatedClass;
     }
 
+    private void assignClassTeacher(Classes classesEntity, String teacherId, String schoolId) {
+        com.littlesteps.playschool.entity.Teacher teacher = teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new IllegalArgumentException("Teacher not found with ID: " + teacherId));
+
+        // Validate teacher belongs to the same school
+        if (!teacher.getSchoolId().equals(schoolId)) {
+            throw new IllegalArgumentException("Teacher does not belong to this school");
+        }
+
+        // Check if teacher is already a CLASS TEACHER of another class
+        List<Classes> existingClasses = classesRepository.findByClassTeacherId(teacherId);
+        for (Classes existing : existingClasses) {
+            // If it's a different class, throw error
+            if (!existing.getId().equals(classesEntity.getId())) {
+                throw new IllegalArgumentException(
+                        "Teacher " + teacher.getName() + " is already the Class Teacher of " + existing.getName());
+            }
+        }
+
+        classesEntity.setClassTeacherId(teacherId);
+    }
+
+    @Transactional
+    public Classes assignClassTeacherToClass(String classId, String teacherId, String schoolId, String updatedBy) {
+        Classes classesEntity = classesRepository.findById(classId)
+                .orElseThrow(() -> new IllegalArgumentException("Class not found"));
+
+        if (!classesEntity.getSchoolId().equals(schoolId)) {
+            throw new IllegalArgumentException("Class does not belong to this school");
+        }
+
+        if (Boolean.TRUE.equals(classesEntity.getLocked())) {
+            throw new IllegalStateException("Cannot edit a locked class");
+        }
+
+        if (teacherId == null || teacherId.trim().isEmpty()) {
+            classesEntity.setClassTeacherId(null);
+        } else {
+            assignClassTeacher(classesEntity, teacherId, schoolId);
+        }
+
+        classesEntity.setUpdatedAt(LocalDateTime.now());
+        Classes updatedClass = classesRepository.save(classesEntity);
+
+        auditService.logAction(updatedBy, "ASSIGN_CLASS_TEACHER", "CLASS", classId, null,
+                "Assigned teacher " + teacherId + " to class " + classesEntity.getName());
+
+        return updatedClass;
+    }
+
+    @Autowired
+    private com.littlesteps.playschool.repository.ClassSubjectRepository classSubjectRepository;
+
     @Transactional
     public void deleteClass(String id, String deletedBy) {
         Classes existingClass = classesRepository.findById(id)
@@ -92,7 +179,10 @@ public class ClassService {
         if (Boolean.TRUE.equals(existingClass.getLocked())) {
             throw new IllegalStateException("Cannot delete a locked class");
         }
-        // Ideally check for dependencies (students/teachers) before delete
+
+        // Remove subjects assigned to this class
+        classSubjectRepository.deleteByClassId(id);
+
         classesRepository.deleteById(id);
         auditService.logAction(deletedBy, "DELETE_CLASS", "CLASS", id, null,
                 "Deleted class: " + existingClass.getName());

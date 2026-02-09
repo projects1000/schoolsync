@@ -33,6 +33,15 @@ public class AuditLog {
 
     private String schoolId;
 
+    // Roll Number Recalculation Fields
+    private String classId;
+    private String sectionId;
+    private java.util.List<String> affectedStudentIds;
+
+    // Academic Assignment Fields
+    private String subjectId;
+    private String teacherId;
+
     // Constructors
     public AuditLog() {
     }
@@ -145,5 +154,45 @@ public class AuditLog {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getClassId() {
+        return classId;
+    }
+
+    public void setClassId(String classId) {
+        this.classId = classId;
+    }
+
+    public String getSectionId() {
+        return sectionId;
+    }
+
+    public void setSectionId(String sectionId) {
+        this.sectionId = sectionId;
+    }
+
+    public java.util.List<String> getAffectedStudentIds() {
+        return affectedStudentIds;
+    }
+
+    public void setAffectedStudentIds(java.util.List<String> affectedStudentIds) {
+        this.affectedStudentIds = affectedStudentIds;
+    }
+
+    public String getSubjectId() {
+        return subjectId;
+    }
+
+    public void setSubjectId(String subjectId) {
+        this.subjectId = subjectId;
+    }
+
+    public String getTeacherId() {
+        return teacherId;
+    }
+
+    public void setTeacherId(String teacherId) {
+        this.teacherId = teacherId;
     }
 }

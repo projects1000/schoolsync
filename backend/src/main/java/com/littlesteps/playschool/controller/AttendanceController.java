@@ -17,6 +17,18 @@ import java.util.Map;
 public class AttendanceController {
 
     @Autowired
+    private com.littlesteps.playschool.repository.UserRepository userRepository;
+
+    @Autowired
+    private com.littlesteps.playschool.repository.StudentRepository studentRepository;
+
+    @Autowired
+    private com.littlesteps.playschool.repository.ClassesRepository classesRepository;
+
+    @Autowired
+    private com.littlesteps.playschool.repository.AttendanceRepository attendanceRepository;
+
+    @Autowired
     private AttendanceService attendanceService;
 
     @GetMapping
@@ -73,8 +85,21 @@ public class AttendanceController {
     }
 
     @PostMapping
-    public ResponseEntity<List<AttendanceDTO>> saveAttendance(@RequestBody List<AttendanceDTO> attendanceList) {
+    public ResponseEntity<?> saveAttendance(@RequestBody List<AttendanceDTO> attendanceList,
+            org.springframework.security.core.Authentication authentication) {
         try {
+            if (attendanceList == null || attendanceList.isEmpty()) {
+                return ResponseEntity.badRequest().body("Attendance list cannot be empty");
+            }
+
+            // Permission Check: Verify currentUser is Class Teacher of the student's class
+            // We check the first student in the list assuming batch is for one class
+            String studentId = attendanceList.get(0).getStudentId();
+            if (!hasAttendancePermission(authentication.getName(), studentId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Only Class Teacher or Admin can mark attendance");
+            }
+
             List<AttendanceDTO> savedAttendance = attendanceService.saveAttendance(attendanceList);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedAttendance);
         } catch (Exception e) {
@@ -83,15 +108,84 @@ public class AttendanceController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AttendanceDTO> updateAttendance(
+    public ResponseEntity<?> updateAttendance(
             @PathVariable String id,
-            @RequestBody AttendanceDTO attendanceDTO) {
+            @RequestBody AttendanceDTO attendanceDTO,
+            org.springframework.security.core.Authentication authentication) {
         try {
+            // Permission Check
+            // We need studentId. If DTO doesn't have it (it might not on update?), we need
+            // to fetch existing attendance.
+            // But checking DTO first is faster if provided.
+            // For safety, let's skip DTO check and check existing record inside service?
+            // Or fetch attendance here to check permission.
+            // Fetching attendance requires repository.
+            // Let's rely on DTO having studentId, or fetch.
+            // Actually, we can fetch Student from DTO if present.
+            // If DTO.studentId is null, we can't check easily without fetching record.
+            // Let's assume passed DTO has studentId (which it should for UI).
+            // Better: use a service method to check permission?
+            // Let's fetch the attendance record to get studentId to be sure.
+            // But we can't fetch it easily here without Service.
+
+            // For now, assume DTO has studentId. If not, we might need a workaround.
+            // Wait, we can use the studentId from the DTO.
+
+            String studentId = attendanceDTO.getStudentId();
+
+            // If studentId not in DTO, fetch from existing record
+            if (studentId == null) {
+                com.littlesteps.playschool.entity.Attendance existing = attendanceRepository.findById(id)
+                        .orElseThrow(() -> new RuntimeException("Attendance not found"));
+                if (existing.getStudent() != null) {
+                    studentId = existing.getStudent().getId();
+                }
+            }
+
+            if (studentId != null && !hasAttendancePermission(authentication.getName(), studentId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Only Class Teacher or Admin can update attendance");
+            }
+
             AttendanceDTO updatedAttendance = attendanceService.updateAttendance(id, attendanceDTO);
             return ResponseEntity.ok(updatedAttendance);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @Autowired
+    private com.littlesteps.playschool.repository.TeacherRepository teacherRepository;
+
+    private boolean hasAttendancePermission(String email, String studentId) {
+        com.littlesteps.playschool.entity.User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.getRole() == com.littlesteps.playschool.entity.User.Role.ADMIN ||
+                user.getRole() == com.littlesteps.playschool.entity.User.Role.SUPERADMIN) {
+            return true;
+        }
+
+        com.littlesteps.playschool.entity.Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        String classId = student.getClassId();
+        if (classId == null)
+            return false;
+
+        com.littlesteps.playschool.entity.Classes classes = classesRepository.findById(classId)
+                .orElseThrow(() -> new RuntimeException("Class not found"));
+
+        if (classes.getClassTeacherId() != null) {
+            com.littlesteps.playschool.entity.Teacher teacher = teacherRepository.findById(classes.getClassTeacherId())
+                    .orElse(null);
+
+            if (teacher != null && teacher.getUser() != null && teacher.getUser().getId().equals(user.getId())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @GetMapping("/summary")

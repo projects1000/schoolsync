@@ -2,7 +2,8 @@ package com.littlesteps.playschool.dto;
 
 public class ClassDTO {
     private String id;
-    private String name;
+    private String grade;
+    private String section;
     private Integer capacity;
     private Boolean locked;
     private String room;
@@ -10,26 +11,27 @@ public class ClassDTO {
     public ClassDTO() {
     }
 
-    public ClassDTO(String name, Integer capacity, String room) {
-        this.name = name;
+    public ClassDTO(String grade, String section, Integer capacity, String room) {
+        this.grade = grade;
+        this.section = section;
         this.capacity = capacity;
         this.room = room;
     }
 
-    public String getId() {
-        return id;
+    public String getGrade() {
+        return grade;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setGrade(String grade) {
+        this.grade = grade;
     }
 
-    public String getName() {
-        return name;
+    public String getSection() {
+        return section;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setSection(String section) {
+        this.section = section;
     }
 
     public Integer getCapacity() {
@@ -54,5 +56,15 @@ public class ClassDTO {
 
     public void setRoom(String room) {
         this.room = room;
+    }
+
+    private String classTeacherId;
+
+    public String getClassTeacherId() {
+        return classTeacherId;
+    }
+
+    public void setClassTeacherId(String classTeacherId) {
+        this.classTeacherId = classTeacherId;
     }
 }

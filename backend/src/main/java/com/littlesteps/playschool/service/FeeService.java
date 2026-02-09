@@ -8,9 +8,7 @@ import com.littlesteps.playschool.repository.StudentRepository;
 import com.littlesteps.playschool.security.SchoolContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.query.Criteria;
+
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -19,7 +17,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+
 import java.util.stream.Collectors;
 
 @Service
@@ -30,9 +28,6 @@ public class FeeService {
 
         @Autowired
         private StudentRepository studentRepository;
-
-        @Autowired
-        private MongoTemplate mongoTemplate;
 
         public List<FeeInvoiceDTO> getAllInvoices() {
                 String schoolId = SchoolContext.getSchoolId();

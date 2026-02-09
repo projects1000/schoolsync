@@ -18,7 +18,7 @@ public class SectionController {
     private SectionService sectionService;
 
     @GetMapping("/{classId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
     public ResponseEntity<List<Section>> getSections(@PathVariable String classId) {
         return ResponseEntity.ok(sectionService.getSectionsByClass(classId));
     }

@@ -108,4 +108,12 @@ public class TeacherDashboardController {
         String email = authentication.getName();
         return ResponseEntity.ok(teacherDashboardService.getProfile(email));
     }
+
+    @GetMapping("/role-info")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<com.littlesteps.playschool.dto.TeacherRoleInfoDTO> getRoleInfo() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return ResponseEntity.ok(teacherDashboardService.getTeacherRoleInfo(email));
+    }
 }

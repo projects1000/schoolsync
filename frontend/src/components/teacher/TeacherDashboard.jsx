@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Loader2, Users, Calendar, BookOpen, FileText } from 'lucide-react';
+import { Loader2, Users, Calendar, BookOpen, FileText, Shield } from 'lucide-react';
 
 const TeacherDashboard = ({ setActiveTab }) => {
     const [dashboardData, setDashboardData] = useState(null);
+    const [roleInfo, setRoleInfo] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -18,10 +19,17 @@ const TeacherDashboard = ({ setActiveTab }) => {
                     return;
                 }
 
-                const response = await axios.get('http://localhost:8082/api/teacher/dashboard', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setDashboardData(response.data);
+                // Fetch dashboard data and role info in parallel
+                const [dashboardResponse, roleInfoResponse] = await Promise.all([
+                    axios.get('http://localhost:8082/api/teacher/dashboard', {
+                        headers: { Authorization: `Bearer ${token}` }
+                    }),
+                    axios.get('http://localhost:8082/api/teacher/role-info', {
+                        headers: { Authorization: `Bearer ${token}` }
+                    })
+                ]);
+                setDashboardData(dashboardResponse.data);
+                setRoleInfo(roleInfoResponse.data);
             } catch (err) {
                 console.error("Error fetching dashboard:", err);
                 // Fallback for demo if backend is not reachable immediately
@@ -44,6 +52,8 @@ const TeacherDashboard = ({ setActiveTab }) => {
 
     if (!dashboardData) return null;
 
+    const isClassTeacher = roleInfo?.classTeacher === true;
+
     return (
         <div className="space-y-6">
             {/* Profile Summary */}
@@ -60,12 +70,17 @@ const TeacherDashboard = ({ setActiveTab }) => {
                         <span className="bg-purple-50 text-purple-700 px-4 py-2 rounded-full text-sm font-medium border border-purple-100">
                             {dashboardData.assignedClassesCount || 0} Classes Assigned
                         </span>
+                        {isClassTeacher && (
+                            <span className="bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm font-medium border border-green-100 flex items-center gap-1">
+                                <Shield className="w-4 h-4" /> Class Teacher: {roleInfo.classTeacherOfClassName}
+                            </span>
+                        )}
                     </div>
                 </div>
             </div>
 
             {/* Quick Stats / Links */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className={`grid grid-cols-1 ${isClassTeacher ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-4`}>
                 <QuickLinkCard
                     icon={Users}
                     title="My Students"
@@ -73,13 +88,15 @@ const TeacherDashboard = ({ setActiveTab }) => {
                     color="blue"
                     onClick={() => setActiveTab('teacher-classes')}
                 />
-                <QuickLinkCard
-                    icon={Calendar}
-                    title="Attendance"
-                    count="Mark Now"
-                    color="green"
-                    onClick={() => setActiveTab('attendance')}
-                />
+                {isClassTeacher && (
+                    <QuickLinkCard
+                        icon={Calendar}
+                        title="Attendance"
+                        count="Mark Now"
+                        color="green"
+                        onClick={() => setActiveTab('attendance')}
+                    />
+                )}
                 <QuickLinkCard
                     icon={FileText}
                     title="Assignments"
