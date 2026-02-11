@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import NotificationDropdown from '@/components/common/NotificationDropdown';
 
 const Header = ({ currentUser, onLogout, onToggleSidebar, sidebarOpen }) => {
   const { toast } = useToast();
@@ -35,25 +36,25 @@ const Header = ({ currentUser, onLogout, onToggleSidebar, sidebarOpen }) => {
     <motion.header
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="bg-white shadow-sm border-b border-gray-200 px-6 py-4"
+      className="bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 sticky top-0 z-30"
     >
       <div className="flex items-center justify-between">
         {/* Left Side */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={onToggleSidebar}
-            className="hover:bg-gray-100"
+            className="hover:bg-gray-100 lg:hidden"
           >
             <Menu className="w-5 h-5" />
           </Button>
 
-          <div className="hidden lg:block">
-            <h1 className="text-xl font-semibold text-gray-800">
-              Welcome back, {currentUser?.name}!
+          <div className="block">
+            <h1 className="text-lg sm:text-xl font-semibold text-gray-800 truncate max-w-[150px] sm:max-w-xs">
+              {currentUser?.name ? `Welcome, ${currentUser.name.split(' ')[0]}` : 'Welcome'}
             </h1>
-            <p className="text-sm text-gray-500">
+            <p className="hidden sm:block text-sm text-gray-500">
               {new Date().toLocaleDateString('en-US', {
                 weekday: 'long',
                 year: 'numeric',
@@ -65,10 +66,10 @@ const Header = ({ currentUser, onLogout, onToggleSidebar, sidebarOpen }) => {
         </div>
 
         {/* Center/Right Side child Selector for Parents */}
-        <div className="flex-1 flex justify-center px-4">
+        <div className="flex-1 flex justify-center px-2 sm:px-4">
           {isParent && childrenList.length > 1 && selectedChild && (
-            <div className="flex items-center gap-3 bg-indigo-50 px-4 py-2 rounded-full border border-indigo-100 shadow-sm">
-              <div className="hidden sm:flex items-center gap-2 text-indigo-700 font-medium text-sm">
+            <div className="flex items-center gap-2 sm:gap-3 bg-indigo-50 px-2 sm:px-4 py-1 sm:py-2 rounded-full border border-indigo-100 shadow-sm max-w-[200px] sm:max-w-none">
+              <div className="hidden md:flex items-center gap-2 text-indigo-700 font-medium text-sm">
                 <Users className="w-4 h-4" />
                 <span>Switch Profile:</span>
               </div>
@@ -83,7 +84,7 @@ const Header = ({ currentUser, onLogout, onToggleSidebar, sidebarOpen }) => {
                   });
                 }}
               >
-                <SelectTrigger className="w-[160px] sm:w-[200px] h-9 border-indigo-200 bg-white rounded-full">
+                <SelectTrigger className="w-full sm:w-[200px] h-8 sm:h-9 border-indigo-200 bg-white rounded-full text-xs sm:text-sm px-2">
                   <SelectValue placeholder="Select Child" />
                 </SelectTrigger>
                 <SelectContent>
@@ -99,30 +100,22 @@ const Header = ({ currentUser, onLogout, onToggleSidebar, sidebarOpen }) => {
         </div>
 
         {/* Right Side */}
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          {/* Search - Hidden on small screens if child selector is present */}
+        <div className="flex items-center space-x-1 sm:space-x-4">
+          {/* Search - Hidden on small screens */}
           <Button
             variant="ghost"
             size="icon"
             onClick={handleSearchClick}
-            className={`hover:bg-gray-100 ${isParent ? 'hidden xl:inline-flex' : ''}`}
+            className={`hover:bg-gray-100 hidden sm:inline-flex`}
           >
             <Search className="w-5 h-5" />
           </Button>
 
           {/* Notifications */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleNotificationClick}
-            className="hover:bg-gray-100 relative"
-          >
-            <Bell className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-          </Button>
+          <NotificationDropdown />
 
           {/* User Menu */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3 ml-1 sm:ml-0">
             <div className="hidden md:block text-right">
               <p className="text-sm font-medium text-gray-800 truncate max-w-[100px]">{currentUser?.name}</p>
               <p className="text-xs text-gray-500 capitalize">{currentUser?.role}</p>
@@ -138,7 +131,7 @@ const Header = ({ currentUser, onLogout, onToggleSidebar, sidebarOpen }) => {
               variant="ghost"
               size="icon"
               onClick={onLogout}
-              className="hover:bg-red-50 hover:text-red-600"
+              className="hover:bg-red-50 hover:text-red-600 hidden sm:inline-flex"
             >
               <LogOut className="w-5 h-5" />
             </Button>
