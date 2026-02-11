@@ -24,10 +24,11 @@ import {
   Building,
   Box,
   User,
-  TrendingUp
+  TrendingUp,
+  Bell
 } from 'lucide-react';
 
-const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose }) => {
+const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose, sidebarOpen }) => {
   const menuItems = [
     { id: 'super-admin-dashboard', label: 'Command Center', icon: Crown, roles: ['superadmin'] },
     { id: 'school-management', label: 'School Management', icon: School, roles: ['superadmin'] },
@@ -57,6 +58,7 @@ const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose }) => {
     { id: 'fees', label: 'Fees & Billing', icon: CreditCard, roles: ['superadmin', 'admin'] },
     { id: 'timetable', label: 'Timetable', icon: BookOpen, roles: ['admin', 'teacher'] },
     { id: 'announcements', label: 'Announcements', icon: MessageSquare, roles: ['superadmin', 'admin'] },
+    { id: 'notification-management', label: 'Notifications', icon: Bell, roles: ['superadmin', 'admin'] },
     { id: 'parent-overview', label: 'Dashboard', icon: LayoutDashboard, roles: ['parent'] },
     { id: 'parent-academics', label: 'Academic Details', icon: GraduationCap, roles: ['parent'] },
     { id: 'parent-attendance', label: 'Attendance', icon: Calendar, roles: ['parent'] },
@@ -73,81 +75,101 @@ const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose }) => {
   );
 
   return (
-    <motion.div
-      initial={{ x: -300 }}
-      animate={{ x: 0 }}
-      exit={{ x: -300 }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="w-64 bg-white shadow-xl border-r border-gray-200 flex flex-col h-full relative"
-    >
-      {/* Header */}
-      <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-blue-600">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-white/20 rounded-lg">
-              <School className="w-6 h-6 text-white" />
+    <>
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+        />
+      )}
+
+      {/* Sidebar Container */}
+      <motion.div
+        initial={{ x: -300 }}
+        animate={{ x: sidebarOpen ? 0 : -300 }}
+        exit={{ x: -300 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-xl border-r border-gray-200 flex flex-col h-full transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          }`}
+      >
+        {/* Header */}
+        <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-blue-600">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-white/20 rounded-lg">
+                <School className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-white font-bold text-lg">Little Steps</h2>
+                <p className="text-white/80 text-xs">Playschool</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-white font-bold text-lg">Little Steps</h2>
-              <p className="text-white/80 text-xs">Playschool</p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="lg:hidden p-1 text-white/80 hover:text-white"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-
-      {/* User Info */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
-            <span className="text-white font-semibold text-sm">
-              {currentUser?.name?.charAt(0)}
-            </span>
-          </div>
-          <div>
-            <p className="font-medium text-gray-800 text-sm">{currentUser?.name}</p>
-            <p className="text-xs text-gray-500 capitalize">{currentUser?.role}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto overflow-x-hidden">
-        {filteredMenuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeModule === item.id;
-
-          return (
-            <motion.button
-              key={item.id}
-              onClick={() => setActiveModule(item.id)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all ${isActive
-                ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
-                }`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            <button
+              onClick={onClose}
+              className="lg:hidden p-1 text-white/80 hover:text-white"
             >
-              <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500'}`} />
-              <span className="font-medium">{item.label}</span>
-            </motion.button>
-          );
-        })}
-      </nav>
-
-      {/* Footer */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
-        <div className="text-center">
-          <p className="text-xs text-gray-500">© 2025 Little Steps Playschool</p>
-          <p className="text-xs text-gray-400">Management System v1.0</p>
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
-      </div>
-    </motion.div>
+
+        {/* User Info */}
+        <div className="p-4 border-b border-gray-200 bg-gray-50">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+              <span className="text-white font-semibold text-sm">
+                {currentUser?.name?.charAt(0)}
+              </span>
+            </div>
+            <div className="overflow-hidden">
+              <p className="font-medium text-gray-800 text-sm truncate">{currentUser?.name}</p>
+              <p className="text-xs text-gray-500 capitalize">{currentUser?.role}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto overflow-x-hidden">
+          {filteredMenuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeModule === item.id;
+
+            return (
+              <motion.button
+                key={item.id}
+                onClick={() => {
+                  setActiveModule(item.id);
+                  if (window.innerWidth < 1024) {
+                    onClose();
+                  }
+                }}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all ${isActive
+                  ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
+                  }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500'}`} />
+                <span className="font-medium truncate">{item.label}</span>
+              </motion.button>
+            );
+          })}
+        </nav>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-gray-200 bg-gray-50">
+          <div className="text-center">
+            <p className="text-xs text-gray-500">© 2025 Little Steps Playschool</p>
+            <p className="text-xs text-gray-400">Management System v1.0</p>
+          </div>
+        </div>
+      </motion.div>
+    </>
   );
 };
 

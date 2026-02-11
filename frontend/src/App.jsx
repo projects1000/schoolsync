@@ -21,6 +21,7 @@ import ParentStudyMaterials from '@/components/parent/ParentStudyMaterials';
 import ParentCourseHandouts from '@/components/parent/ParentCourseHandouts';
 import ParentAcademicDetails from '@/components/parent/ParentAcademicDetails';
 import { ParentProvider } from '@/context/ParentContext';
+import { NotificationProvider } from '@/context/NotificationContext';
 
 import ParentManagement from '@/components/parents/ParentManagement';
 import ParentRegistrationManagement from '@/components/admin/ParentRegistrationManagement';
@@ -45,14 +46,28 @@ import SecurityAuditLogs from '@/components/superadmin/SecurityAuditLogs';
 import SystemHealthBackup from '@/components/superadmin/SystemHealthBackup';
 import SchoolProfile from '@/components/admin/SchoolProfile';
 import AcademicsManagement from '@/components/admin/AcademicsManagement';
+import NotificationManagement from '@/components/admin/NotificationManagement';
 import ClassManagement from '@/components/classes/ClassManagement';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [activeModule, setActiveModule] = useState('dashboard');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -140,6 +155,8 @@ function App() {
         return <FeesManagement currentUser={currentUser} />;
       case 'announcements':
         return <AnnouncementManagement currentUser={currentUser} />;
+      case 'notification-management':
+        return <NotificationManagement currentUser={currentUser} />;
       case 'communications':
         return <Communications currentUser={currentUser} />;
       case 'timetable':
@@ -208,41 +225,45 @@ function App() {
         <meta name="description" content="Complete playschool management solution for administrators, teachers, and parents" />
       </Helmet>
 
-      <ParentProvider currentUser={currentUser}>
-        <div className="flex h-screen bg-gray-50">
-          <AnimatePresence>
-            {sidebarOpen && (
-              <Sidebar
-                activeModule={activeModule}
-                setActiveModule={setActiveModule}
+      <NotificationProvider currentUser={currentUser}>
+        <ParentProvider currentUser={currentUser}>
+          <div className="flex h-screen bg-gray-50 overflow-hidden">
+            {/* Sidebar with AnimatePresence for mobile transitions */}
+            <AnimatePresence mode="wait">
+              {(sidebarOpen || (window.innerWidth >= 1024)) && (
+                <Sidebar
+                  activeModule={activeModule}
+                  setActiveModule={setActiveModule}
+                  currentUser={currentUser}
+                  sidebarOpen={sidebarOpen}
+                  onClose={() => setSidebarOpen(false)}
+                />
+              )}
+            </AnimatePresence>
+
+            <div className="flex-1 flex flex-col overflow-hidden w-full">
+              <Header
                 currentUser={currentUser}
-                onClose={() => setSidebarOpen(false)}
+                onLogout={handleLogout}
+                onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+                sidebarOpen={sidebarOpen}
               />
-            )}
-          </AnimatePresence>
 
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <Header
-              currentUser={currentUser}
-              onLogout={handleLogout}
-              onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-              sidebarOpen={sidebarOpen}
-            />
-
-            <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
-              <motion.div
-                key={activeModule}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                {renderActiveModule()}
-              </motion.div>
-            </main>
+              <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 sm:p-6 pb-20 sm:pb-6">
+                <motion.div
+                  key={activeModule}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {renderActiveModule()}
+                </motion.div>
+              </main>
+            </div>
           </div>
-        </div>
-      </ParentProvider>
+        </ParentProvider>
+      </NotificationProvider>
 
       <Toaster />
     </HelmetProvider>

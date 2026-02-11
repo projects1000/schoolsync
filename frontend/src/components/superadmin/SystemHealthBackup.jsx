@@ -179,23 +179,23 @@ const SystemHealthBackup = ({ currentUser }) => {
                 </div>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-4 gap-4 mt-6 pt-4 border-t border-white/20">
-                    <div className="text-center">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-4 border-t border-white/20">
+                    <div className="text-center p-2 bg-white/5 rounded-lg md:bg-transparent">
                         <div className="flex items-center justify-center gap-2">
                             <div className={`w-3 h-3 rounded-full ${serverHealth.status === 'healthy' ? 'bg-emerald-400' : 'bg-amber-400'}`} />
                             <p className="text-lg font-bold capitalize">{serverHealth.status}</p>
                         </div>
                         <p className="text-sm text-cyan-100">Server Status</p>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center p-2 bg-white/5 rounded-lg md:bg-transparent">
                         <p className="text-lg font-bold">{serverHealth.uptime}</p>
                         <p className="text-sm text-cyan-100">Uptime</p>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center p-2 bg-white/5 rounded-lg md:bg-transparent">
                         <p className="text-lg font-bold">{serverHealth.responseTime}ms</p>
                         <p className="text-sm text-cyan-100">Response Time</p>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center p-2 bg-white/5 rounded-lg md:bg-transparent">
                         <p className="text-lg font-bold">{errorMetrics.errorRate}%</p>
                         <p className="text-sm text-cyan-100">Error Rate</p>
                     </div>
@@ -203,7 +203,7 @@ const SystemHealthBackup = ({ currentUser }) => {
             </motion.div>
 
             {/* Tabs */}
-            <div className="flex gap-2 border-b border-gray-200">
+            <div className="flex gap-2 border-b border-gray-200 overflow-x-auto pb-1">
                 {[
                     { id: 'health', label: 'System Health', icon: Activity },
                     { id: 'backups', label: 'Backup & Restore', icon: Archive },
@@ -212,9 +212,9 @@ const SystemHealthBackup = ({ currentUser }) => {
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${activeTab === tab.id
-                                ? 'border-cyan-600 text-cyan-700'
-                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                        className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id
+                            ? 'border-cyan-600 text-cyan-700'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         <tab.icon className="w-4 h-4" />
@@ -324,7 +324,7 @@ const SystemHealthBackup = ({ currentUser }) => {
                             </div>
                         </div>
                         <div className="overflow-x-auto">
-                            <table className="w-full">
+                            <table className="w-full min-w-[600px]">
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th className="text-left px-4 py-2 text-xs font-medium text-gray-500">Error Code</th>
@@ -384,7 +384,7 @@ const SystemHealthBackup = ({ currentUser }) => {
                             <h3 className="font-semibold text-gray-800">Backup History</h3>
                         </div>
                         <div className="overflow-x-auto">
-                            <table className="w-full">
+                            <table className="w-full min-w-[700px]">
                                 <thead className="bg-gray-50 border-b">
                                     <tr>
                                         <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Type</th>
@@ -459,7 +459,7 @@ const SystemHealthBackup = ({ currentUser }) => {
                     className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
                 >
                     <div className="overflow-x-auto">
-                        <table className="w-full">
+                        <table className="w-full min-w-[700px]">
                             <thead className="bg-gray-50 border-b">
                                 <tr>
                                     <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Service</th>

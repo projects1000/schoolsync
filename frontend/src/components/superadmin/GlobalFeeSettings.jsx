@@ -115,7 +115,7 @@ const GlobalFeeSettings = ({ currentUser }) => {
     );
 
     const RuleCard = ({ rule, type }) => (
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 gap-4">
             <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                     <h4 className="font-medium text-gray-800">{rule.name}</h4>
@@ -137,10 +137,10 @@ const GlobalFeeSettings = ({ currentUser }) => {
                     </div>
                 )}
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
                 <div className="text-right">
                     <span className={`text-lg font-bold ${type === 'late' ? 'text-rose-600' :
-                            type === 'discount' ? 'text-emerald-600' : 'text-blue-600'
+                        type === 'discount' ? 'text-emerald-600' : 'text-blue-600'
                         }`}>
                         {rule.value}{rule.type === 'Percentage' || type === 'refund' ? '%' : rule.unit ? ` ${rule.unit}` : ''}
                     </span>
@@ -190,13 +190,17 @@ const GlobalFeeSettings = ({ currentUser }) => {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4 mt-4 pt-4 border-t border-white/20 text-sm text-emerald-100">
-                    <span>Current Version: <strong className="text-white">{feeSettingsVersion.current}</strong></span>
-                    <span className="text-white/50">•</span>
-                    <span>Last Updated: {new Date(feeSettingsVersion.lastUpdated).toLocaleDateString()}</span>
+                <div className="flex flex-col md:flex-row md:items-center gap-4 mt-4 pt-4 border-t border-white/20 text-sm text-emerald-100">
+                    <div className="flex items-center gap-2">
+                        <span>Current Version: <strong className="text-white">{feeSettingsVersion.current}</strong></span>
+                        <span className="hidden md:inline text-white/50">•</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span>Last Updated: {new Date(feeSettingsVersion.lastUpdated).toLocaleDateString()}</span>
+                    </div>
                     {!isSuperAdmin && (
                         <>
-                            <span className="text-white/50">•</span>
+                            <span className="hidden md:inline text-white/50">•</span>
                             <span className="flex items-center gap-1 text-amber-200">
                                 <Lock className="w-3 h-3" />
                                 Admins can apply, not modify
@@ -256,8 +260,8 @@ const GlobalFeeSettings = ({ currentUser }) => {
                                                         <span className="text-gray-600">{cat.frequency}</span>
                                                     </div>
                                                     <span className={`px-2 py-0.5 rounded text-xs ${cat.mandatory
-                                                            ? 'bg-blue-100 text-blue-700'
-                                                            : 'bg-gray-100 text-gray-600'
+                                                        ? 'bg-blue-100 text-blue-700'
+                                                        : 'bg-gray-100 text-gray-600'
                                                         }`}>
                                                         {cat.mandatory ? 'Mandatory' : 'Optional'}
                                                     </span>
@@ -357,8 +361,8 @@ const GlobalFeeSettings = ({ currentUser }) => {
                                 exit={{ height: 0, opacity: 0 }}
                                 className="border-t border-gray-100"
                             >
-                                <div className="p-4">
-                                    <table className="w-full">
+                                <div className="p-4 overflow-x-auto">
+                                    <table className="w-full min-w-[500px]">
                                         <thead>
                                             <tr className="text-left text-sm text-gray-500 border-b">
                                                 <th className="pb-3 font-medium">Category</th>
@@ -375,7 +379,7 @@ const GlobalFeeSettings = ({ currentUser }) => {
                                                     <td className="py-3 text-gray-500">{rule.condition}</td>
                                                     <td className="py-3">
                                                         <span className={`font-semibold ${rule.refundPercent === 100 ? 'text-emerald-600' :
-                                                                rule.refundPercent === 0 ? 'text-rose-600' : 'text-blue-600'
+                                                            rule.refundPercent === 0 ? 'text-rose-600' : 'text-blue-600'
                                                             }`}>
                                                             {rule.refundPercent}%
                                                         </span>
@@ -416,7 +420,7 @@ const GlobalFeeSettings = ({ currentUser }) => {
                                 className="border-t border-gray-100"
                             >
                                 <div className="p-4">
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                                         {[
                                             { label: 'School Logo', value: invoiceTemplate.headerLogo },
                                             { label: 'School Address', value: invoiceTemplate.showSchoolAddress },

@@ -195,10 +195,10 @@ const GlobalAcademicSettings = ({ currentUser }) => {
                                         {classTemplates.map((cls, index) => (
                                             <div
                                                 key={cls.id}
-                                                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200"
+                                                className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 gap-4"
                                             >
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                                    <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center shrink-0">
                                                         <span className="font-bold text-indigo-600">{cls.shortCode}</span>
                                                     </div>
                                                     <div>
@@ -206,20 +206,22 @@ const GlobalAcademicSettings = ({ currentUser }) => {
                                                         <p className="text-sm text-gray-500">{cls.description}</p>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-6 text-sm">
-                                                    <div className="text-center">
-                                                        <p className="text-gray-400">Age Range</p>
+                                                <div className="flex flex-wrap items-center gap-4 md:gap-6 text-sm">
+                                                    <div className="text-center bg-white px-3 py-1 rounded-md border border-gray-100 shadow-sm w-[45%] md:w-auto">
+                                                        <p className="text-gray-400 text-xs">Age Range</p>
                                                         <p className="font-medium text-gray-700">{cls.minAge} - {cls.maxAge} yrs</p>
                                                     </div>
-                                                    <div className="text-center">
-                                                        <p className="text-gray-400">Max Capacity</p>
+                                                    <div className="text-center bg-white px-3 py-1 rounded-md border border-gray-100 shadow-sm w-[45%] md:w-auto">
+                                                        <p className="text-gray-400 text-xs">Max Capacity</p>
                                                         <p className="font-medium text-gray-700">{cls.maxCapacity}</p>
                                                     </div>
-                                                    <div className="text-center">
-                                                        <p className="text-gray-400">Teacher Ratio</p>
+                                                    <div className="text-center bg-white px-3 py-1 rounded-md border border-gray-100 shadow-sm w-[45%] md:w-auto">
+                                                        <p className="text-gray-400 text-xs">Teacher Ratio</p>
                                                         <p className="font-medium text-gray-700">{cls.teacherRatio}</p>
                                                     </div>
-                                                    <LockedBadge />
+                                                    <div className="w-[45%] md:w-auto flex justify-center">
+                                                        <LockedBadge />
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
@@ -306,7 +308,7 @@ const GlobalAcademicSettings = ({ currentUser }) => {
                                 className="border-t border-gray-100"
                             >
                                 <div className="p-4 space-y-4">
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                                         <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                                             <p className="text-sm text-blue-600 mb-1">Academic Year Start</p>
                                             <p className="font-semibold text-blue-800">{academicYear.startMonth}</p>
@@ -334,7 +336,7 @@ const GlobalAcademicSettings = ({ currentUser }) => {
                                             <Calendar className="w-4 h-4" />
                                             Term Structure
                                         </h4>
-                                        <div className="grid grid-cols-3 gap-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                                             {academicYear.terms.map((term, index) => (
                                                 <div key={index} className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-center">
                                                     <p className="font-medium text-gray-800">{term.name}</p>
@@ -388,9 +390,9 @@ const GlobalAcademicSettings = ({ currentUser }) => {
                                                         <td className="py-3 text-gray-500">{holiday.date}</td>
                                                         <td className="py-3">
                                                             <span className={`px-2 py-1 text-xs font-medium rounded-full ${holiday.type === 'National' ? 'bg-blue-100 text-blue-700' :
-                                                                    holiday.type === 'Festival' ? 'bg-orange-100 text-orange-700' :
-                                                                        holiday.type === 'Vacation' ? 'bg-green-100 text-green-700' :
-                                                                            'bg-gray-100 text-gray-700'
+                                                                holiday.type === 'Festival' ? 'bg-orange-100 text-orange-700' :
+                                                                    holiday.type === 'Vacation' ? 'bg-green-100 text-green-700' :
+                                                                        'bg-gray-100 text-gray-700'
                                                                 }`}>
                                                                 {holiday.type}
                                                             </span>
@@ -447,10 +449,10 @@ const GlobalAcademicSettings = ({ currentUser }) => {
                                                     <div className="flex items-center gap-3">
                                                         <h4 className="font-medium text-gray-800">{rule.rule}</h4>
                                                         <span className={`px-2 py-0.5 text-xs font-semibold rounded ${rule.value === 'Enabled' || rule.value === 'Required'
-                                                                ? 'bg-emerald-100 text-emerald-700'
-                                                                : rule.value === 'Optional' || rule.value === 'Disabled'
-                                                                    ? 'bg-gray-100 text-gray-600'
-                                                                    : 'bg-blue-100 text-blue-700'
+                                                            ? 'bg-emerald-100 text-emerald-700'
+                                                            : rule.value === 'Optional' || rule.value === 'Disabled'
+                                                                ? 'bg-gray-100 text-gray-600'
+                                                                : 'bg-blue-100 text-blue-700'
                                                             }`}>
                                                             {rule.value}
                                                         </span>

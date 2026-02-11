@@ -276,7 +276,7 @@ const SchoolManagement = ({ currentUser }) => {
                         </select>
 
                         {/* View Toggle */}
-                        <div className="flex border border-gray-200 rounded-lg overflow-hidden">
+                        <div className="hidden md:flex border border-gray-200 rounded-lg overflow-hidden">
                             <button
                                 onClick={() => setViewMode('table')}
                                 className={`p-2 ${viewMode === 'table' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
@@ -310,140 +310,146 @@ const SchoolManagement = ({ currentUser }) => {
                             <Plus className="w-4 h-4 mr-2" /> Add School
                         </Button>
                     </div>
-                ) : viewMode === 'table' ? (
-                    /* Table View */
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-gray-50 border-b border-gray-200">
-                                    <tr>
-                                        <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">School</th>
-                                        <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">City</th>
-                                        <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Type</th>
-                                        <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Admin</th>
-                                        <th className="text-center px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Students</th>
-                                        <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Status</th>
-                                        <th className="text-right px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {filteredSchools.map((school) => (
-                                        <tr key={school.id} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <div className="font-medium text-gray-800">{school.name}</div>
-                                                <div className="text-xs text-gray-500">{school.email}</div>
-                                            </td>
-                                            <td className="px-6 py-4 text-gray-600">{school.city}</td>
-                                            <td className="px-6 py-4 text-gray-600">{school.type}</td>
-                                            <td className="px-6 py-4">
-                                                {school.admin ? (
-                                                    <div>
-                                                        <div className="text-gray-800 text-sm">{school.admin.name}</div>
-                                                        <div className="text-xs text-gray-400">{school.admin.email}</div>
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-gray-400 text-sm italic">Not assigned</span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <span className="font-semibold text-gray-800">{school.students}</span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className={`px-2.5 py-1 text-xs font-medium rounded-full border capitalize ${getStatusBadge(school.status)}`}>
-                                                    {school.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex justify-end gap-1">
-                                                    <button onClick={() => handleViewDetails(school)} className="p-2 hover:bg-gray-100 rounded-lg" title="View">
-                                                        <Eye className="w-4 h-4 text-gray-500" />
-                                                    </button>
-                                                    <button onClick={() => handleEditSchool(school)} className="p-2 hover:bg-gray-100 rounded-lg" title="Edit">
-                                                        <Edit className="w-4 h-4 text-blue-500" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => !school.admin && handleAssignAdmin(school)}
-                                                        disabled={!!school.admin}
-                                                        className={`p-2 rounded-lg ${school.admin ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-100'}`}
-                                                        title={school.admin ? "Admin already assigned" : "Assign Admin"}
-                                                    >
-                                                        <UserPlus className={`w-4 h-4 ${school.admin ? 'text-gray-400' : 'text-purple-500'}`} />
-                                                    </button>
-                                                    {school.status === 'active' && (
-                                                        <button onClick={() => handleConfirmAction(school, 'suspend')} className="p-2 hover:bg-gray-100 rounded-lg" title="Suspend">
-                                                            <PauseCircle className="w-4 h-4 text-amber-500" />
-                                                        </button>
-                                                    )}
-                                                    {school.status !== 'active' && (
-                                                        <button onClick={() => handleConfirmAction(school, 'activate')} className="p-2 hover:bg-gray-100 rounded-lg" title="Activate">
-                                                            <PlayCircle className="w-4 h-4 text-emerald-500" />
-                                                        </button>
-                                                    )}
-                                                    <button onClick={() => handleConfirmAction(school, 'softDelete')} className="p-2 hover:bg-gray-100 rounded-lg" title="Delete">
-                                                        <Trash2 className="w-4 h-4 text-rose-500" />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
                 ) : (
-                    /* Card View */
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {filteredSchools.map((school, index) => (
-                            <motion.div
-                                key={school.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.05 }}
-                                className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow"
-                            >
-                                <div className="flex items-start justify-between mb-3">
-                                    <div>
-                                        <h3 className="font-semibold text-gray-800">{school.name}</h3>
-                                        <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                                            <MapPin className="w-3 h-3" /> {school.city}
-                                        </p>
-                                    </div>
-                                    <span className={`px-2.5 py-1 text-xs font-medium rounded-full border capitalize ${getStatusBadge(school.status)}`}>
-                                        {school.status}
-                                    </span>
+                    <>
+                        {/* Table View - Desktop Only if viewMode is table */}
+                        {viewMode === 'table' && (
+                            <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead className="bg-gray-50 border-b border-gray-200">
+                                            <tr>
+                                                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">School</th>
+                                                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">City</th>
+                                                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Type</th>
+                                                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Admin</th>
+                                                <th className="text-center px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Students</th>
+                                                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Status</th>
+                                                <th className="text-right px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {filteredSchools.map((school) => (
+                                                <tr key={school.id} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="px-6 py-4">
+                                                        <div className="font-medium text-gray-800">{school.name}</div>
+                                                        <div className="text-xs text-gray-500">{school.email}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-gray-600">{school.city}</td>
+                                                    <td className="px-6 py-4 text-gray-600">{school.type}</td>
+                                                    <td className="px-6 py-4">
+                                                        {school.admin ? (
+                                                            <div>
+                                                                <div className="text-gray-800 text-sm">{school.admin.name}</div>
+                                                                <div className="text-xs text-gray-400">{school.admin.email}</div>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-gray-400 text-sm italic">Not assigned</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <span className="font-semibold text-gray-800">{school.students}</span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={`px-2.5 py-1 text-xs font-medium rounded-full border capitalize ${getStatusBadge(school.status)}`}>
+                                                            {school.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex justify-end gap-1">
+                                                            <button onClick={() => handleViewDetails(school)} className="p-2 hover:bg-gray-100 rounded-lg" title="View">
+                                                                <Eye className="w-4 h-4 text-gray-500" />
+                                                            </button>
+                                                            <button onClick={() => handleEditSchool(school)} className="p-2 hover:bg-gray-100 rounded-lg" title="Edit">
+                                                                <Edit className="w-4 h-4 text-blue-500" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => !school.admin && handleAssignAdmin(school)}
+                                                                disabled={!!school.admin}
+                                                                className={`p-2 rounded-lg ${school.admin ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-100'}`}
+                                                                title={school.admin ? "Admin already assigned" : "Assign Admin"}
+                                                            >
+                                                                <UserPlus className={`w-4 h-4 ${school.admin ? 'text-gray-400' : 'text-purple-500'}`} />
+                                                            </button>
+                                                            {school.status === 'active' && (
+                                                                <button onClick={() => handleConfirmAction(school, 'suspend')} className="p-2 hover:bg-gray-100 rounded-lg" title="Suspend">
+                                                                    <PauseCircle className="w-4 h-4 text-amber-500" />
+                                                                </button>
+                                                            )}
+                                                            {school.status !== 'active' && (
+                                                                <button onClick={() => handleConfirmAction(school, 'activate')} className="p-2 hover:bg-gray-100 rounded-lg" title="Activate">
+                                                                    <PlayCircle className="w-4 h-4 text-emerald-500" />
+                                                                </button>
+                                                            )}
+                                                            <button onClick={() => handleConfirmAction(school, 'softDelete')} className="p-2 hover:bg-gray-100 rounded-lg" title="Delete">
+                                                                <Trash2 className="w-4 h-4 text-rose-500" />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
+                            </div>
+                        )}
 
-                                <div className="space-y-2 mb-4">
-                                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                                        <Users className="w-4 h-4 text-blue-500" />
-                                        <span>{school.students} students</span>
-                                        <span className="text-gray-300">•</span>
-                                        <GraduationCap className="w-4 h-4 text-green-500" />
-                                        <span>{school.teachers} teachers</span>
-                                    </div>
-                                    <div className="text-sm text-gray-500">
-                                        <span className="font-medium">Admin:</span> {school.admin?.name || 'Not assigned'}
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-2 pt-3 border-t border-gray-100">
-                                    <button onClick={() => handleViewDetails(school)} className="flex-1 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
-                                        View
-                                    </button>
-                                    <button onClick={() => handleEditSchool(school)} className="flex-1 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                                        Edit
-                                    </button>
-                                    <button
-                                        onClick={() => !school.admin && handleAssignAdmin(school)}
-                                        disabled={!!school.admin}
-                                        className={`flex-1 py-2 text-sm rounded-lg transition-colors ${school.admin ? 'text-gray-400 cursor-not-allowed' : 'text-purple-600 hover:bg-purple-50'}`}
+                        {/* Card View - Visible on Mobile OR if viewMode is card */}
+                        <div className={`${viewMode === 'table' ? 'md:hidden' : 'block'}`}>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {filteredSchools.map((school, index) => (
+                                    <motion.div
+                                        key={school.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.05 }}
+                                        className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow"
                                     >
-                                        {school.admin ? 'Assigned' : 'Admin'}
-                                    </button>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div>
+                                                <h3 className="font-semibold text-gray-800">{school.name}</h3>
+                                                <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                                                    <MapPin className="w-3 h-3" /> {school.city}
+                                                </p>
+                                            </div>
+                                            <span className={`px-2.5 py-1 text-xs font-medium rounded-full border capitalize ${getStatusBadge(school.status)}`}>
+                                                {school.status}
+                                            </span>
+                                        </div>
+
+                                        <div className="space-y-2 mb-4">
+                                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                <Users className="w-4 h-4 text-blue-500" />
+                                                <span>{school.students} students</span>
+                                                <span className="text-gray-300">•</span>
+                                                <GraduationCap className="w-4 h-4 text-green-500" />
+                                                <span>{school.teachers} teachers</span>
+                                            </div>
+                                            <div className="text-sm text-gray-500">
+                                                <span className="font-medium">Admin:</span> {school.admin?.name || 'Not assigned'}
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-2 pt-3 border-t border-gray-100">
+                                            <button onClick={() => handleViewDetails(school)} className="flex-1 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                                                View
+                                            </button>
+                                            <button onClick={() => handleEditSchool(school)} className="flex-1 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={() => !school.admin && handleAssignAdmin(school)}
+                                                disabled={!!school.admin}
+                                                className={`flex-1 py-2 text-sm rounded-lg transition-colors ${school.admin ? 'text-gray-400 cursor-not-allowed' : 'text-purple-600 hover:bg-purple-50'}`}
+                                            >
+                                                {school.admin ? 'Assigned' : 'Admin'}
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </div>
+                    </>
                 )}
             </motion.div>
 

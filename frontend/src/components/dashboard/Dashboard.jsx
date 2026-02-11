@@ -79,7 +79,7 @@ const Dashboard = ({ currentUser, setActiveModule }) => {
         animate={{ opacity: 1, y: 0 }}
         className="bg-white rounded-xl shadow-sm p-6 border border-gray-200"
       >
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
             <p className="text-gray-600 mt-1">
@@ -88,7 +88,7 @@ const Dashboard = ({ currentUser, setActiveModule }) => {
                   'Parent Portal'}
             </p>
           </div>
-          <div className="text-right">
+          <div className="text-left md:text-right bg-blue-50 md:bg-transparent p-3 md:p-0 rounded-lg">
             <p className="text-sm text-gray-500">Current Academic Year</p>
             <p className="text-lg font-semibold text-gray-800">2025-26</p>
           </div>

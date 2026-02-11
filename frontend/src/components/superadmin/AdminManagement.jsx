@@ -253,7 +253,8 @@ const AdminManagement = ({ currentUser }) => {
                 transition={{ delay: 0.2 }}
                 className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
             >
-                <div className="overflow-x-auto">
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full">
                         <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>
@@ -373,6 +374,96 @@ const AdminManagement = ({ currentUser }) => {
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-4 p-4">
+                    {isLoading ? (
+                        <div className="text-center py-10 text-gray-500">Loading admins...</div>
+                    ) : filteredAdmins.length === 0 ? (
+                        <div className="text-center py-10">
+                            <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                            <p className="text-gray-500">No admins found</p>
+                        </div>
+                    ) : (
+                        filteredAdmins.map((admin) => (
+                            <div key={admin.id} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                            <span className="font-semibold text-purple-600">{(admin.name || 'A').charAt(0)}</span>
+                                        </div>
+                                        <div>
+                                            <div className="font-medium text-gray-800">{admin.name}</div>
+                                            <div className="text-xs text-gray-500">{admin.email}</div>
+                                        </div>
+                                    </div>
+                                    <div className="relative">
+                                        <button
+                                            onClick={() => setActiveDropdown(activeDropdown === admin.id ? null : admin.id)}
+                                            className="p-2 hover:bg-gray-100 rounded-lg"
+                                        >
+                                            <MoreVertical className="w-4 h-4 text-gray-500" />
+                                        </button>
+                                        {/* Mobile Dropdown */}
+                                        <AnimatePresence>
+                                            {activeDropdown === admin.id && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, scale: 0.95 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    exit={{ opacity: 0, scale: 0.95 }}
+                                                    className="absolute right-0 top-10 z-20 bg-white rounded-lg shadow-lg border border-gray-200 py-1 w-48"
+                                                >
+                                                    <button
+                                                        onClick={() => handleViewActivity(admin)}
+                                                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                                                    >
+                                                        <History className="w-4 h-4 text-blue-500" />
+                                                        View Activity
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleConfirmAction(admin, 'resetPassword')}
+                                                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                                                    >
+                                                        <Key className="w-4 h-4 text-amber-500" />
+                                                        Reset Password
+                                                    </button>
+                                                    <div className="border-t border-gray-100 my-1" />
+                                                    {admin.status === 'ACTIVE' ? (
+                                                        <button
+                                                            onClick={() => handleConfirmAction(admin, 'block')}
+                                                            className="w-full px-4 py-2 text-left text-sm hover:bg-rose-50 flex items-center gap-2 text-rose-600"
+                                                        >
+                                                            <UserX className="w-4 h-4" />
+                                                            Block Admin
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleConfirmAction(admin, 'unblock')}
+                                                            className="w-full px-4 py-2 text-left text-sm hover:bg-emerald-50 flex items-center gap-2 text-emerald-600"
+                                                        >
+                                                            <UserCheck className="w-4 h-4" />
+                                                            Unblock
+                                                        </button>
+                                                    )}
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-100">
+                                    <div className="flex items-center gap-2 text-gray-600">
+                                        <Building2 className="w-4 h-4 text-gray-400" />
+                                        <span>{admin.schoolName}</span>
+                                    </div>
+                                    <span className={`px-2.5 py-1 text-xs font-medium rounded-full border capitalize ${getStatusBadge(admin.status)}`}>
+                                        {admin.status}
+                                    </span>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             </motion.div>
 

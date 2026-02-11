@@ -158,24 +158,24 @@ const SecurityAuditLogs = ({ currentUser }) => {
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-5 gap-4 mt-6 pt-4 border-t border-white/20">
-                    <div className="text-center">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6 pt-4 border-t border-white/20">
+                    <div className="text-center p-2 bg-white/5 rounded-lg md:bg-transparent">
                         <p className="text-2xl font-bold">{securityStats.totalLogins24h}</p>
                         <p className="text-sm text-slate-300">Logins (24h)</p>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center p-2 bg-white/5 rounded-lg md:bg-transparent">
                         <p className="text-2xl font-bold text-rose-400">{securityStats.failedLogins24h}</p>
                         <p className="text-sm text-slate-300">Failed (24h)</p>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center p-2 bg-white/5 rounded-lg md:bg-transparent">
                         <p className="text-2xl font-bold text-emerald-400">{securityStats.activeSessions}</p>
                         <p className="text-sm text-slate-300">Active Sessions</p>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center p-2 bg-white/5 rounded-lg md:bg-transparent">
                         <p className="text-2xl font-bold text-amber-400">{securityStats.blockedIPs}</p>
                         <p className="text-sm text-slate-300">Blocked IPs</p>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center p-2 bg-white/5 rounded-lg md:bg-transparent col-span-2 md:col-span-1">
                         <p className="text-sm font-medium">{securityStats.lastSecurityAudit}</p>
                         <p className="text-sm text-slate-300">Last Audit</p>
                     </div>
@@ -183,14 +183,14 @@ const SecurityAuditLogs = ({ currentUser }) => {
             </motion.div>
 
             {/* Tabs */}
-            <div className="flex gap-2 border-b border-gray-200">
+            <div className="flex gap-2 border-b border-gray-200 overflow-x-auto pb-1">
                 {tabs.map(tab => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${activeTab === tab.id
-                                ? 'border-slate-700 text-slate-800'
-                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                        className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id
+                            ? 'border-slate-700 text-slate-800'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         <tab.icon className="w-4 h-4" />
@@ -217,50 +217,52 @@ const SecurityAuditLogs = ({ currentUser }) => {
                             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-slate-500"
                         />
                     </div>
-                    <select
-                        value={roleFilter}
-                        onChange={(e) => setRoleFilter(e.target.value)}
-                        className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                    >
-                        <option value="all">All Roles</option>
-                        <option value="superadmin">Super Admin</option>
-                        <option value="admin">Admin</option>
-                        <option value="teacher">Teacher</option>
-                        <option value="parent">Parent</option>
-                    </select>
-                    {activeTab === 'logins' && (
+                    <div className="grid grid-cols-2 md:flex gap-4">
                         <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                            value={roleFilter}
+                            onChange={(e) => setRoleFilter(e.target.value)}
+                            className="px-3 py-2 border border-gray-200 rounded-lg text-sm w-full md:w-auto"
                         >
-                            <option value="all">All Status</option>
-                            <option value="success">Success</option>
-                            <option value="failed">Failed</option>
-                            <option value="blocked">Blocked</option>
+                            <option value="all">All Roles</option>
+                            <option value="superadmin">Super Admin</option>
+                            <option value="admin">Admin</option>
+                            <option value="teacher">Teacher</option>
+                            <option value="parent">Parent</option>
                         </select>
-                    )}
-                    <div className="flex gap-2">
+                        {activeTab === 'logins' && (
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                className="px-3 py-2 border border-gray-200 rounded-lg text-sm w-full md:w-auto"
+                            >
+                                <option value="all">All Status</option>
+                                <option value="success">Success</option>
+                                <option value="failed">Failed</option>
+                                <option value="blocked">Blocked</option>
+                            </select>
+                        )}
+                    </div>
+                    <div className="grid grid-cols-2 md:flex gap-2">
                         <input
                             type="date"
                             value={dateFrom}
                             onChange={(e) => setDateFrom(e.target.value)}
-                            className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                            className="px-3 py-2 border border-gray-200 rounded-lg text-sm w-full md:w-auto"
                             placeholder="From"
                         />
                         <input
                             type="date"
                             value={dateTo}
                             onChange={(e) => setDateTo(e.target.value)}
-                            className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                            className="px-3 py-2 border border-gray-200 rounded-lg text-sm w-full md:w-auto"
                             placeholder="To"
                         />
                     </div>
                     <div className="flex gap-2">
-                        <Button onClick={() => handleExport('csv')} variant="outline" size="sm">
+                        <Button onClick={() => handleExport('csv')} variant="outline" size="sm" className="flex-1 md:flex-none">
                             <Download className="w-4 h-4 mr-1" /> CSV
                         </Button>
-                        <Button onClick={() => handleExport('pdf')} variant="outline" size="sm">
+                        <Button onClick={() => handleExport('pdf')} variant="outline" size="sm" className="flex-1 md:flex-none">
                             <FileText className="w-4 h-4 mr-1" /> PDF
                         </Button>
                     </div>
@@ -275,7 +277,7 @@ const SecurityAuditLogs = ({ currentUser }) => {
                     className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
                 >
                     <div className="overflow-x-auto">
-                        <table className="w-full">
+                        <table className="w-full min-w-[800px]">
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
                                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">User</th>
@@ -369,7 +371,7 @@ const SecurityAuditLogs = ({ currentUser }) => {
                     className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
                 >
                     <div className="overflow-x-auto">
-                        <table className="w-full">
+                        <table className="w-full min-w-[800px]">
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
                                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">User</th>
@@ -426,7 +428,7 @@ const SecurityAuditLogs = ({ currentUser }) => {
                     className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
                 >
                     <div className="overflow-x-auto">
-                        <table className="w-full">
+                        <table className="w-full min-w-[800px]">
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
                                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">User</th>
