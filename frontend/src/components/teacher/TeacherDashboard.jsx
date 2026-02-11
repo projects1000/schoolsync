@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/services/api';
 import { Loader2, Users, Calendar, BookOpen, FileText, Shield } from 'lucide-react';
 
 const TeacherDashboard = ({ setActiveTab }) => {
@@ -21,12 +21,8 @@ const TeacherDashboard = ({ setActiveTab }) => {
 
                 // Fetch dashboard data and role info in parallel
                 const [dashboardResponse, roleInfoResponse] = await Promise.all([
-                    axios.get('http://localhost:8082/api/teacher/dashboard', {
-                        headers: { Authorization: `Bearer ${token}` }
-                    }),
-                    axios.get('http://localhost:8082/api/teacher/role-info', {
-                        headers: { Authorization: `Bearer ${token}` }
-                    })
+                    api.get('/teacher/dashboard'),
+                    api.get('/teacher/role-info')
                 ]);
                 setDashboardData(dashboardResponse.data);
                 setRoleInfo(roleInfoResponse.data);
