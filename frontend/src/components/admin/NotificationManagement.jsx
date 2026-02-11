@@ -13,7 +13,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { useToast } from '@/components/ui/use-toast';
-import axios from 'axios';
+import api from '@/services/api';
 
 const NotificationManagement = ({ currentUser }) => {
     const { toast } = useToast();
@@ -52,9 +52,7 @@ const NotificationManagement = ({ currentUser }) => {
         e.preventDefault();
         setLoading(true);
         try {
-            await axios.post('http://localhost:8082/api/notifications', formData, {
-                headers: { Authorization: `Bearer ${currentUser.token}` }
-            });
+            await api.post('/notifications', formData);
 
             toast({
                 title: "Notification Sent",

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
+import api from "@/services/api";
 
 const NotificationContext = createContext();
 
@@ -12,9 +12,7 @@ export const NotificationProvider = ({ children, currentUser }) => {
     const fetchNotifications = async () => {
         if (!currentUser || !currentUser.token) return;
         try {
-            const response = await axios.get("http://localhost:8082/api/notifications", {
-                headers: { Authorization: `Bearer ${currentUser.token}` },
-            });
+            const response = await api.get("/notifications");
             setNotifications(response.data);
             setUnreadCount(response.data.filter((n) => !n.isRead).length); // Backend uses isRead
         } catch (error) {
@@ -25,9 +23,7 @@ export const NotificationProvider = ({ children, currentUser }) => {
     const markAsRead = async (id) => {
         if (!currentUser || !currentUser.token) return;
         try {
-            await axios.put(`http://localhost:8082/api/notifications/${id}/read`, {}, {
-                headers: { Authorization: `Bearer ${currentUser.token}` },
-            });
+            await api.put(`/notifications/${id}/read`);
             setNotifications((prev) =>
                 prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
             );
@@ -40,9 +36,7 @@ export const NotificationProvider = ({ children, currentUser }) => {
     const markAllAsRead = async () => {
         if (!currentUser || !currentUser.token) return;
         try {
-            await axios.put(`http://localhost:8082/api/notifications/read-all`, {}, {
-                headers: { Authorization: `Bearer ${currentUser.token}` },
-            });
+            await api.put(`/notifications/read-all`);
             setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
             setUnreadCount(0);
         } catch (error) {
