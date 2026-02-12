@@ -2,7 +2,14 @@
   command = "npm run build"
   publish = "dist"
 
-# SPA routing - redirect all routes to index.html
+# Proxy /api requests to the Render backend
+[[redirects]]
+  from = "/api/*"
+  to = "https://schoolsync-1-iysg.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# SPA routing - redirect all other routes to index.html
 [[redirects]]
   from = "/*"
   to = "/index.html"
