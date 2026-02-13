@@ -712,4 +712,135 @@ public class TeacherDashboardService {
         dto.setSubjectAssignments(assignments);
         return dto;
     }
+
+    /**
+     * Returns students of the class where the teacher is the class teacher.
+     * Used for the Promotions tab.
+     */
+    public Map<String, Object> getClassTeacherStudentsForPromotion(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Teacher teacher = teacherRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Teacher profile not found"));
+
+        // Find class where teacher is class teacher
+        List<Classes> classTeacherOfList = classesRepository.findByClassTeacherId(teacher.getId());
+        if (classTeacherOfList.isEmpty()) {
+            throw new RuntimeException("You are not assigned as a class teacher of any class.");
+        }
+
+        Classes classTeacherOf = classTeacherOfList.get(0);
+
+        // Get students of this class
+        List<Student> students = studentRepository.findByClassId(classTeacherOf.getId());
+
+        // Sort by Roll No ASC
+        students.sort((s1, s2) -> {
+            Integer r1 = s1.getRollNo() != null ? s1.getRollNo() : Integer.MAX_VALUE;
+            Integer r2 = s2.getRollNo() != null ? s2.getRollNo() : Integer.MAX_VALUE;
+            return r1.compareTo(r2);
+        });
+
+        List<StudentDTO> studentDTOs = students.stream().map(s -> {
+            StudentDTO dto2 = new StudentDTO();
+            dto2.setId(s.getId());
+            dto2.setAdmissionNo(s.getAdmissionNo());
+            dto2.setRollNo(s.getRollNo());
+            dto2.setName(s.getName());
+            dto2.setAge(s.getAge());
+            dto2.setClassName(s.getClassName());
+            dto2.setClassId(s.getClassId());
+            dto2.setSectionId(s.getSectionId());
+            dto2.setGuardian(s.getGuardian());
+            dto2.setGuardianPhone(s.getGuardianPhone());
+            dto2.setGuardianEmail(s.getGuardianEmail());
+            dto2.setAddress(s.getAddress());
+            if (s.getStatus() != null) {
+                dto2.setStatus(s.getStatus().name());
+            }
+            return dto2;
+        }).collect(Collectors.toList());
+
+        // Get all classes in the same school (for target class dropdown), excluding
+        // current class
+        List<Classes> allClasses = classesRepository.findBySchoolId(teacher.getSchoolId());
+        List<Map<String, String>> availableClasses = allClasses.stream()
+                .filter(cls -> !cls.getId().equals(classTeacherOf.getId()))
+                .filter(cls -> cls.getStatus() == Classes.Status.ACTIVE)
+                .map(cls -> {
+                    Map<String, String> map = new HashMap<>();
+                    map.put("id", cls.getId());
+                    map.put("name", cls.getName());
+                    map.put("grade", cls.getGrade());
+                    map.put("section", cls.getSection());
+                    return map;
+                }).collect(Collectors.toList());
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("currentClass", Map.of(
+                "id", classTeacherOf.getId(),
+                "name", classTeacherOf.getName(),
+                "grade", classTeacherOf.getGrade(),
+                "section", classTeacherOf.getSection()));
+        result.put("students", studentDTOs);
+        result.put("availableClasses", availableClasses);
+
+        return result;
+    }
+
+    /**
+     * Promotes selected students to a target class.
+     * Only the class teacher of the students' current class can promote them.
+     */
+    public Map<String, Object> promoteStudents(String email, List<String> studentIds, String targetClassId) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Teacher teacher = teacherRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Teacher profile not found"));
+
+        // Validate teacher is a class teacher
+        List<Classes> classTeacherOfList = classesRepository.findByClassTeacherId(teacher.getId());
+        if (classTeacherOfList.isEmpty()) {
+            throw new RuntimeException("You are not assigned as a class teacher of any class.");
+        }
+
+        Classes currentClass = classTeacherOfList.get(0);
+
+        // Validate target class exists and belongs to the same school
+        Classes targetClass = classesRepository.findById(targetClassId)
+                .orElseThrow(() -> new RuntimeException("Target class not found."));
+
+        if (!targetClass.getSchoolId().equals(teacher.getSchoolId())) {
+            throw new RuntimeException("Target class does not belong to your school.");
+        }
+
+        if (targetClass.getId().equals(currentClass.getId())) {
+            throw new RuntimeException("Cannot promote students to the same class.");
+        }
+
+        // Promote each student
+        int promotedCount = 0;
+        for (String studentId : studentIds) {
+            Optional<Student> studentOpt = studentRepository.findById(studentId);
+            if (studentOpt.isPresent()) {
+                Student student = studentOpt.get();
+                // Only promote students currently in the teacher's class
+                if (currentClass.getId().equals(student.getClassId())) {
+                    student.setClassId(targetClass.getId());
+                    student.setSectionId(targetClass.getSection());
+                    student.setClassName(targetClass.getName());
+                    student.setUpdatedAt(java.time.LocalDateTime.now());
+                    studentRepository.save(student);
+                    promotedCount++;
+                }
+            }
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("promotedCount", promotedCount);
+        result.put("targetClassName", targetClass.getName());
+        result.put("message", promotedCount + " student(s) promoted to " + targetClass.getName() + " successfully.");
+
+        return result;
+    }
 }

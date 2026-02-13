@@ -119,4 +119,32 @@ public class TeacherDashboardController {
         return ResponseEntity.ok(teacherDashboardService.getTeacherRoleInfo(email));
     }
 
+    @GetMapping("/promotion/students")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<Map<String, Object>> getPromotionStudents() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return ResponseEntity.ok(teacherDashboardService.getClassTeacherStudentsForPromotion(email));
+    }
+
+    @PostMapping("/promotion/promote")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<Map<String, Object>> promoteStudents(@RequestBody Map<String, Object> request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+
+        @SuppressWarnings("unchecked")
+        List<String> studentIds = (List<String>) request.get("studentIds");
+        String targetClassId = (String) request.get("targetClassId");
+
+        if (studentIds == null || studentIds.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "No students selected."));
+        }
+        if (targetClassId == null || targetClassId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Target class not selected."));
+        }
+
+        return ResponseEntity.ok(teacherDashboardService.promoteStudents(email, studentIds, targetClassId));
+    }
+
 }
