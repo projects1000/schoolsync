@@ -25,7 +25,8 @@ import {
   Box,
   User,
   TrendingUp,
-  Bell
+  Bell,
+  ArrowUpCircle
 } from 'lucide-react';
 
 const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose, sidebarOpen }) => {
@@ -47,6 +48,7 @@ const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose, sidebarO
 
     { id: 'teacher-course-handouts', label: 'Course Handouts', icon: FileText, roles: ['teacher'] },
     { id: 'teacher-resources', label: 'Resources', icon: BookOpen, roles: ['teacher'] },
+    { id: 'teacher-promotions', label: 'Promotions', icon: ArrowUpCircle, roles: ['teacher'] },
     { id: 'teachers', label: 'Teachers', icon: UserCheck, roles: ['admin'] },
     { id: 'students', label: 'Students', icon: GraduationCap, roles: ['admin'] },
     { id: 'communications', label: 'Communication', icon: MessageSquare, roles: ['superadmin', 'admin'] },

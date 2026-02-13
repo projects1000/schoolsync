@@ -36,6 +36,7 @@ import LearningResources from '@/components/teacher/LearningResources';
 import Assignments from '@/components/teacher/Assignments';
 import TeacherCommunications from '@/components/teacher/TeacherCommunications';
 import TeacherProfile from '@/components/teacher/TeacherProfile';
+import StudentPromotions from '@/components/teacher/StudentPromotions';
 import AdminManagement from '@/components/superadmin/AdminManagement';
 import SuperAdminDashboard from '@/components/superadmin/SuperAdminDashboard';
 import SchoolManagement from '@/components/superadmin/SchoolManagement';
@@ -184,6 +185,8 @@ function App() {
         return <TeacherCommunications currentUser={currentUser} />;
       case 'teacher-profile':
         return <TeacherProfile />;
+      case 'teacher-promotions':
+        return <StudentPromotions />;
       case 'parent-overview':
         return <ParentOverview currentUser={currentUser} setActiveTab={setActiveModule} />;
       case 'parent-attendance':

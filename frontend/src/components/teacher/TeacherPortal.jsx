@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Users, Calendar, BookOpen, MessageSquare, Send, X, Plus, Edit, Trash2, Folder, BarChart, CheckSquare, FileText } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, BookOpen, MessageSquare, Send, X, Plus, Edit, Trash2, Folder, BarChart, CheckSquare, FileText, ArrowUpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
@@ -11,6 +11,7 @@ import TimetableManagement from '@/components/timetable/TimetableManagement';
 import TeacherDashboard from './TeacherDashboard';
 import TeacherCourseHandouts from './TeacherCourseHandouts';
 import CreateCourseHandout from './CreateCourseHandout';
+import StudentPromotions from './StudentPromotions';
 
 const MyStudents = ({ teacher, students }) => {
   const myStudents = students.filter(s => teacher.classes.includes(s.class));
@@ -182,6 +183,8 @@ const TeacherPortal = ({ currentUser, setActiveModule }) => {
         return <LearningResources teacher={teacher} students={students} />;
       case 'communications':
         return <Communications currentUser={currentUser} />;
+      case 'promotions':
+        return <StudentPromotions />;
       default:
         return <TeacherDashboard setActiveTab={setActiveTab} />;
     }
@@ -207,6 +210,7 @@ const TeacherPortal = ({ currentUser, setActiveModule }) => {
               { id: 'course-handouts', label: 'Course Handouts', icon: FileText },
               { id: 'resources', label: 'Resources', icon: Folder },
               { id: 'communications', label: 'Communications', icon: MessageSquare },
+              { id: 'promotions', label: 'Promotions', icon: ArrowUpCircle },
             ].map(tab => {
               const Icon = tab.icon;
               return (<button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 whitespace-nowrap ${activeTab === tab.id ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}><Icon className="w-4 h-4" /><span>{tab.label}</span></button>);
