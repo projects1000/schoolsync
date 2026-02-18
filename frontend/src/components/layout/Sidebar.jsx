@@ -106,7 +106,7 @@ const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose, sidebarO
                 <School className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-white font-bold text-lg">Little Steps</h2>
+                <h2 className="text-white font-bold text-lg">SchoolSync</h2>
                 <p className="text-white/80 text-xs">Playschool</p>
               </div>
             </div>
@@ -166,7 +166,7 @@ const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose, sidebarO
         {/* Footer */}
         <div className="p-4 border-t border-gray-200 bg-gray-50">
           <div className="text-center">
-            <p className="text-xs text-gray-500">© 2025 Little Steps Playschool</p>
+            <p className="text-xs text-gray-500">© 2026 SchoolSync</p>
             <p className="text-xs text-gray-400">Management System v1.0</p>
           </div>
         </div>

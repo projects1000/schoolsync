@@ -212,7 +212,7 @@ function App() {
     return (
       <HelmetProvider>
         <Helmet>
-          <title>Login - Little Steps Playschool</title>
+          <title>Login - SchoolSync</title>
           <meta name="description" content="Secure login to your playschool management dashboard" />
         </Helmet>
         <LoginPage onLogin={handleLogin} />
@@ -224,7 +224,7 @@ function App() {
   return (
     <HelmetProvider>
       <Helmet>
-        <title>Little Steps Playschool</title>
+        <title>SchoolSync</title>
         <meta name="description" content="Complete playschool management solution for administrators, teachers, and parents" />
       </Helmet>
 
