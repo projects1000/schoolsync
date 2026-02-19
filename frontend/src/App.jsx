@@ -240,6 +240,7 @@ function App() {
                   currentUser={currentUser}
                   sidebarOpen={sidebarOpen}
                   onClose={() => setSidebarOpen(false)}
+                  onLogout={handleLogout}
                 />
               )}
             </AnimatePresence>
