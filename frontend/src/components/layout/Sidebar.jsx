@@ -14,6 +14,7 @@ import {
   MessageSquare,
   FileText,
   X,
+  LogOut,
   BookOpen,
   UserPlus,
   Crown,
@@ -29,7 +30,7 @@ import {
   ArrowUpCircle
 } from 'lucide-react';
 
-const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose, sidebarOpen }) => {
+const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose, sidebarOpen, onLogout }) => {
   const menuItems = [
     { id: 'super-admin-dashboard', label: 'Command Center', icon: Crown, roles: ['superadmin'] },
     { id: 'school-management', label: 'School Management', icon: School, roles: ['superadmin'] },
@@ -164,7 +165,17 @@ const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose, sidebarO
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
+        <div className="p-4 border-t border-gray-200 bg-gray-50 space-y-3">
+          {/* Logout button for mobile sidebar */}
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              className="lg:hidden w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors font-medium text-sm"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
+            </button>
+          )}
           <div className="text-center">
             <p className="text-xs text-gray-500">© 2026 SchoolSync</p>
             <p className="text-xs text-gray-400">Management System v1.0</p>

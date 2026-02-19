@@ -131,7 +131,7 @@ const Header = ({ currentUser, onLogout, onToggleSidebar, sidebarOpen }) => {
               variant="ghost"
               size="icon"
               onClick={onLogout}
-              className="hover:bg-red-50 hover:text-red-600 hidden sm:inline-flex"
+              className="hover:bg-red-50 hover:text-red-600"
             >
               <LogOut className="w-5 h-5" />
             </Button>
