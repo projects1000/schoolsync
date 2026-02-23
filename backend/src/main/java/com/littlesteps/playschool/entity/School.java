@@ -34,11 +34,12 @@ public class School {
     private Status status = Status.ACTIVE;
 
     private LocalDateTime establishedDate;
+    private LocalDateTime trialStartDate;
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     public enum Status {
-        ACTIVE, INACTIVE, SUSPENDED
+        ACTIVE, INACTIVE, SUSPENDED, TRIAL
     }
 
     // Constructors
@@ -160,6 +161,14 @@ public class School {
 
     public void setEstablishedDate(LocalDateTime establishedDate) {
         this.establishedDate = establishedDate;
+    }
+
+    public LocalDateTime getTrialStartDate() {
+        return trialStartDate;
+    }
+
+    public void setTrialStartDate(LocalDateTime trialStartDate) {
+        this.trialStartDate = trialStartDate;
     }
 
     public LocalDateTime getCreatedAt() {
