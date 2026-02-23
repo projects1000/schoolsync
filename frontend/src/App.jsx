@@ -90,6 +90,42 @@ function App() {
     }
   }, []);
 
+  // Idle Timer Implementation (30 minutes)
+  useEffect(() => {
+    let idleTimer;
+    const TIMEOUT = 30 * 60 * 1000; // 30 minutes
+
+    const resetTimer = () => {
+      if (idleTimer) clearTimeout(idleTimer);
+      if (isAuthenticated) {
+        idleTimer = setTimeout(() => {
+          handleLogout();
+          toast({
+            variant: "destructive",
+            title: "Session Expired",
+            description: "You have been logged out due to inactivity for 30 minutes.",
+          });
+        }, TIMEOUT);
+      }
+    };
+
+    // Events to track user activity
+    const events = [
+      'mousedown', 'mousemove', 'keypress',
+      'scroll', 'touchstart', 'click'
+    ];
+
+    if (isAuthenticated) {
+      events.forEach(event => window.addEventListener(event, resetTimer));
+      resetTimer(); // Start timer on initial auth
+    }
+
+    return () => {
+      if (idleTimer) clearTimeout(idleTimer);
+      events.forEach(event => window.removeEventListener(event, resetTimer));
+    };
+  }, [isAuthenticated]);
+
   const handleLogin = (userData) => {
     setIsAuthenticated(true);
     setCurrentUser(userData);

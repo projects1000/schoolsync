@@ -17,13 +17,19 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { schoolTypes, cities } from './mockSchoolData';
+import { schoolTypes, cities, statusOptions } from './mockSchoolData';
 import SuperAdminService from '../../services/superAdminService';
 
 const states = [
-    'Maharashtra', 'Delhi', 'Karnataka', 'Tamil Nadu', 'Gujarat',
-    'Telangana', 'West Bengal', 'Rajasthan', 'Uttar Pradesh', 'Kerala'
-];
+    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+    'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
+    'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
+    'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
+    'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
+    'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+    'Andaman and Nicobar Islands', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu',
+    'Lakshadweep', 'Delhi', 'Puducherry', 'Ladakh', 'Jammu and Kashmir'
+].sort();
 
 const AddEditSchoolForm = ({
     isOpen,
@@ -45,6 +51,7 @@ const AddEditSchoolForm = ({
         code: '',
         address: '',
         city: '',
+        otherCity: '',
         state: '',
         phone: '',
         email: '',
@@ -55,11 +62,13 @@ const AddEditSchoolForm = ({
     // Initialize form data when editing
     useEffect(() => {
         if (editSchool) {
+            const isCityInList = cities.includes(editSchool.city);
             setFormData({
                 name: editSchool.name || '',
                 code: editSchool.code || '',
                 address: editSchool.address || '',
-                city: editSchool.city || '',
+                city: isCityInList ? (editSchool.city || '') : 'Other',
+                otherCity: isCityInList ? '' : (editSchool.city || ''),
                 state: editSchool.state || 'Maharashtra',
                 phone: editSchool.phone || '',
                 email: editSchool.email || '',
@@ -110,7 +119,7 @@ const AddEditSchoolForm = ({
 
     const resetForm = () => {
         setFormData({
-            name: '', code: '', address: '', city: '', state: '',
+            name: '', code: '', address: '', city: '', otherCity: '', state: '',
             phone: '', email: '', type: 'Playschool', status: 'ACTIVE'
         });
         setCurrentStep(1);
@@ -141,12 +150,14 @@ const AddEditSchoolForm = ({
             newErrors.code = 'School code is required';
         }
 
-        if (!formData.city) {
-            newErrors.city = 'City is required';
-        }
-
         if (!formData.state) {
             newErrors.state = 'State is required';
+        }
+
+        if (!formData.city) {
+            newErrors.city = 'City is required';
+        } else if (formData.city === 'Other' && !formData.otherCity?.trim()) {
+            newErrors.otherCity = 'Please specify your city';
         }
 
         // Email validation
@@ -182,6 +193,7 @@ const AddEditSchoolForm = ({
 
         const schoolData = {
             ...formData,
+            city: formData.city === 'Other' ? formData.otherCity : formData.city,
             id: editSchool?.id, // Let backend generate ID for new schools
             principalName: selectedAdmin?.name,
             principalEmail: selectedAdmin?.email,
@@ -191,6 +203,8 @@ const AddEditSchoolForm = ({
             teachers: editSchool?.teachers || 0,
             createdAt: editSchool?.createdAt || new Date().toISOString()
         };
+        // Remove otherCity from data sent to server
+        delete schoolData.otherCity;
 
         onSave(schoolData);
 
@@ -206,18 +220,38 @@ const AddEditSchoolForm = ({
     };
 
     const handleInputChange = (field, value) => {
-        const newData = { ...formData, [field]: value };
+        setFormData(prev => {
+            const newData = { ...prev, [field]: value };
 
-        // Auto-generate code from name if code is empty
-        if (field === 'name' && !formData.code) {
-            const generatedCode = value.substring(0, 3).toUpperCase() + '-' + Math.floor(100 + Math.random() * 900);
-            newData.code = generatedCode;
-        }
+            // Auto-generate code from name
+            if (field === 'name') {
+                const nameBase = value.trim().substring(0, 3).toUpperCase();
+                if (nameBase.length >= 2) {
+                    // If code is empty or we are creating a new school, update it
+                    if (!editSchool) {
+                        newData.code = nameBase + '-' + Math.floor(100 + Math.random() * 900);
+                    }
+                }
+            }
 
-        setFormData(newData);
+            // Auto-prefix phone with +91
+            if (field === 'phone') {
+                let phoneValue = value;
+                if (phoneValue && !phoneValue.startsWith('+91')) {
+                    // If they just started typing a digit, prepend +91
+                    if (/^\d/.test(phoneValue)) {
+                        phoneValue = '+91 ' + phoneValue;
+                    }
+                }
+                newData.phone = phoneValue;
+            }
+
+            return newData;
+        });
+
         // Clear error when user starts typing
         if (errors[field]) {
-            setErrors({ ...errors, [field]: null });
+            setErrors(prev => ({ ...prev, [field]: null }));
         }
     };
 
@@ -331,20 +365,27 @@ const AddEditSchoolForm = ({
 
                                 {/* School Code */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                        School Code <span className="text-rose-500">*</span>
-                                    </label>
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            School Code <span className="text-rose-500">*</span>
+                                        </label>
+                                        <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded">
+                                            System Generated
+                                        </span>
+                                    </div>
                                     <div className="relative">
                                         <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                         <input
                                             type="text"
                                             value={formData.code}
-                                            onChange={(e) => handleInputChange('code', e.target.value.toUpperCase())}
-                                            className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${errors.code ? 'border-rose-500 bg-rose-50' : 'border-gray-200'
-                                                }`}
-                                            placeholder="e.g. SCH-001"
+                                            readOnly
+                                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed focus:outline-none"
+                                            placeholder="Waiting for school name..."
                                         />
                                     </div>
+                                    <p className="mt-1 text-xs text-gray-400">
+                                        Unique identifier generated automatically from school name
+                                    </p>
                                     {errors.code && (
                                         <p className="mt-1 text-sm text-rose-500 flex items-center gap-1">
                                             <AlertCircle className="w-3.5 h-3.5" />
@@ -368,35 +409,25 @@ const AddEditSchoolForm = ({
                                     </div>
                                 </div>
 
-                                {/* City & State */}
+                                {/* State & City */}
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                            City <span className="text-rose-500">*</span>
-                                        </label>
-                                        <select
-                                            value={formData.city}
-                                            onChange={(e) => handleInputChange('city', e.target.value)}
-                                            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${errors.city ? 'border-rose-500 bg-rose-50' : 'border-gray-200'
-                                                }`}
-                                        >
-                                            <option value="">Select city</option>
-                                            {cities.map(city => <option key={city} value={city}>{city}</option>)}
-                                        </select>
-                                        {errors.city && (
-                                            <p className="mt-1 text-sm text-rose-500 flex items-center gap-1">
-                                                <AlertCircle className="w-3.5 h-3.5" />
-                                                {errors.city}
-                                            </p>
-                                        )}
-                                    </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
                                             State <span className="text-rose-500">*</span>
                                         </label>
                                         <select
                                             value={formData.state}
-                                            onChange={(e) => handleInputChange('state', e.target.value)}
+                                            onChange={(e) => {
+                                                const newState = e.target.value;
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    state: newState,
+                                                    city: '' // Reset city when state changes
+                                                }));
+                                                if (errors.state) {
+                                                    setErrors(prev => ({ ...prev, state: null }));
+                                                }
+                                            }}
                                             className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${errors.state ? 'border-rose-500 bg-rose-50' : 'border-gray-200'
                                                 }`}
                                         >
@@ -410,7 +441,63 @@ const AddEditSchoolForm = ({
                                             </p>
                                         )}
                                     </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            City <span className="text-rose-500">*</span>
+                                        </label>
+                                        <select
+                                            value={formData.city}
+                                            disabled={!formData.state}
+                                            onChange={(e) => handleInputChange('city', e.target.value)}
+                                            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${!formData.state ? 'bg-gray-50 cursor-not-allowed text-gray-400' : ''} ${errors.city ? 'border-rose-500 bg-rose-50' : 'border-gray-200'
+                                                }`}
+                                        >
+                                            <option value="">Select city</option>
+                                            {cities.map(city => <option key={city} value={city}>{city}</option>)}
+                                            <option value="Other">Other</option>
+                                        </select>
+                                        {errors.city && (
+                                            <p className="mt-1 text-sm text-rose-500 flex items-center gap-1">
+                                                <AlertCircle className="w-3.5 h-3.5" />
+                                                {errors.city}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
+
+                                {/* Custom City Field */}
+                                <AnimatePresence>
+                                    {formData.city === 'Other' && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="pt-2">
+                                                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                                    Specify City <span className="text-rose-500">*</span>
+                                                </label>
+                                                <div className="relative">
+                                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                    <input
+                                                        type="text"
+                                                        value={formData.otherCity || ''}
+                                                        onChange={(e) => handleInputChange('otherCity', e.target.value)}
+                                                        className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors.otherCity ? 'border-rose-500 bg-rose-50' : 'border-gray-200'}`}
+                                                        placeholder="Enter your city name"
+                                                    />
+                                                </div>
+                                                {errors.otherCity && (
+                                                    <p className="mt-1 text-sm text-rose-500 flex items-center gap-1">
+                                                        <AlertCircle className="w-3.5 h-3.5" />
+                                                        {errors.otherCity}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
 
                                 {/* Contact & Email */}
                                 <div className="grid grid-cols-2 gap-4">
@@ -475,8 +562,9 @@ const AddEditSchoolForm = ({
                                             onChange={(e) => handleInputChange('status', e.target.value)}
                                             className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
                                         >
-                                            <option value="ACTIVE">Active</option>
-                                            <option value="INACTIVE">Inactive</option>
+                                            {statusOptions.map(option => (
+                                                <option key={option.value} value={option.value}>{option.label}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>

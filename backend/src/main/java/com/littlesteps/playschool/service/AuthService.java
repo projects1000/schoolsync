@@ -58,8 +58,19 @@ public class AuthService {
             com.littlesteps.playschool.entity.School school = schoolRepository.findById(user.getSchoolId())
                     .orElseThrow(() -> new RuntimeException("Associated school not found"));
 
-            if (school.getStatus() != com.littlesteps.playschool.entity.School.Status.ACTIVE) {
+            if (school.getStatus() != com.littlesteps.playschool.entity.School.Status.ACTIVE &&
+                    school.getStatus() != com.littlesteps.playschool.entity.School.Status.TRIAL) {
                 throw new RuntimeException("Your school is currently inactive. Please contact Super Admin.");
+            }
+
+            // Check Trial Expiry
+            if (school.getStatus() == com.littlesteps.playschool.entity.School.Status.TRIAL) {
+                LocalDateTime startDate = school.getTrialStartDate() != null ? school.getTrialStartDate()
+                        : school.getCreatedAt();
+                if (startDate.isBefore(LocalDateTime.now().minusDays(7))) {
+                    throw new RuntimeException(
+                            "Trial period expired. Please contact Super Admin to activate your account.");
+                }
             }
         }
 

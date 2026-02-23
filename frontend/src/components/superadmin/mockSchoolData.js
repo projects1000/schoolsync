@@ -132,4 +132,5 @@ export const statusOptions = [
     { value: 'ACTIVE', label: 'Active' },
     { value: 'INACTIVE', label: 'Inactive' },
     { value: 'SUSPENDED', label: 'Suspended' },
+    { value: 'TRIAL', label: 'Trial Period' },
 ];

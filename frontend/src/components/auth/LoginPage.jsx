@@ -76,6 +76,27 @@ const LoginPage = ({ onLogin }) => {
     { icon: Sparkles, title: 'Parent Portal', desc: 'Seamless home-school connection' },
   ];
   const [featureIdx, setFeatureIdx] = useState(0);
+  const [realStats, setRealStats] = useState({ totalSchools: 0, totalStudents: 0, uptime: '99%' });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/public/stats');
+        if (response.ok) {
+          const data = await response.json();
+          setRealStats({
+            totalSchools: data.totalSchools || 0,
+            totalStudents: data.totalStudents || 0,
+            uptime: data.uptime || '99.9%'
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching public stats:', error);
+      }
+    };
+    fetchStats();
+  }, []);
+
   useEffect(() => {
     const t = setInterval(() => setFeatureIdx(i => (i + 1) % features.length), 3000);
     return () => clearInterval(t);
@@ -115,7 +136,7 @@ const LoginPage = ({ onLogin }) => {
   const selectedRole = ROLES[activeRoleIdx];
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: '#050a18' }}>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: '#f8fafc' }}>
 
       {/* ── Animated background layer ── */}
       <div className="absolute inset-0">
@@ -138,7 +159,7 @@ const LoginPage = ({ onLogin }) => {
         <FloatingParticle delay={0.8} duration={8} x={60} y={85} size={8} />
 
         {/* Grid overlay */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(139,92,246,.3) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,.3) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+        <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'linear-gradient(rgba(139,92,246,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,.1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
       </div>
 
       <div className="relative z-10 w-full max-w-[1100px] mx-auto grid lg:grid-cols-[1.15fr_1fr] items-stretch m-4">
@@ -149,7 +170,7 @@ const LoginPage = ({ onLogin }) => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
           className="hidden lg:flex flex-col justify-between p-10 rounded-l-[28px] relative overflow-hidden"
-          style={{ background: 'linear-gradient(160deg, #312e81 0%, #4338ca 40%, #6366f1 100%)' }}
+          style={{ background: 'linear-gradient(160deg, #4f46e5 0%, #6366f1 40%, #818cf8 100%)' }}
         >
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-40 h-40" style={{ background: 'radial-gradient(circle at top right, rgba(255,255,255,0.08) 0%, transparent 60%)' }} />
@@ -224,9 +245,12 @@ const LoginPage = ({ onLogin }) => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
             className="relative z-10 grid grid-cols-3 gap-4 rounded-2xl p-4"
             style={{ background: 'rgba(0,0,0,0.15)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <StatCounter end={500} suffix="+" label="Schools" />
-            <StatCounter end={25} suffix="K" label="Students" />
-            <StatCounter end={99} suffix="%" label="Uptime" />
+            <StatCounter end={realStats.totalSchools} suffix="+" label="Schools" />
+            <StatCounter end={realStats.totalStudents} suffix="" label="Students" />
+            <div className="text-center">
+              <p className="text-2xl font-bold text-white">{realStats.uptime}</p>
+              <p className="text-[11px] text-indigo-200/60 mt-0.5">Uptime</p>
+            </div>
           </motion.div>
         </motion.div>
 
@@ -235,8 +259,7 @@ const LoginPage = ({ onLogin }) => {
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, delay: 0.15, ease: 'easeOut' }}
-          className="flex flex-col justify-center p-8 sm:p-10 rounded-3xl lg:rounded-l-none lg:rounded-r-[28px] relative"
-          style={{ background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.07)' }}
+          className="flex flex-col justify-center p-8 sm:p-10 rounded-3xl lg:rounded-l-none lg:rounded-r-[28px] relative bg-white shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-slate-100"
         >
           {/* Decorative corner glow */}
           <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none" style={{ background: 'radial-gradient(circle at top right, rgba(99,102,241,0.08) 0%, transparent 60%)' }} />
@@ -246,26 +269,26 @@ const LoginPage = ({ onLogin }) => {
             <div className="p-2.5 bg-indigo-500/20 rounded-xl border border-indigo-500/30">
               <GraduationCap className="w-7 h-7 text-indigo-400" />
             </div>
-            <span className="text-xl font-bold text-white tracking-tight">SchoolSync</span>
+            <span className="text-xl font-bold text-slate-900 tracking-tight">SchoolSync</span>
           </div>
 
           {/* Header */}
           <div className="mb-7">
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
               className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full mb-4"
-              style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)' }}>
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[11px] font-medium text-indigo-300">Secure Portal</span>
+              style={{ background: '#eef2ff', border: '1px solid #e0e7ff' }}>
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[11px] font-semibold text-indigo-600">Secure Portal</span>
             </motion.div>
-            <h3 className="text-2xl font-bold text-white mb-1.5">Welcome back</h3>
-            <p className="text-slate-400 text-sm">Sign in to continue to your dashboard</p>
+            <h3 className="text-2xl font-bold text-slate-900 mb-1.5">Welcome back</h3>
+            <p className="text-slate-500 text-sm">Sign in to continue to your dashboard</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Role Selector — Pill style */}
             <div>
-              <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2.5">Sign in as</label>
-              <div className="grid grid-cols-4 gap-1.5 p-1 rounded-xl" style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2.5">Sign in as</label>
+              <div className="grid grid-cols-4 gap-1.5 p-1 rounded-xl bg-slate-50 border border-slate-100">
                 {ROLES.map((role, idx) => {
                   const isActive = idx === activeRoleIdx;
                   return (
@@ -277,13 +300,11 @@ const LoginPage = ({ onLogin }) => {
                       whileTap={{ scale: 0.97 }}
                       className="relative py-2.5 px-1 rounded-lg text-[11px] font-medium transition-all duration-300 flex flex-col items-center space-y-1"
                       style={{
-                        color: isActive ? '#fff' : 'rgba(148,163,184,0.8)',
-                        background: isActive ? 'rgba(99,102,241,0.25)' : 'transparent',
-                        border: isActive ? '1px solid rgba(99,102,241,0.4)' : '1px solid transparent',
+                        color: isActive ? '#fff' : '#64748b',
                       }}
                     >
-                      {isActive && <motion.div layoutId="activeRole" className="absolute inset-0 rounded-lg" style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)' }} transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }} />}
-                      <role.icon className="w-3.5 h-3.5 relative z-10" style={{ color: isActive ? role.color : undefined }} />
+                      {isActive && <motion.div layoutId="activeRole" className="absolute inset-0 rounded-lg shadow-sm" style={{ background: '#6366f1' }} transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }} />}
+                      <role.icon className="w-3.5 h-3.5 relative z-10" style={{ color: isActive ? '#fff' : undefined }} />
                       <span className="relative z-10 leading-tight">{role.label}</span>
                     </motion.button>
                   );
@@ -301,12 +322,8 @@ const LoginPage = ({ onLogin }) => {
                 <input type="email" name="email" value={formData.email} onChange={handleChange}
                   onFocus={() => setFocusedField('email')} onBlur={() => setFocusedField(null)}
                   placeholder="you@school.com" required
-                  className="w-full pl-10 pr-4 py-3 rounded-xl text-sm text-white placeholder-slate-600 transition-all duration-300 focus:outline-none"
-                  style={{
-                    background: 'rgba(15, 23, 42, 0.5)',
-                    border: focusedField === 'email' ? '1px solid rgba(99,102,241,0.5)' : '1px solid rgba(255,255,255,0.07)',
-                    boxShadow: focusedField === 'email' ? '0 0 20px rgba(99,102,241,0.1)' : 'none',
-                  }} />
+                  className="w-full pl-10 pr-4 py-3 rounded-xl text-sm text-slate-900 placeholder-slate-400 transition-all duration-300 focus:outline-none bg-white border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
+                />
               </div>
             </div>
 
@@ -320,12 +337,8 @@ const LoginPage = ({ onLogin }) => {
                 <input type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange}
                   onFocus={() => setFocusedField('password')} onBlur={() => setFocusedField(null)}
                   placeholder="Enter your password" required
-                  className="w-full pl-10 pr-12 py-3 rounded-xl text-sm text-white placeholder-slate-600 transition-all duration-300 focus:outline-none"
-                  style={{
-                    background: 'rgba(15, 23, 42, 0.5)',
-                    border: focusedField === 'password' ? '1px solid rgba(99,102,241,0.5)' : '1px solid rgba(255,255,255,0.07)',
-                    boxShadow: focusedField === 'password' ? '0 0 20px rgba(99,102,241,0.1)' : 'none',
-                  }} />
+                  className="w-full pl-10 pr-12 py-3 rounded-xl text-sm text-slate-900 placeholder-slate-400 transition-all duration-300 focus:outline-none bg-white border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
+                />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors duration-200">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -365,7 +378,7 @@ const LoginPage = ({ onLogin }) => {
 
           {/* Trust badges */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}
-            className="mt-7 pt-5 border-t border-white/5">
+            className="mt-7 pt-5 border-t border-slate-100">
             <div className="flex items-center justify-center space-x-6">
               {[
                 { icon: ShieldCheck, text: '256-bit SSL' },
@@ -385,7 +398,7 @@ const LoginPage = ({ onLogin }) => {
       {/* Bottom attribution */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
         className="absolute bottom-3 left-1/2 -translate-x-1/2">
-        <p className="text-[11px] text-slate-700">© 2026 SchoolSync — All rights reserved</p>
+        <p className="text-[11px] text-slate-400">© 2026 SchoolSync — All rights reserved</p>
       </motion.div>
     </div>
   );

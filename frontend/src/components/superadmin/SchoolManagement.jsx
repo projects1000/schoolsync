@@ -40,6 +40,7 @@ const SchoolManagement = ({ currentUser }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [filters, setFilters] = useState({ city: '', status: '', dateFrom: '', dateTo: '' });
     const [showFilters, setShowFilters] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     // Modal states
     const [showAddEditModal, setShowAddEditModal] = useState(false);
@@ -49,15 +50,19 @@ const SchoolManagement = ({ currentUser }) => {
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [selectedSchool, setSelectedSchool] = useState(null);
     const [confirmAction, setConfirmAction] = useState(null);
+    const [confirmationInput, setConfirmationInput] = useState('');
 
     // Fetch schools
     const fetchSchools = async () => {
+        setIsLoading(true);
         try {
             const response = await SuperAdminService.getAllSchools();
             setSchools(response.data || []);
         } catch (error) {
             console.error(error);
             toast({ title: 'Error', description: 'Failed to fetch schools', variant: 'destructive' });
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -110,6 +115,7 @@ const SchoolManagement = ({ currentUser }) => {
     const handleConfirmAction = (school, action) => {
         setSelectedSchool(school);
         setConfirmAction(action);
+        setConfirmationInput(''); // Reset input
         setShowConfirmModal(true);
     };
 
@@ -196,6 +202,7 @@ const SchoolManagement = ({ currentUser }) => {
             ACTIVE: 'bg-emerald-100 text-emerald-700 border-emerald-200',
             INACTIVE: 'bg-gray-100 text-gray-600 border-gray-200',
             SUSPENDED: 'bg-rose-100 text-rose-700 border-rose-200',
+            TRIAL: 'bg-blue-100 text-blue-700 border-blue-200',
             DELETED: 'bg-slate-100 text-slate-500 border-slate-200'
         };
         return styles[status] || styles.INACTIVE;
@@ -300,7 +307,26 @@ const SchoolManagement = ({ currentUser }) => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
             >
-                {filteredSchools.length === 0 ? (
+                {isLoading ? (
+                    /* Loading State Skeleton */
+                    <div className="space-y-4">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                            <div key={i} className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm animate-pulse">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                                    <div className="flex-1 space-y-2">
+                                        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                                        <div className="h-3 bg-gray-100 rounded w-1/6"></div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <div className="w-8 h-8 bg-gray-100 rounded"></div>
+                                        <div className="w-8 h-8 bg-gray-100 rounded"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : filteredSchools.length === 0 ? (
                     /* Empty State */
                     <div className="bg-white rounded-xl shadow-sm p-12 border border-gray-200 text-center">
                         <Building2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -568,17 +594,34 @@ const SchoolManagement = ({ currentUser }) => {
                                         : `Are you sure you want to ${confirmAction} ${selectedSchool?.name}?`
                                     }
                                 </p>
-                                <div className="flex gap-3">
-                                    <Button onClick={() => setShowConfirmModal(false)} className="flex-1 bg-gray-100 text-gray-700 hover:bg-gray-200">
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        onClick={executeConfirmAction}
-                                        className={`flex-1 ${confirmAction === 'hardDelete' || confirmAction === 'softDelete' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}
-                                    >
-                                        Confirm
-                                    </Button>
-                                </div>
+                                {
+                                    (confirmAction === 'softDelete' || confirmAction === 'hardDelete') && (
+                                        <div className="mb-4">
+                                            <label className="block text-sm text-gray-700 mb-1">
+                                                Type <strong>delete</strong> to confirm:
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={confirmationInput}
+                                                onChange={(e) => setConfirmationInput(e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                                                placeholder="delete"
+                                            />
+                                        </div>
+                                    )
+                                }
+                            </div>
+                            <div className="flex gap-3">
+                                <Button onClick={() => setShowConfirmModal(false)} className="flex-1 bg-gray-100 text-gray-700 hover:bg-gray-200">
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={executeConfirmAction}
+                                    disabled={(confirmAction === 'softDelete' || confirmAction === 'hardDelete') && confirmationInput !== 'delete'}
+                                    className={`flex-1 ${(confirmAction === 'hardDelete' || confirmAction === 'softDelete') ? 'bg-rose-600 hover:bg-rose-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+                                >
+                                    Confirm
+                                </Button>
                             </div>
                         </motion.div>
                     </motion.div>
@@ -686,7 +729,7 @@ const SchoolManagement = ({ currentUser }) => {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 };
 
