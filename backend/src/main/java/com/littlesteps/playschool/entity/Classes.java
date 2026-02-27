@@ -37,7 +37,7 @@ public class Classes {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     public enum Status {
-        ACTIVE, INACTIVE, ARCHIVED
+        ACTIVE, INACTIVE, ARCHIVED, DELETED
     }
 
     // Constructors

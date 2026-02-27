@@ -410,6 +410,17 @@ public class StudentService {
         }
     }
 
+    @Transactional
+    public void unassignStudentsFromClass(String classId) {
+        List<Student> students = studentRepository.findByClassId(classId);
+        for (Student student : students) {
+            student.setClassId(null);
+            student.setSectionId(null);
+            student.setClassName(null);
+            studentRepository.save(student);
+        }
+    }
+
     private StudentDTO convertToDTO(Student student) {
         StudentDTO dto = modelMapper.map(student, StudentDTO.class);
         return dto;

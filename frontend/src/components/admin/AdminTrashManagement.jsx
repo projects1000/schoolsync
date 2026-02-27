@@ -6,7 +6,8 @@ import {
     Users,
     GraduationCap,
     Heart,
-    Search
+    Search,
+    Box
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -18,7 +19,8 @@ const AdminTrashManagement = () => {
     const [deletedItems, setDeletedItems] = useState({
         students: [],
         teachers: [],
-        parents: []
+        parents: [],
+        classes: []
     });
     const [isLoading, setIsLoading] = useState(true);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -27,16 +29,18 @@ const AdminTrashManagement = () => {
     const fetchDeletedItems = async () => {
         setIsLoading(true);
         try {
-            const [studentsRes, teachersRes, parentsRes] = await Promise.all([
+            const [studentsRes, teachersRes, parentsRes, classesRes] = await Promise.all([
                 adminService.getDeletedStudents(),
                 adminService.getDeletedTeachers(),
-                adminService.getDeletedParents()
+                adminService.getDeletedParents(),
+                adminService.getDeletedClasses()
             ]);
 
             setDeletedItems({
                 students: studentsRes.students || [],
                 teachers: teachersRes.teachers || [],
-                parents: parentsRes.parents || []
+                parents: parentsRes.parents || [],
+                classes: classesRes || []
             });
         } catch (error) {
             console.error(error);
@@ -65,6 +69,8 @@ const AdminTrashManagement = () => {
                 await adminService.restoreTeacher(selectedItem.id);
             } else if (selectedItem.type === 'parents') {
                 await adminService.restoreParent(selectedItem.id);
+            } else if (selectedItem.type === 'classes') {
+                await adminService.restoreClass(selectedItem.id);
             }
 
             toast({ title: 'Success', description: `${selectedItem.name} restored successfully.` });
@@ -94,7 +100,7 @@ const AdminTrashManagement = () => {
                         <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>
                                 <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Name</th>
-                                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Email</th>
+                                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">{type === 'classes' ? 'Details' : 'Email'}</th>
                                 <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Status</th>
                                 <th className="text-right px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Actions</th>
                             </tr>
@@ -103,7 +109,11 @@ const AdminTrashManagement = () => {
                             {items.map((item) => (
                                 <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-6 py-4 font-medium text-gray-800">{item.name}</td>
-                                    <td className="px-6 py-4 text-gray-600">{item.email}</td>
+                                    <td className="px-6 py-4 text-gray-600">
+                                        {type === 'classes'
+                                            ? `${item.grade}${item.section ? ` - ${item.section}` : ''}`
+                                            : item.email}
+                                    </td>
                                     <td className="px-6 py-4">
                                         <span className="px-2.5 py-1 text-xs font-medium rounded-full border bg-slate-100 text-slate-500 border-slate-200 capitalize">
                                             DELETED
@@ -150,14 +160,15 @@ const AdminTrashManagement = () => {
                     {[
                         { id: 'students', label: 'Students', icon: GraduationCap },
                         { id: 'teachers', label: 'Teachers', icon: Users },
-                        { id: 'parents', label: 'Parents', icon: Heart }
+                        { id: 'parents', label: 'Parents', icon: Heart },
+                        { id: 'classes', label: 'Classes', icon: Box }
                     ].map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === tab.id
-                                    ? 'bg-white text-rose-600 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+                                ? 'bg-white text-rose-600 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
                                 }`}
                         >
                             <tab.icon className="w-4 h-4" />

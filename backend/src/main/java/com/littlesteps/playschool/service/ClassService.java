@@ -23,8 +23,11 @@ public class ClassService {
     @Autowired
     private com.littlesteps.playschool.repository.TeacherRepository teacherRepository;
 
+    @Autowired
+    private StudentService studentService;
+
     public List<Classes> getClassesBySchoolId(String schoolId) {
-        return classesRepository.findBySchoolId(schoolId);
+        return classesRepository.findBySchoolIdAndStatusNot(schoolId, Classes.Status.DELETED);
     }
 
     public Optional<Classes> getClassById(String id) {
@@ -169,9 +172,6 @@ public class ClassService {
         return updatedClass;
     }
 
-    @Autowired
-    private com.littlesteps.playschool.repository.ClassSubjectRepository classSubjectRepository;
-
     @Transactional
     public void deleteClass(String id, String deletedBy) {
         Classes existingClass = classesRepository.findById(id)
@@ -180,11 +180,42 @@ public class ClassService {
             throw new IllegalStateException("Cannot delete a locked class");
         }
 
-        // Remove subjects assigned to this class
-        classSubjectRepository.deleteByClassId(id);
+        // Soft delete class
+        existingClass.setStatus(Classes.Status.DELETED);
 
-        classesRepository.deleteById(id);
+        // Unassign teacher
+        existingClass.setClassTeacherId(null);
+
+        classesRepository.save(existingClass);
+
+        // Unassign students from this class
+        studentService.unassignStudentsFromClass(id);
+
         auditService.logAction(deletedBy, "DELETE_CLASS", "CLASS", id, null,
                 "Deleted class: " + existingClass.getName());
+    }
+
+    public List<Classes> getDeletedClassesBySchoolId(String schoolId) {
+        return classesRepository.findBySchoolIdAndStatus(schoolId, Classes.Status.DELETED);
+    }
+
+    @Transactional
+    public Classes restoreClass(String id, String restoredBy) {
+        Classes existingClass = classesRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Class not found"));
+
+        if (existingClass.getStatus() != Classes.Status.DELETED) {
+            throw new IllegalStateException("Class is not deleted");
+        }
+
+        // Restore class as INACTIVE (admin can activate it later if needed)
+        existingClass.setStatus(Classes.Status.INACTIVE);
+
+        Classes savedClass = classesRepository.save(existingClass);
+
+        auditService.logAction(restoredBy, "RESTORE_CLASS", "CLASS", id, null,
+                "Restored class: " + existingClass.getName());
+
+        return savedClass;
     }
 }
