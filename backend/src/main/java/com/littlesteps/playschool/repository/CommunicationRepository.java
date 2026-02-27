@@ -35,4 +35,19 @@ public interface CommunicationRepository extends MongoRepository<Communication, 
     List<Communication> findBySenderRole(Communication.SenderRole role);
 
     List<Communication> findAllByOrderByCreatedAtDesc();
+
+    List<Communication> findBySchoolIdOrderByCreatedAtDesc(String schoolId);
+
+    List<Communication> findBySchoolIdAndSenderRole(String schoolId, Communication.SenderRole role);
+
+    List<Communication> findBySchoolIdAndRecipientType(String schoolId, Communication.RecipientType recipientType);
+
+    List<Communication> findByTargetClassId(String targetClassId);
+
+    List<Communication> findByTargetClassIdAndRecipientType(String targetClassId,
+            Communication.RecipientType recipientType);
+
+    List<Communication> findByRecipientIdsContaining(String recipientId);
+
+    List<Communication> findByRecipientType(Communication.RecipientType recipientType);
 }

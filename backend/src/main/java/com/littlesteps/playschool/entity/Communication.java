@@ -35,12 +35,24 @@ public class Communication {
 
     private String className; // For class-wide communications
 
+    private String targetClassId;
+
+    private String targetStudentId;
+
+    private String schoolId;
+
+    private RecipientType recipientType;
+
     private LocalDateTime createdAt = LocalDateTime.now();
 
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     public enum MessageType {
         INDIVIDUAL, BROADCAST, ANNOUNCEMENT, ALERT, REMINDER
+    }
+
+    public enum RecipientType {
+        TEACHER, PARENT, ALL_TEACHERS, CLASS_PARENTS, ALL_PARENTS
     }
 
     public enum SenderRole {
@@ -52,13 +64,14 @@ public class Communication {
     }
 
     public Communication(String subject, String body, MessageType type, String senderId,
-            String senderName, SenderRole senderRole) {
+            String senderName, SenderRole senderRole, String schoolId) {
         this.subject = subject;
         this.body = body;
         this.type = type;
         this.senderId = senderId;
         this.senderName = senderName;
         this.senderRole = senderRole;
+        this.schoolId = schoolId;
     }
 
     // Getters and Setters
@@ -172,6 +185,38 @@ public class Communication {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getSchoolId() {
+        return schoolId;
+    }
+
+    public void setSchoolId(String schoolId) {
+        this.schoolId = schoolId;
+    }
+
+    public RecipientType getRecipientType() {
+        return recipientType;
+    }
+
+    public void setRecipientType(RecipientType recipientType) {
+        this.recipientType = recipientType;
+    }
+
+    public String getTargetClassId() {
+        return targetClassId;
+    }
+
+    public void setTargetClassId(String targetClassId) {
+        this.targetClassId = targetClassId;
+    }
+
+    public String getTargetStudentId() {
+        return targetStudentId;
+    }
+
+    public void setTargetStudentId(String targetStudentId) {
+        this.targetStudentId = targetStudentId;
     }
 
     // Helper methods

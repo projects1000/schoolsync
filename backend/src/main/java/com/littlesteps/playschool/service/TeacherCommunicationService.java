@@ -68,4 +68,23 @@ public class TeacherCommunicationService {
                 .filter(m -> m.getClassId().equals(classId))
                 .toList();
     }
+
+    @Autowired
+    private com.littlesteps.playschool.repository.CommunicationRepository communicationRepository;
+
+    public List<com.littlesteps.playschool.entity.Communication> getTeacherInbox(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Teacher teacher = teacherRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Teacher not found"));
+
+        // Get both direct messages to this teacher and broadcasts to all teachers
+        return communicationRepository.findAllByOrderByCreatedAtDesc().stream()
+                .filter(c -> c.getSchoolId().equals(user.getSchoolId()))
+                .filter(c -> (c
+                        .getRecipientType() == com.littlesteps.playschool.entity.Communication.RecipientType.TEACHER
+                        && c.getRecipientIds().contains(teacher.getId())) ||
+                        (c.getRecipientType() == com.littlesteps.playschool.entity.Communication.RecipientType.ALL_TEACHERS))
+                .toList();
+    }
 }
