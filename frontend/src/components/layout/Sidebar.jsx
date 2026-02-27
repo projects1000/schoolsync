@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -29,8 +30,11 @@ import {
   Bell,
   ArrowUpCircle
 } from 'lucide-react';
+import { MODULE_TO_PATH } from '@/routeConfig';
 
-const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose, sidebarOpen, onLogout }) => {
+const Sidebar = ({ activeModule, currentUser, onClose, sidebarOpen, onLogout }) => {
+  const navigate = useNavigate();
+
   const menuItems = [
     { id: 'super-admin-dashboard', label: 'Command Center', icon: Crown, roles: ['superadmin'] },
     { id: 'school-management', label: 'School Management', icon: School, roles: ['superadmin'] },
@@ -146,7 +150,7 @@ const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose, sidebarO
               <motion.button
                 key={item.id}
                 onClick={() => {
-                  setActiveModule(item.id);
+                  navigate(MODULE_TO_PATH[item.id]);
                   if (window.innerWidth < 1024) {
                     onClose();
                   }

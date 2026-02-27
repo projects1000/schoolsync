@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, Plus, Trash2, BookOpen } from 'lucide-react';
 import api from '@/services/api';
+import { MODULE_TO_PATH } from '@/routeConfig';
 
-const CreateCourseHandout = ({ currentUser, onBack, onSuccess }) => {
+const CreateCourseHandout = ({ currentUser }) => {
+    const navigate = useNavigate();
+    const goBack = () => navigate(MODULE_TO_PATH['teacher-course-handouts']);
     const [formData, setFormData] = useState({
         classId: '',
         subject: '',
@@ -107,7 +111,7 @@ const CreateCourseHandout = ({ currentUser, onBack, onSuccess }) => {
             });
 
             toast({ title: 'Course handout created successfully!' });
-            onSuccess();
+            goBack();
         } catch (error) {
             console.error('Error creating handout:', error);
             const errorMessage = error.response?.data?.error || 'Failed to create course handout';
@@ -265,7 +269,7 @@ const CreateCourseHandout = ({ currentUser, onBack, onSuccess }) => {
 
                     {/* Submit */}
                     <div className="flex justify-end gap-3 pt-4 border-t">
-                        <Button type="button" variant="outline" onClick={onBack}>
+                        <Button type="button" variant="outline" onClick={goBack}>
                             Cancel
                         </Button>
                         <Button
