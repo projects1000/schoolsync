@@ -20,6 +20,7 @@ import ParentAssignments from '@/components/parent/ParentAssignments';
 import ParentStudyMaterials from '@/components/parent/ParentStudyMaterials';
 import ParentCourseHandouts from '@/components/parent/ParentCourseHandouts';
 import ParentAcademicDetails from '@/components/parent/ParentAcademicDetails';
+import ParentStudentProfile from '@/components/parent/ParentStudentProfile';
 import { ParentProvider } from '@/context/ParentContext';
 import { NotificationProvider } from '@/context/NotificationContext';
 
@@ -225,6 +226,8 @@ function App() {
         return <StudentPromotions />;
       case 'parent-overview':
         return <ParentOverview currentUser={currentUser} setActiveTab={setActiveModule} />;
+      case 'parent-student-profile':
+        return <ParentStudentProfile currentUser={currentUser} />;
       case 'parent-attendance':
         return <ParentAttendance currentUser={currentUser} />;
       case 'parent-fees':

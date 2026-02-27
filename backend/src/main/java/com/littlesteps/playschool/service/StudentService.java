@@ -103,6 +103,32 @@ public class StudentService {
         existingStudent.setGuardianEmail(studentDTO.getGuardianEmail());
         existingStudent.setAddress(studentDTO.getAddress());
 
+        // Profile fields
+        if (studentDTO.getDateOfBirth() != null) {
+            existingStudent.setDateOfBirth(studentDTO.getDateOfBirth());
+        }
+        if (studentDTO.getGender() != null) {
+            existingStudent.setGender(studentDTO.getGender());
+        }
+        if (studentDTO.getBloodGroup() != null) {
+            existingStudent.setBloodGroup(studentDTO.getBloodGroup());
+        }
+        if (studentDTO.getNewToEducation() != null) {
+            existingStudent.setNewToEducation(studentDTO.getNewToEducation());
+        }
+        if (studentDTO.getPreviousSchool() != null) {
+            existingStudent.setPreviousSchool(studentDTO.getPreviousSchool());
+        }
+        if (studentDTO.getMedicalConditions() != null) {
+            existingStudent.setMedicalConditions(studentDTO.getMedicalConditions());
+        }
+        if (studentDTO.getTransportMode() != null) {
+            existingStudent.setTransportMode(studentDTO.getTransportMode());
+        }
+        if (studentDTO.getProfileCompleted() != null) {
+            existingStudent.setProfileCompleted(studentDTO.getProfileCompleted());
+        }
+
         if (studentDTO.getClassId() != null) {
             existingStudent.setClassId(studentDTO.getClassId());
             classesRepository.findById(studentDTO.getClassId())

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   Plus, Search, Edit2, Trash2, Users, Mail, Phone,
-  BookOpen, Calendar, CheckCircle, ArrowRight
+  BookOpen, Calendar, CheckCircle, ArrowRight, AlertCircle,
+  Heart, GraduationCap, Bus
 } from 'lucide-react';
 import adminService from '@/services/adminService';
 import { useToast } from '@/components/ui/use-toast';
@@ -16,6 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Table,
@@ -48,8 +50,11 @@ const StudentManagement = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPromoteModalOpen, setIsPromoteModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const [currentStudent, setCurrentStudent] = useState(null);
+  const [profileStudentId, setProfileStudentId] = useState(null);
+  const [profileStudentName, setProfileStudentName] = useState('');
 
   // Form State
   const [formData, setFormData] = useState({
@@ -61,6 +66,17 @@ const StudentManagement = () => {
     guardianPhone: '',
     guardianEmail: '',
     address: ''
+  });
+
+  // Profile Form State
+  const [profileFormData, setProfileFormData] = useState({
+    dateOfBirth: '',
+    gender: '',
+    bloodGroup: '',
+    newToEducation: true,
+    previousSchool: '',
+    medicalConditions: '',
+    transportMode: ''
   });
 
   // Promotion State
@@ -120,10 +136,15 @@ const StudentManagement = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleProfileInputChange = (e) => {
+    const { name, value } = e.target;
+    setProfileFormData(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     try {
-      await adminService.createStudent(formData);
+      const createdStudent = await adminService.createStudent(formData);
       toast({ title: "Success", description: "Student admitted successfully" });
       setIsAddModalOpen(false);
       fetchInitialData();
@@ -131,9 +152,45 @@ const StudentManagement = () => {
         name: '', age: '', classId: '', sectionId: '',
         guardian: '', guardianPhone: '', guardianEmail: '', address: ''
       });
+
+      // Auto-open the Complete Profile popup
+      setProfileStudentId(createdStudent.id);
+      setProfileStudentName(createdStudent.name);
+      setProfileFormData({
+        dateOfBirth: '',
+        gender: '',
+        bloodGroup: '',
+        newToEducation: true,
+        previousSchool: '',
+        medicalConditions: '',
+        transportMode: ''
+      });
+      setIsProfileModalOpen(true);
     } catch (error) {
       toast({ title: "Error", description: error.response?.data?.message || "Failed to create student", variant: "destructive" });
     }
+  };
+
+  const handleProfileSubmit = async () => {
+    try {
+      await adminService.updateStudent(profileStudentId, {
+        ...profileFormData,
+        profileCompleted: true
+      });
+      toast({ title: "Success", description: "Student profile completed successfully" });
+      setIsProfileModalOpen(false);
+      setProfileStudentId(null);
+      setProfileStudentName('');
+      fetchInitialData();
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to save profile", variant: "destructive" });
+    }
+  };
+
+  const handleProfileSkip = () => {
+    setIsProfileModalOpen(false);
+    setProfileStudentId(null);
+    setProfileStudentName('');
   };
 
   const handleEditClick = (student) => {
@@ -179,6 +236,22 @@ const StudentManagement = () => {
       toast({ title: "Error", description: "Failed to promote student", variant: "destructive" });
     }
   }
+
+  // Open profile popup for existing students with incomplete profile
+  const handleCompleteProfileClick = (student) => {
+    setProfileStudentId(student.id);
+    setProfileStudentName(student.name);
+    setProfileFormData({
+      dateOfBirth: student.dateOfBirth || '',
+      gender: student.gender || '',
+      bloodGroup: student.bloodGroup || '',
+      newToEducation: student.newToEducation ?? true,
+      previousSchool: student.previousSchool || '',
+      medicalConditions: student.medicalConditions || '',
+      transportMode: student.transportMode || ''
+    });
+    setIsProfileModalOpen(true);
+  };
 
   const filteredStudents = students.filter(student => {
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -299,7 +372,7 @@ const StudentManagement = () => {
           <TableBody>
             {filteredStudents.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-gray-500 py-8">
+                <TableCell colSpan={7} className="text-center text-gray-500 py-8">
                   No students found
                 </TableCell>
               </TableRow>
@@ -309,8 +382,21 @@ const StudentManagement = () => {
                   <TableCell className="font-mono text-xs">{student.rollNo}</TableCell>
                   <TableCell className="font-mono text-xs">{student.admissionNo}</TableCell>
                   <TableCell>
-                    <div className="font-medium">{student.name}</div>
-                    <div className="text-xs text-gray-500">{student.age} years old</div>
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <div className="font-medium">{student.name}</div>
+                        <div className="text-xs text-gray-500">{student.age} years old</div>
+                      </div>
+                      {!student.profileCompleted && (
+                        <button
+                          onClick={() => handleCompleteProfileClick(student)}
+                          title="Profile incomplete — click to complete"
+                          className="ml-1"
+                        >
+                          <AlertCircle className="w-4 h-4 text-amber-500 hover:text-amber-600 transition-colors" />
+                        </button>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     {student.className || 'Unassigned'}
@@ -411,6 +497,175 @@ const StudentManagement = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsPromoteModalOpen(false)}>Cancel</Button>
             <Button onClick={handlePromoteSubmit} disabled={!promoteData.classId}>Confirm Promotion</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Complete Profile Modal */}
+      <Dialog open={isProfileModalOpen} onOpenChange={(open) => { if (!open) handleProfileSkip(); }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-purple-600" />
+              Complete Student Profile
+            </DialogTitle>
+            <DialogDescription>
+              Fill in additional details for <strong>{profileStudentName}</strong>. You can skip this and complete it later.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-2 gap-4 py-2">
+            {/* Date of Birth */}
+            <div className="space-y-2">
+              <Label htmlFor="dob" className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-gray-500" />
+                Date of Birth
+              </Label>
+              <Input
+                id="dob"
+                name="dateOfBirth"
+                type="date"
+                value={profileFormData.dateOfBirth}
+                onChange={handleProfileInputChange}
+              />
+            </div>
+
+            {/* Gender */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-gray-500" />
+                Gender
+              </Label>
+              <Select
+                value={profileFormData.gender}
+                onValueChange={(val) => setProfileFormData(p => ({ ...p, gender: val }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Male">Male</SelectItem>
+                  <SelectItem value="Female">Female</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Blood Group */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5">
+                <Heart className="w-3.5 h-3.5 text-red-500" />
+                Blood Group
+              </Label>
+              <Select
+                value={profileFormData.bloodGroup}
+                onValueChange={(val) => setProfileFormData(p => ({ ...p, bloodGroup: val }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Blood Group" />
+                </SelectTrigger>
+                <SelectContent>
+                  {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => (
+                    <SelectItem key={bg} value={bg}>{bg}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Transport Mode */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5">
+                <Bus className="w-3.5 h-3.5 text-gray-500" />
+                Transport Mode
+              </Label>
+              <Select
+                value={profileFormData.transportMode}
+                onValueChange={(val) => setProfileFormData(p => ({ ...p, transportMode: val }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Transport" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="School Bus">School Bus</SelectItem>
+                  <SelectItem value="Private Vehicle">Private Vehicle</SelectItem>
+                  <SelectItem value="Walk">Walk</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <hr className="col-span-2" />
+
+            {/* New to Education */}
+            <div className="col-span-2 space-y-3">
+              <Label className="flex items-center gap-1.5">
+                <GraduationCap className="w-3.5 h-3.5 text-gray-500" />
+                Education History
+              </Label>
+              <div className="flex items-center gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="educationHistory"
+                    checked={profileFormData.newToEducation === true}
+                    onChange={() => setProfileFormData(p => ({ ...p, newToEducation: true, previousSchool: '' }))}
+                    className="w-4 h-4 text-purple-600"
+                  />
+                  <span className="text-sm">New to education</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="educationHistory"
+                    checked={profileFormData.newToEducation === false}
+                    onChange={() => setProfileFormData(p => ({ ...p, newToEducation: false }))}
+                    className="w-4 h-4 text-purple-600"
+                  />
+                  <span className="text-sm">Previously admitted in another school</span>
+                </label>
+              </div>
+
+              {/* Previous School - shown only when not new to education */}
+              {profileFormData.newToEducation === false && (
+                <div className="space-y-2 mt-2">
+                  <Label htmlFor="previousSchool">Previous School Name</Label>
+                  <Input
+                    id="previousSchool"
+                    name="previousSchool"
+                    placeholder="Enter the name of the last school"
+                    value={profileFormData.previousSchool}
+                    onChange={handleProfileInputChange}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Medical Conditions */}
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="medical" className="flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 text-gray-500" />
+                Medical Conditions / Allergies
+              </Label>
+              <textarea
+                id="medical"
+                name="medicalConditions"
+                placeholder="Any known allergies, conditions, or medications (optional)"
+                value={profileFormData.medicalConditions}
+                onChange={handleProfileInputChange}
+                rows={2}
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" onClick={handleProfileSkip}>
+              Skip for now
+            </Button>
+            <Button onClick={handleProfileSubmit} className="bg-purple-600 hover:bg-purple-700">
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Save Profile
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

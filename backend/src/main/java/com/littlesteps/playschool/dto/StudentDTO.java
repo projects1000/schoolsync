@@ -16,6 +16,18 @@ public class StudentDTO {
     private String address;
     private String status;
 
+    // Profile fields
+    private String dateOfBirth;
+    private String gender;
+    private String bloodGroup;
+    private Boolean newToEducation;
+    private String previousSchool;
+    private String previousClass;
+    private String previousPercentage;
+    private String medicalConditions;
+    private String transportMode;
+    private Boolean profileCompleted;
+
     // Constructors
     public StudentDTO() {
     }
@@ -139,5 +151,85 @@ public class StudentDTO {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(String dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getBloodGroup() {
+        return bloodGroup;
+    }
+
+    public void setBloodGroup(String bloodGroup) {
+        this.bloodGroup = bloodGroup;
+    }
+
+    public Boolean getNewToEducation() {
+        return newToEducation;
+    }
+
+    public void setNewToEducation(Boolean newToEducation) {
+        this.newToEducation = newToEducation;
+    }
+
+    public String getPreviousSchool() {
+        return previousSchool;
+    }
+
+    public void setPreviousSchool(String previousSchool) {
+        this.previousSchool = previousSchool;
+    }
+
+    public String getPreviousClass() {
+        return previousClass;
+    }
+
+    public void setPreviousClass(String previousClass) {
+        this.previousClass = previousClass;
+    }
+
+    public String getPreviousPercentage() {
+        return previousPercentage;
+    }
+
+    public void setPreviousPercentage(String previousPercentage) {
+        this.previousPercentage = previousPercentage;
+    }
+
+    public String getMedicalConditions() {
+        return medicalConditions;
+    }
+
+    public void setMedicalConditions(String medicalConditions) {
+        this.medicalConditions = medicalConditions;
+    }
+
+    public String getTransportMode() {
+        return transportMode;
+    }
+
+    public void setTransportMode(String transportMode) {
+        this.transportMode = transportMode;
+    }
+
+    public Boolean getProfileCompleted() {
+        return profileCompleted;
+    }
+
+    public void setProfileCompleted(Boolean profileCompleted) {
+        this.profileCompleted = profileCompleted;
     }
 }

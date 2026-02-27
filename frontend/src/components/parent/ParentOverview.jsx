@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, Calendar, MessageSquare, Download } from 'lucide-react';
+import { User, Calendar, MessageSquare, Download, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useParent } from '@/context/ParentContext';
@@ -9,6 +9,13 @@ import api from '@/services/api';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import CourseProgressWidget from './CourseProgressWidget';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog";
 
 const ParentOverview = ({ currentUser, setActiveTab }) => {
     const { toast } = useToast();
@@ -17,6 +24,16 @@ const ParentOverview = ({ currentUser, setActiveTab }) => {
     const [messages, setMessages] = useState([]);
     const [attendancePercentage, setAttendancePercentage] = useState(100);
     const [isLoading, setIsLoading] = useState(true);
+    const [showProfileReminder, setShowProfileReminder] = useState(false);
+
+    // Show profile reminder popup if child's profile is incomplete
+    useEffect(() => {
+        if (selectedChild && !selectedChild.profileCompleted) {
+            setShowProfileReminder(true);
+        } else {
+            setShowProfileReminder(false);
+        }
+    }, [selectedChild]);
 
     useEffect(() => {
         if (selectedChild) {
@@ -88,6 +105,37 @@ const ParentOverview = ({ currentUser, setActiveTab }) => {
 
     return (
         <div className="space-y-6">
+            {/* Profile Reminder Popup */}
+            <Dialog open={showProfileReminder} onOpenChange={setShowProfileReminder}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <AlertCircle className="w-5 h-5 text-amber-500" />
+                            Profile Incomplete
+                        </DialogTitle>
+                        <DialogDescription>
+                            {selectedChild?.name}'s profile is not yet complete. Please update the profile with important details like date of birth, blood group, and more.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-end gap-3 pt-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowProfileReminder(false)}
+                        >
+                            Later
+                        </Button>
+                        <Button
+                            className="bg-purple-600 hover:bg-purple-700"
+                            onClick={() => {
+                                setShowProfileReminder(false);
+                                setActiveTab && setActiveTab('parent-student-profile');
+                            }}
+                        >
+                            Go to Student Profile
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
