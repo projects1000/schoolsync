@@ -1,16 +1,19 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Plus, UserPlus, Calendar, CreditCard, FileText, MessageSquare, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { MODULE_TO_PATH } from '@/routeConfig';
 
-const QuickActions = ({ currentUser, setActiveModule }) => {
+const QuickActions = ({ currentUser }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleAction = (actionName, module) => {
-    if (module) {
-      setActiveModule(module);
+    if (module && MODULE_TO_PATH[module]) {
+      navigate(MODULE_TO_PATH[module]);
     } else {
       toast({
         title: "🚧 This feature isn't implemented yet—but don't worry! You can request it in your next prompt! 🚀"
@@ -52,8 +55,8 @@ const QuickActions = ({ currentUser, setActiveModule }) => {
 
   const getActions = () => {
     const userRole = currentUser?.role?.toLowerCase();
-    
-    switch(userRole) {
+
+    switch (userRole) {
       case 'superadmin':
         return superAdminActions;
       case 'admin':
@@ -72,11 +75,11 @@ const QuickActions = ({ currentUser, setActiveModule }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
-      
+
       <div className="grid grid-cols-2 gap-3">
         {actions.map((action, index) => {
           const Icon = action.icon;
-          
+
           return (
             <motion.div
               key={action.label}

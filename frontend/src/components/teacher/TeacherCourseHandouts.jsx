@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Plus, BookOpen, Filter, ChevronDown, ChevronUp, CheckCircle2, Circle, Calendar, X } from 'lucide-react';
 import api from '@/services/api';
+import { MODULE_TO_PATH } from '@/routeConfig';
 
-const TeacherCourseHandouts = ({ currentUser, onCreateNew }) => {
+const TeacherCourseHandouts = ({ currentUser }) => {
+    const navigate = useNavigate();
     const [handouts, setHandouts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filterClass, setFilterClass] = useState('');
@@ -124,7 +127,7 @@ const TeacherCourseHandouts = ({ currentUser, onCreateNew }) => {
                         <h2 className="text-2xl font-bold text-gray-800">Course Handouts</h2>
                         <p className="text-gray-500">Manage your course handouts and track topic progress</p>
                     </div>
-                    <Button onClick={onCreateNew} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                    <Button onClick={() => navigate(MODULE_TO_PATH['teacher-create-handout'])} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
                         <Plus className="w-4 h-4 mr-2" />
                         Create Handout
                     </Button>

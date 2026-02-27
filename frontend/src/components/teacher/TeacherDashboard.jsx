@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '@/services/api';
 import { Loader2, Users, Calendar, BookOpen, FileText, Shield } from 'lucide-react';
+import { MODULE_TO_PATH } from '@/routeConfig';
 
-const TeacherDashboard = ({ setActiveTab }) => {
+const TeacherDashboard = () => {
+    const navigate = useNavigate();
     const [dashboardData, setDashboardData] = useState(null);
     const [roleInfo, setRoleInfo] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -82,7 +85,7 @@ const TeacherDashboard = ({ setActiveTab }) => {
                     title="My Students"
                     count="View All"
                     color="blue"
-                    onClick={() => setActiveTab('teacher-classes')}
+                    onClick={() => navigate(MODULE_TO_PATH['teacher-classes'])}
                 />
                 {isClassTeacher && (
                     <QuickLinkCard
@@ -90,7 +93,7 @@ const TeacherDashboard = ({ setActiveTab }) => {
                         title="Attendance"
                         count="Mark Now"
                         color="green"
-                        onClick={() => setActiveTab('attendance')}
+                        onClick={() => navigate(MODULE_TO_PATH['attendance'])}
                     />
                 )}
                 <QuickLinkCard
@@ -98,14 +101,14 @@ const TeacherDashboard = ({ setActiveTab }) => {
                     title="Assignments"
                     count="Manage"
                     color="orange"
-                    onClick={() => setActiveTab('teacher-assignments')}
+                    onClick={() => navigate(MODULE_TO_PATH['teacher-assignments'])}
                 />
                 <QuickLinkCard
                     icon={BookOpen}
                     title="Communications"
                     count="Inbox"
                     color="purple"
-                    onClick={() => setActiveTab('teacher-communications')}
+                    onClick={() => navigate(MODULE_TO_PATH['teacher-communications'])}
                 />
             </div>
 

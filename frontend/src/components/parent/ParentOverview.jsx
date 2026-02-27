@@ -1,10 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { User, Calendar, MessageSquare, Download, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useParent } from '@/context/ParentContext';
+import { MODULE_TO_PATH } from '@/routeConfig';
 import api from '@/services/api';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -17,8 +19,9 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 
-const ParentOverview = ({ currentUser, setActiveTab }) => {
+const ParentOverview = ({ currentUser }) => {
     const { toast } = useToast();
+    const navigate = useNavigate();
     const { selectedChild } = useParent();
     const [attendance, setAttendance] = useState([]);
     const [messages, setMessages] = useState([]);
@@ -128,7 +131,7 @@ const ParentOverview = ({ currentUser, setActiveTab }) => {
                             className="bg-purple-600 hover:bg-purple-700"
                             onClick={() => {
                                 setShowProfileReminder(false);
-                                setActiveTab && setActiveTab('parent-student-profile');
+                                navigate(MODULE_TO_PATH['parent-student-profile']);
                             }}
                         >
                             Go to Student Profile
@@ -176,7 +179,7 @@ const ParentOverview = ({ currentUser, setActiveTab }) => {
 
                         <div
                             className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                            onClick={() => setActiveTab && setActiveTab('parent-attendance')}
+                            onClick={() => navigate(MODULE_TO_PATH['parent-attendance'])}
                         >
                             <div className="flex items-center justify-between">
                                 <div>
@@ -190,7 +193,7 @@ const ParentOverview = ({ currentUser, setActiveTab }) => {
 
                         <div
                             className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                            onClick={() => setActiveTab && setActiveTab('parent-messages')}
+                            onClick={() => navigate(MODULE_TO_PATH['parent-messages'])}
                         >
                             <div className="flex items-center justify-between">
                                 <div>
@@ -223,7 +226,7 @@ const ParentOverview = ({ currentUser, setActiveTab }) => {
                         >
                             <CourseProgressWidget
                                 studentId={selectedChild.id}
-                                onViewAll={() => setActiveTab && setActiveTab('parent-course-handouts')}
+                                onViewAll={() => navigate(MODULE_TO_PATH['parent-course-handouts'])}
                             />
                         </motion.div>
                     )}

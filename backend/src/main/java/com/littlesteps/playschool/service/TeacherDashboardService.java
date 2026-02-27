@@ -640,18 +640,8 @@ public class TeacherDashboardService {
             }
         }
 
-        List<Map<String, String>> assignedClassesList = new ArrayList<>();
-        if (teacher.getAssignedClasses() != null && !teacher.getAssignedClasses().isEmpty()) {
-            List<Classes> classes = classesRepository.findAllById(teacher.getAssignedClasses());
-            for (Classes cls : classes) {
-                Map<String, String> classMap = new HashMap<>();
-                classMap.put("id", cls.getId());
-                classMap.put("name", cls.getName());
-                classMap.put("grade", cls.getGrade());
-                classMap.put("section", cls.getSection());
-                assignedClassesList.add(classMap);
-            }
-        }
+        // Reuse the comprehensive getAssignedClasses method which checks all sources
+        List<Map<String, String>> assignedClassesList = getAssignedClasses(email);
 
         return new com.littlesteps.playschool.dto.TeacherProfileDTO(
                 teacher.getName(),

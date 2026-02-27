@@ -16,7 +16,7 @@ import AttendanceChart from './AttendanceChart';
 import adminService from '@/services/adminService';
 import { useToast } from '@/components/ui/use-toast';
 
-const Dashboard = ({ currentUser, setActiveModule }) => {
+const Dashboard = ({ currentUser }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({
@@ -118,7 +118,7 @@ const Dashboard = ({ currentUser, setActiveModule }) => {
           transition={{ delay: 0.4 }}
           className="lg:col-span-1"
         >
-          <QuickActions currentUser={currentUser} setActiveModule={setActiveModule} />
+          <QuickActions currentUser={currentUser} />
         </motion.div>
 
         {/* Attendance Chart - Passing generic data or simply rendering it if it handles its own emptiness. 
