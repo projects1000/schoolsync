@@ -42,6 +42,19 @@ public class SuperAdminController {
         }
     }
 
+    @GetMapping("/schools/trash")
+    public ResponseEntity<List<SchoolResponse>> getDeletedSchools() {
+        try {
+            logger.info("Fetching deleted schools (trash)...");
+            List<SchoolResponse> schools = superAdminService.getDeletedSchools();
+            logger.info("Successfully fetched {} deleted schools", schools.size());
+            return ResponseEntity.ok(schools);
+        } catch (Exception e) {
+            logger.error("Error fetching deleted schools: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
     @GetMapping("/admins")
     public ResponseEntity<List<AdminResponse>> getAllAdmins() {
         try {
@@ -99,6 +112,12 @@ public class SuperAdminController {
     @DeleteMapping("/schools/{schoolId}")
     public ResponseEntity<Void> deleteSchool(@PathVariable String schoolId) {
         superAdminService.deleteSchool(schoolId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/schools/{schoolId}/restore")
+    public ResponseEntity<Void> restoreSchool(@PathVariable String schoolId) {
+        superAdminService.restoreSchool(schoolId);
         return ResponseEntity.ok().build();
     }
 

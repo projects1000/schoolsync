@@ -11,11 +11,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/students")
 @CrossOrigin(origins = { "http://localhost:3000", "http://localhost:5173" })
-@org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN', 'TEACHER')")
+@org.springframework.security.access.prepost.PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN', 'ROLE_TEACHER')")
 public class StudentController {
 
     @Autowired
@@ -81,6 +82,16 @@ public class StudentController {
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<Map<String, Object>> restoreStudent(@PathVariable String id) {
+        try {
+            studentService.restoreStudent(id);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Student restored successfully"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         }
     }
 

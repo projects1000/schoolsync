@@ -50,7 +50,7 @@ public class Parent {
     }
 
     public enum Status {
-        ACTIVE, INACTIVE, SUSPENDED
+        ACTIVE, INACTIVE, SUSPENDED, DELETED
     }
 
     // Constructors

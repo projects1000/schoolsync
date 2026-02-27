@@ -18,7 +18,7 @@ public class SchoolController {
     private SchoolService schoolService;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
     public ResponseEntity<School> getSchoolProfile() {
         String schoolId = SchoolContext.getSchoolId();
         System.out.println("SchoolController - getSchoolProfile - SchoolContextID: " + schoolId);
@@ -36,7 +36,7 @@ public class SchoolController {
     }
 
     @PutMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
     public ResponseEntity<School> updateSchoolProfile(@RequestBody SchoolUpdateDTO updateDTO,
             Authentication authentication) {
         String schoolId = SchoolContext.getSchoolId();

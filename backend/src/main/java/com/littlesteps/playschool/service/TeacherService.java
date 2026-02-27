@@ -51,10 +51,20 @@ public class TeacherService {
             teachers = teacherRepository.findBySchoolIdAndStatus(schoolId,
                     Teacher.Status.valueOf(status.toUpperCase()));
         } else {
-            teachers = teacherRepository.findBySchoolId(schoolId);
+            teachers = teacherRepository.findBySchoolIdAndStatusNot(schoolId, Teacher.Status.DELETED);
         }
 
         return teachers.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get all deleted teachers
+     */
+    public List<TeacherDTO> getDeletedTeachers(String schoolId) {
+        return teacherRepository.findBySchoolIdAndStatus(schoolId, Teacher.Status.DELETED)
+                .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -222,8 +232,78 @@ public class TeacherService {
         auditService.logTeacherDeactivated(deactivatedBy, id);
     }
 
+    @Transactional
+    public void deleteTeacher(String id, String deletedBy) {
+        Teacher teacher = teacherRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Teacher not found with ID: " + id));
+
+        if (teacher.getStatus() == Teacher.Status.DELETED) {
+            throw new RuntimeException("Teacher is already deleted");
+        }
+
+        teacher.setStatus(Teacher.Status.DELETED);
+
+        // Clear assigned classes
+        teacher.setAssignedClasses(new ArrayList<>());
+
+        if (teacher.getUser() != null) {
+            User user = teacher.getUser();
+            user.setStatus(User.Status.DELETED);
+            user.setActive(false);
+            user.setAssignedClassIds(new ArrayList<>());
+            userRepository.save(user);
+        }
+
+        teacherRepository.save(teacher);
+
+        // Remove teacher from any classes where they are the class teacher
+        List<com.littlesteps.playschool.entity.Classes> activeClasses = classesRepository
+                .findBySchoolId(teacher.getSchoolId());
+        for (com.littlesteps.playschool.entity.Classes cls : activeClasses) {
+            if (id.equals(cls.getClassTeacherId())) {
+                cls.setClassTeacherId(null);
+                classesRepository.save(cls);
+            }
+        }
+
+        // Remove teacher from subject assignments
+        List<com.littlesteps.playschool.entity.ClassSubject> subjectAssignments = classSubjectRepository
+                .findByTeacherId(id);
+        for (com.littlesteps.playschool.entity.ClassSubject cs : subjectAssignments) {
+            cs.setTeacherId(null);
+            classSubjectRepository.save(cs);
+        }
+
+        auditService.logAction(deletedBy, "DELETE", "TEACHER", id, null, "Soft deleted teacher: " + teacher.getName());
+    }
+
+    @Transactional
+    public void restoreTeacher(String id, String restoredBy) {
+        Teacher teacher = teacherRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Teacher not found with ID: " + id));
+
+        if (teacher.getStatus() != Teacher.Status.DELETED) {
+            throw new RuntimeException("Teacher is not deleted");
+        }
+
+        teacher.setStatus(Teacher.Status.INACTIVE);
+        teacherRepository.save(teacher);
+
+        if (teacher.getUser() != null) {
+            User user = teacher.getUser();
+            user.setStatus(User.Status.INACTIVE);
+            user.setActive(false);
+            userRepository.save(user);
+        }
+
+        auditService.logAction(restoredBy, "RESTORE", "TEACHER", id, null, "Restored teacher: " + teacher.getName());
+    }
+
     @Autowired
     private com.littlesteps.playschool.repository.ClassesRepository classesRepository;
+
+    @Autowired
+    private com.littlesteps.playschool.repository.ClassSubjectRepository classSubjectRepository;
 
     public void assignClasses(String teacherId, List<String> classNames, String assignedBy) {
         Teacher teacher = teacherRepository.findById(teacherId)

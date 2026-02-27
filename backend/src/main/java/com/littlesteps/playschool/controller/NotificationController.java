@@ -21,12 +21,10 @@ public class NotificationController {
     @GetMapping
     public ResponseEntity<List<Notification>> getUserNotifications() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userId = authentication.getName(); // Assuming username is the ID or we can get ID from user details
-        // In existing code, typically we might need to look up the user ID if
-        // 'getName()' returns email.
-        // For now, let's assume the principal's name is the email/ID used for
-        // recipientId or we need to resolving it.
-        // Actually, looking at other controllers, we might need to resolve the user.
+        if (authentication == null) {
+            return ResponseEntity.status(401).build();
+        }
+        String userId = authentication.getName();
         return ResponseEntity.ok(notificationService.getUserNotifications(userId));
     }
 

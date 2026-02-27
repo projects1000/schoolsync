@@ -88,7 +88,13 @@ public class AdminDashboardService {
                 Query logQuery = new Query(Criteria.where("schoolId").is(schoolId))
                                 .with(Sort.by(Sort.Direction.DESC, "createdAt"))
                                 .limit(10);
-                List<AuditLog> recent = mongoTemplate.find(logQuery, AuditLog.class);
+                List<AuditLog> recent;
+                try {
+                        recent = mongoTemplate.find(logQuery, AuditLog.class);
+                } catch (Exception e) {
+                        System.err.println("ERROR: Failed to fetch recent activities: " + e.getMessage());
+                        recent = java.util.Collections.emptyList();
+                }
 
                 return new AdminDashboardDTO(totalStudents, totalTeachers, attendancePercentage, pendingFees, recent);
         }

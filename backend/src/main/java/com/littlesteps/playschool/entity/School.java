@@ -39,7 +39,7 @@ public class School {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     public enum Status {
-        ACTIVE, INACTIVE, SUSPENDED, TRIAL
+        ACTIVE, INACTIVE, SUSPENDED, TRIAL, DELETED
     }
 
     // Constructors

@@ -25,7 +25,6 @@ import java.util.HashMap;
  */
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class InviteController {
 
     @Autowired
@@ -38,7 +37,7 @@ public class InviteController {
      * Create a new invite (Admin only)
      */
     @PostMapping("/admin/invites")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
     public ResponseEntity<?> createInvite(@Valid @RequestBody InviteCreateDTO inviteDTO,
             HttpServletRequest request) {
         try {
@@ -60,7 +59,7 @@ public class InviteController {
      * Get all invites with pagination and filtering (Admin only)
      */
     @GetMapping("/admin/invites")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
     public ResponseEntity<Page<InviteResponseDTO>> getAllInvites(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -82,7 +81,7 @@ public class InviteController {
      * Get invite by ID (Admin only)
      */
     @GetMapping("/admin/invites/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
     public ResponseEntity<?> getInviteById(@PathVariable String id) {
         try {
             Invite invite = inviteService.getInviteById(id);
@@ -139,7 +138,7 @@ public class InviteController {
      * Cancel an invite (Admin only)
      */
     @PutMapping("/admin/invites/{id}/cancel")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
     public ResponseEntity<?> cancelInvite(@PathVariable String id, HttpServletRequest request) {
         try {
             String token = extractTokenFromRequest(request);
@@ -161,7 +160,7 @@ public class InviteController {
      * Resend an invite (Admin only)
      */
     @PostMapping("/admin/invites/{id}/resend")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
     public ResponseEntity<?> resendInvite(@PathVariable String id, HttpServletRequest request) {
         try {
             String token = extractTokenFromRequest(request);
@@ -182,7 +181,7 @@ public class InviteController {
      * Get invite statistics (Admin only)
      */
     @GetMapping("/admin/invites/statistics")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
     public ResponseEntity<?> getInviteStatistics() {
         try {
             Map<String, Object> stats = inviteService.getInviteStatistics();

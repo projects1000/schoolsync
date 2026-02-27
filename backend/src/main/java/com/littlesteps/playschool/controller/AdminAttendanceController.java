@@ -21,8 +21,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/attendance")
-@CrossOrigin(origins = { "http://localhost:3000", "http://localhost:5173" })
-@PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
 public class AdminAttendanceController {
 
     @Autowired

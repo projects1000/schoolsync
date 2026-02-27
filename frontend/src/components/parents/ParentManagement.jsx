@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Users, Mail, Phone, Link2, Copy, Check, Lock, Ban, CheckCircle, Eye } from 'lucide-react';
+import { Plus, Search, Edit2, Users, Mail, Phone, Link2, Copy, Check, Lock, Ban, CheckCircle, Eye, Trash2 } from 'lucide-react';
 import adminService from '@/services/adminService';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -47,6 +47,8 @@ const ParentManagement = () => {
   const [viewingParent, setViewingParent] = useState(null);
   const [viewingChildren, setViewingChildren] = useState([]);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   // Credentials State
   const [createdCredentials, setCreatedCredentials] = useState(null);
@@ -162,6 +164,27 @@ const ParentManagement = () => {
       setIsSuccessModalOpen(true);
     } catch (error) {
       toast({ title: "Error", description: "Failed to reset password", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteClick = (parent) => {
+    setCurrentParent(parent);
+    setConfirmAction({ type: 'delete', parent });
+    setIsConfirmModalOpen(true);
+  };
+
+  const confirmActionSubmit = async () => {
+    if (!confirmAction) return;
+    try {
+      if (confirmAction.type === 'delete') {
+        await adminService.deleteParent(confirmAction.parent.id);
+        toast({ title: "Success", description: "Parent deleted and moved to Trash" });
+      }
+      setIsConfirmModalOpen(false);
+      setConfirmAction(null);
+      fetchData();
+    } catch (error) {
+      toast({ title: "Error", description: `Failed to ${confirmAction.type} parent`, variant: "destructive" });
     }
   };
 
@@ -376,6 +399,9 @@ const ParentManagement = () => {
                           <CheckCircle className="w-4 h-4 text-green-600" />
                         </Button>
                       )}
+                      <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(parent)} title="Delete Parent">
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -482,6 +508,34 @@ const ParentManagement = () => {
           </div>
           <DialogFooter>
             <Button onClick={() => setIsViewModalOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm Action Modal */}
+      <Dialog open={isConfirmModalOpen} onOpenChange={setIsConfirmModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {confirmAction?.type === 'delete' ? 'Delete Parent?' : 'Confirm'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {confirmAction?.type === 'delete' && (
+              <p className="text-gray-600">
+                Are you sure you want to delete <strong>{confirmAction?.parent?.name}</strong>?
+                They will be moved to the Trash.
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsConfirmModalOpen(false)}>Cancel</Button>
+            <Button
+              onClick={confirmActionSubmit}
+              className={confirmAction?.type === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'bg-primary'}
+            >
+              {confirmAction?.type === 'delete' ? 'Delete Parent' : 'Confirm'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

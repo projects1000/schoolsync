@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Plus, Search, Edit2, Mail, GraduationCap, BookOpen,
-  ShieldOff, ShieldCheck
+  ShieldOff, ShieldCheck, Trash2
 } from 'lucide-react';
 
 import adminService from '@/services/adminService';
@@ -219,15 +219,10 @@ const TeacherManagement = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to deactivate this teacher?")) return;
-    try {
-      await adminService.deleteTeacher(id);
-      toast({ title: "Success", description: "Teacher deactivated" });
-      fetchTeachers();
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to deactivate teacher", variant: "destructive" });
-    }
+  const handleDeleteClick = (teacher) => {
+    setCurrentTeacher(teacher);
+    setConfirmAction({ type: 'delete', teacher });
+    setIsConfirmModalOpen(true);
   };
 
   // Block/Unblock Teacher
@@ -240,20 +235,25 @@ const TeacherManagement = () => {
   const confirmStatusChange = async () => {
     if (!confirmAction) return;
     try {
-      await adminService.updateTeacherStatus(confirmAction.teacher.id, confirmAction.status);
-      toast({
-        title: "Success",
-        description: confirmAction.status === 'BLOCKED'
-          ? `${confirmAction.teacher.name} has been blocked`
-          : `${confirmAction.teacher.name} has been unblocked`
-      });
+      if (confirmAction.type === 'delete') {
+        await adminService.deleteTeacher(confirmAction.teacher.id);
+        toast({ title: "Success", description: "Teacher deleted and moved to Trash" });
+      } else {
+        await adminService.updateTeacherStatus(confirmAction.teacher.id, confirmAction.status);
+        toast({
+          title: "Success",
+          description: confirmAction.status === 'BLOCKED'
+            ? `${confirmAction.teacher.name} has been blocked`
+            : `${confirmAction.teacher.name} has been unblocked`
+        });
+      }
       setIsConfirmModalOpen(false);
       setConfirmAction(null);
       fetchTeachers();
     } catch (error) {
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to update teacher status",
+        description: error.response?.data?.message || `Failed to ${confirmAction.type} teacher`,
         variant: "destructive"
       });
     }
@@ -466,6 +466,9 @@ const TeacherManagement = () => {
                             <ShieldCheck className="w-4 h-4 text-green-500" />
                           </Button>
                         ) : null}
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(teacher)} title="Delete Teacher">
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -509,12 +512,12 @@ const TeacherManagement = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Confirm Block/Unblock Modal */}
+      {/* Confirm Action Modal */}
       <Dialog open={isConfirmModalOpen} onOpenChange={setIsConfirmModalOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {confirmAction?.type === 'block' ? 'Block Teacher?' : 'Unblock Teacher?'}
+              {confirmAction?.type === 'block' ? 'Block Teacher?' : confirmAction?.type === 'delete' ? 'Delete Teacher?' : 'Unblock Teacher?'}
             </DialogTitle>
           </DialogHeader>
           <div className="py-4">
@@ -522,6 +525,11 @@ const TeacherManagement = () => {
               <p className="text-gray-600">
                 Are you sure you want to block <strong>{confirmAction?.teacher?.name}</strong>?
                 They will no longer be able to login to the system.
+              </p>
+            ) : confirmAction?.type === 'delete' ? (
+              <p className="text-gray-600">
+                Are you sure you want to delete <strong>{confirmAction?.teacher?.name}</strong>?
+                They will be moved to the Trash.
               </p>
             ) : (
               <p className="text-gray-600">
@@ -534,9 +542,9 @@ const TeacherManagement = () => {
             <Button variant="outline" onClick={() => setIsConfirmModalOpen(false)}>Cancel</Button>
             <Button
               onClick={confirmStatusChange}
-              className={confirmAction?.type === 'block' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}
+              className={(confirmAction?.type === 'block' || confirmAction?.type === 'delete') ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}
             >
-              {confirmAction?.type === 'block' ? 'Block Teacher' : 'Unblock Teacher'}
+              {confirmAction?.type === 'block' ? 'Block Teacher' : confirmAction?.type === 'delete' ? 'Delete Teacher' : 'Unblock Teacher'}
             </Button>
           </DialogFooter>
         </DialogContent>

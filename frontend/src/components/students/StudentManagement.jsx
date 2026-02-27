@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Plus, Search, Edit2, Trash2, Users, Mail, Phone,
   BookOpen, Calendar, CheckCircle, ArrowRight, AlertCircle,
@@ -37,6 +38,7 @@ import {
 
 const StudentManagement = () => {
   const { toast } = useToast();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState([]);
   const [classes, setClasses] = useState([]);
@@ -51,7 +53,9 @@ const StudentManagement = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPromoteModalOpen, setIsPromoteModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
+  const [confirmAction, setConfirmAction] = useState(null);
   const [currentStudent, setCurrentStudent] = useState(null);
   const [profileStudentId, setProfileStudentId] = useState(null);
   const [profileStudentName, setProfileStudentName] = useState('');
@@ -87,6 +91,11 @@ const StudentManagement = () => {
 
   useEffect(() => {
     fetchInitialData();
+
+    // Check for passed filter from navigation state
+    if (location.state?.filterClass) {
+      setFilterClass(location.state.filterClass);
+    }
   }, []);
 
   const fetchInitialData = async () => {
@@ -235,7 +244,28 @@ const StudentManagement = () => {
     } catch (error) {
       toast({ title: "Error", description: "Failed to promote student", variant: "destructive" });
     }
-  }
+  };
+
+  const handleDeleteClick = (student) => {
+    setCurrentStudent(student);
+    setConfirmAction({ type: 'delete', student });
+    setIsConfirmModalOpen(true);
+  };
+
+  const confirmActionSubmit = async () => {
+    if (!confirmAction) return;
+    try {
+      if (confirmAction.type === 'delete') {
+        await adminService.deleteStudent(confirmAction.student.id);
+        toast({ title: "Success", description: "Student deleted and moved to Trash" });
+      }
+      setIsConfirmModalOpen(false);
+      setConfirmAction(null);
+      fetchInitialData();
+    } catch (error) {
+      toast({ title: "Error", description: `Failed to ${confirmAction.type} student`, variant: "destructive" });
+    }
+  };
 
   // Open profile popup for existing students with incomplete profile
   const handleCompleteProfileClick = (student) => {
@@ -419,6 +449,9 @@ const StudentManagement = () => {
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => handleEditClick(student)} title="Edit">
                         <Edit2 className="w-4 h-4 text-gray-500" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(student)} title="Delete Student">
+                        <Trash2 className="w-4 h-4 text-red-500" />
                       </Button>
                     </div>
                   </TableCell>
@@ -665,6 +698,34 @@ const StudentManagement = () => {
             <Button onClick={handleProfileSubmit} className="bg-purple-600 hover:bg-purple-700">
               <CheckCircle className="w-4 h-4 mr-2" />
               Save Profile
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm Action Modal */}
+      <Dialog open={isConfirmModalOpen} onOpenChange={setIsConfirmModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {confirmAction?.type === 'delete' ? 'Delete Student?' : 'Confirm'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {confirmAction?.type === 'delete' && (
+              <p className="text-gray-600">
+                Are you sure you want to delete <strong>{confirmAction?.student?.name}</strong>?
+                They will be moved to the Trash.
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsConfirmModalOpen(false)}>Cancel</Button>
+            <Button
+              onClick={confirmActionSubmit}
+              className={confirmAction?.type === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'bg-primary'}
+            >
+              {confirmAction?.type === 'delete' ? 'Delete Student' : 'Confirm'}
             </Button>
           </DialogFooter>
         </DialogContent>

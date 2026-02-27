@@ -11,30 +11,34 @@ import java.util.Optional;
 @Repository
 public interface StudentRepository extends MongoRepository<Student, String> {
 
-    Optional<Student> findByAdmissionNo(String admissionNo);
+        Optional<Student> findByAdmissionNo(String admissionNo);
 
-    List<Student> findBySchoolId(String schoolId);
+        List<Student> findBySchoolId(String schoolId);
 
-    List<Student> findBySchoolIdAndClassName(String schoolId, String className);
+        List<Student> findBySchoolIdAndStatusNot(String schoolId, Student.Status status);
 
-    List<Student> findBySchoolIdAndStatus(String schoolId, Student.Status status);
+        List<Student> findBySchoolIdAndClassIdAndStatusNot(String schoolId, String classId, Student.Status status);
 
-    @Query("{ 'schoolId': ?0, '$or': [ { 'name': { '$regex': ?1, '$options': 'i' } }, { 'admissionNo': { '$regex': ?1, '$options': 'i' } } ] }")
-    List<Student> searchStudents(String schoolId, String name);
+        List<Student> findBySchoolIdAndClassName(String schoolId, String className);
 
-    boolean existsByAdmissionNo(String admissionNo);
+        List<Student> findBySchoolIdAndStatus(String schoolId, Student.Status status);
 
-    long countBySchoolIdAndStatus(String schoolId, Student.Status status);
+        @Query("{ 'schoolId': ?0, 'status': { $ne: 'DELETED' }, $or: [ { 'name': { $regex: ?1, $options: 'i' } }, { 'admissionNo': { $regex: ?1, $options: 'i' } } ] }")
+        List<Student> searchStudents(String schoolId, String searchTerm);
 
-    long countBySchoolId(String schoolId);
+        boolean existsByAdmissionNo(String admissionNo);
 
-    List<Student> findByClassIdIn(List<String> classIds);
+        long countBySchoolIdAndStatus(String schoolId, Student.Status status);
 
-    List<Student> findByClassId(String classId);
+        long countBySchoolId(String schoolId);
 
-    Optional<Student> findTopBySchoolIdAndClassIdAndSectionIdOrderByRollNoDesc(String schoolId, String classId,
-            String sectionId);
+        List<Student> findByClassIdIn(List<String> classIds);
 
-    List<Student> findBySchoolIdAndClassIdAndSectionIdAndStatus(String schoolId, String classId, String sectionId,
-            Student.Status status);
+        List<Student> findByClassId(String classId);
+
+        Optional<Student> findTopBySchoolIdAndClassIdAndSectionIdOrderByRollNoDesc(String schoolId, String classId,
+                        String sectionId);
+
+        List<Student> findBySchoolIdAndClassIdAndSectionIdAndStatus(String schoolId, String classId, String sectionId,
+                        Student.Status status);
 }

@@ -16,6 +16,9 @@ public interface ClassesRepository extends MongoRepository<Classes, String> {
 
     java.util.Optional<Classes> findBySchoolIdAndName(String schoolId, String name);
 
+    @Query("{ 'schoolId': ?0, $or: [ { 'grade': ?1 }, { 'name': ?1 } ] }")
+    List<Classes> findBySchoolIdAndGradeOrName(String schoolId, String identifier);
+
     List<Classes> findByGrade(String grade);
 
     List<Classes> findByStatus(Classes.Status status);
