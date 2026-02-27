@@ -13,11 +13,13 @@ public interface ParentRepository extends MongoRepository<Parent, String> {
 
     List<Parent> findBySchoolId(String schoolId);
 
+    List<Parent> findBySchoolIdAndStatusNot(String schoolId, Parent.Status status);
+
+    List<Parent> findBySchoolIdAndStatus(String schoolId, Parent.Status status);
+
     Optional<Parent> findByIdAndSchoolId(String id, String schoolId);
 
     Optional<Parent> findBySchoolIdAndEmail(String schoolId, String email);
-
-    List<Parent> findBySchoolIdAndStatus(String schoolId, Parent.Status status);
 
     @Query("{ 'schoolId': ?0, '$or': [ { 'name': { '$regex': ?1, '$options': 'i' } }, { 'email': { '$regex': ?1, '$options': 'i' } } ] }")
     List<Parent> searchParents(String schoolId, String searchTerm);

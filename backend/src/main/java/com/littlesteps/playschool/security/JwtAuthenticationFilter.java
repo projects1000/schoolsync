@@ -44,10 +44,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String role = jwtUtil.getRoleFromToken(jwt);
 
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    if (role == null) {
+                        logger.warn("TOKEN_DEBUG: role is missing in token for user " + username);
+                        role = "USER"; // Default or handle as error
+                    }
+
                     List<SimpleGrantedAuthority> authorities = Collections.singletonList(
                             new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
 
-                    logger.info("JWT Filter - Extracted Role: " + role + ", Assigned Authority: "
+                    logger.info("TOKEN_DEBUG: username=" + username + ", role=" + role + ", authority="
                             + authorities.get(0).getAuthority());
 
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
@@ -55,12 +60,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
 
-                    // Validate User Status from DB to enforce BLOCKED/INACTIVE checks immediately
+                    logger.info("CONTEXT_DEBUG: Authentication set in SecurityContext for " + username);
+
+                    // Validate User Status from DB
                     com.littlesteps.playschool.entity.User user = userRepository.findByEmail(username).orElse(null);
-                    if (user == null || !user.getActive()
-                            || user.getStatus() == com.littlesteps.playschool.entity.User.Status.BLOCKED
-                            || user.getStatus() == com.littlesteps.playschool.entity.User.Status.INACTIVE) {
-                        logger.warn("User " + username + " is not active or blocked. Denying access.");
+                    if (user == null) {
+                        logger.warn("USER_DEBUG: User not found in database: " + username);
+                    } else if (!user.getActive()) {
+                        logger.warn("USER_DEBUG: User is inactive: " + username);
+                    }
+
+                    boolean isActive = false;
+                    com.littlesteps.playschool.entity.User.Status status = null;
+
+                    if (user != null) {
+                        isActive = user.getActive() != null && user.getActive();
+                        status = user.getStatus();
+                    }
+
+                    if (user == null || !isActive || status == com.littlesteps.playschool.entity.User.Status.BLOCKED
+                            || status == com.littlesteps.playschool.entity.User.Status.INACTIVE) {
+                        logger.warn("AUTH_REJECT: User " + username + " not found or inactive. Status: " + status
+                                + ". Denying access.");
                         response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Account is disabled");
                         return;
                     }

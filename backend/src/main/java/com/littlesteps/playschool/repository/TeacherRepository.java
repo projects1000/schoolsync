@@ -17,12 +17,14 @@ public interface TeacherRepository extends MongoRepository<Teacher, String> {
 
     List<Teacher> findBySchoolId(String schoolId);
 
-    List<Teacher> findBySchoolIdAndDepartment(String schoolId, String department);
+    List<Teacher> findBySchoolIdAndStatusNot(String schoolId, Teacher.Status status);
 
     List<Teacher> findBySchoolIdAndStatus(String schoolId, Teacher.Status status);
 
-    @Query("{ 'schoolId': ?0, '$or': [ { 'name': { '$regex': ?1, '$options': 'i' } }, { 'employeeId': { '$regex': ?1, '$options': 'i' } }, { 'email': { '$regex': ?1, '$options': 'i' } } ] }")
-    List<Teacher> searchTeachers(String schoolId, String search);
+    List<Teacher> findBySchoolIdAndDepartment(String schoolId, String department);
+
+    @Query("{ 'schoolId': ?0, 'status': { $ne: 'DELETED' }, $or: [ { 'name': { $regex: ?1, $options: 'i' } }, { 'email': { $regex: ?1, $options: 'i' } } ] }")
+    List<Teacher> searchTeachers(String schoolId, String searchTerm);
 
     boolean existsByEmployeeId(String employeeId);
 

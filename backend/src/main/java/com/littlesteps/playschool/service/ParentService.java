@@ -19,8 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -78,7 +81,17 @@ public class ParentService {
      * Get all parents for a school
      */
     public List<ParentDTO> getAllParents(String schoolId) {
-        return parentRepository.findBySchoolId(schoolId)
+        return parentRepository.findBySchoolIdAndStatusNot(schoolId, Parent.Status.DELETED)
+                .stream()
+                .map(parent -> convertToDTO(parent, schoolId))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get all deleted parents for a school
+     */
+    public List<ParentDTO> getDeletedParents(String schoolId) {
+        return parentRepository.findBySchoolIdAndStatus(schoolId, Parent.Status.DELETED)
                 .stream()
                 .map(parent -> convertToDTO(parent, schoolId))
                 .collect(Collectors.toList());
@@ -208,6 +221,65 @@ public class ParentService {
         auditService.logParentUpdated(updatedBy, parent.getId());
 
         return convertToDTO(savedParent, schoolId);
+    }
+
+    /**
+     * Delete parent (Soft delete)
+     */
+    @Transactional
+    public void deleteParent(String id, String deletedBy, String schoolId) {
+        Parent parent = parentRepository.findByIdAndSchoolId(id, schoolId)
+                .orElseThrow(() -> new RuntimeException("Parent not found"));
+
+        if (parent.getStatus() == Parent.Status.DELETED) {
+            throw new RuntimeException("Parent is already deleted");
+        }
+
+        // 1. Soft Delete Parent
+        parent.setStatus(Parent.Status.DELETED);
+        parentRepository.save(parent);
+
+        // 2. Soft Delete User Account
+        if (parent.getUserId() != null) {
+            userRepository.findById(parent.getUserId()).ifPresent(user -> {
+                user.setStatus(User.Status.DELETED);
+                user.setActive(false);
+                userRepository.save(user);
+            });
+        }
+
+        // Note: Not removing parentStudentMap here. Admin can restore later.
+        // The mappings will just contain a deleted parent.
+
+        auditService.logSchoolAction(deletedBy, "DELETE_PARENT", "PARENT", id, schoolId,
+                null, "Soft deleted parent: " + parent.getName());
+    }
+
+    /**
+     * Restore parent
+     */
+    @Transactional
+    public void restoreParent(String id, String restoredBy, String schoolId) {
+        Parent parent = parentRepository.findByIdAndSchoolId(id, schoolId)
+                .orElseThrow(() -> new RuntimeException("Parent not found"));
+
+        if (parent.getStatus() != Parent.Status.DELETED) {
+            throw new RuntimeException("Parent is not deleted");
+        }
+
+        parent.setStatus(Parent.Status.INACTIVE);
+        parentRepository.save(parent);
+
+        if (parent.getUserId() != null) {
+            userRepository.findById(parent.getUserId()).ifPresent(user -> {
+                user.setStatus(User.Status.INACTIVE);
+                user.setActive(false);
+                userRepository.save(user);
+            });
+        }
+
+        auditService.logSchoolAction(restoredBy, "RESTORE_PARENT", "PARENT", id, schoolId,
+                null, "Restored parent: " + parent.getName());
     }
 
     /**

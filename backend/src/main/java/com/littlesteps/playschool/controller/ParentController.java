@@ -82,7 +82,32 @@ public class ParentController {
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
+    }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> deleteParent(@PathVariable String id,
+            org.springframework.security.core.Authentication authentication) {
+        try {
+            String schoolId = getSchoolId(authentication);
+            String deletedBy = authentication.getName();
+            parentService.deleteParent(id, deletedBy, schoolId);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Parent deleted successfully"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<Map<String, Object>> restoreParent(@PathVariable String id,
+            org.springframework.security.core.Authentication authentication) {
+        try {
+            String schoolId = getSchoolId(authentication);
+            String restoredBy = authentication.getName();
+            parentService.restoreParent(id, restoredBy, schoolId);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Parent restored successfully"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
     }
 
     @PatchMapping("/{id}/status")

@@ -18,13 +18,13 @@ public class SectionController {
     private SectionService sectionService;
 
     @GetMapping("/{classId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
     public ResponseEntity<List<Section>> getSections(@PathVariable String classId) {
         return ResponseEntity.ok(sectionService.getSectionsByClass(classId));
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
     public ResponseEntity<?> createSection(@RequestBody Section section) {
         try {
             String schoolId = SchoolContext.getSchoolId();
@@ -43,7 +43,7 @@ public class SectionController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
     public ResponseEntity<?> deleteSection(@PathVariable String id) {
         try {
             sectionService.deleteSection(id);

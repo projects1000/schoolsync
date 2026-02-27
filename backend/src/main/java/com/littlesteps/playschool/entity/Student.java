@@ -56,7 +56,7 @@ public class Student {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     public enum Status {
-        ACTIVE, INACTIVE, GRADUATED
+        ACTIVE, INACTIVE, GRADUATED, DELETED
     }
 
     private String schoolId;

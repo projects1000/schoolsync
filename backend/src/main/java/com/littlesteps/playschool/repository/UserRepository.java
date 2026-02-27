@@ -28,6 +28,8 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     List<User> findBySchoolIdAndRole(String schoolId, User.Role role);
 
+    List<User> findBySchoolIdAndRoleAndStatusNot(String schoolId, User.Role role, User.Status status);
+
     boolean existsBySchoolIdAndRole(String schoolId, User.Role role);
 
     // Check if email exists within a specific school for a specific role

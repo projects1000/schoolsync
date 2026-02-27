@@ -44,7 +44,7 @@ public class SuperAdminService {
 
     @Transactional(readOnly = true)
     public List<SchoolResponse> getAllSchools() {
-        List<School> schools = schoolRepository.findAll();
+        List<School> schools = schoolRepository.findByStatusNot(School.Status.DELETED);
         return schools.stream().map(this::mapToSchoolResponse).collect(Collectors.toList());
     }
 
@@ -142,6 +142,10 @@ public class SuperAdminService {
         School school = schoolRepository.findById(schoolId)
                 .orElseThrow(() -> new RuntimeException("School not found"));
 
+        if (school.getStatus() == School.Status.DELETED) {
+            throw new RuntimeException("School is already deleted");
+        }
+
         // 1. Unlink Admin
         if (school.getAdminId() != null) {
             User admin = userRepository.findById(school.getAdminId()).orElse(null);
@@ -149,17 +153,35 @@ public class SuperAdminService {
                 admin.setSchoolId(null);
                 userRepository.save(admin);
             }
+            school.setAdminId(null);
+            school.setPrincipalName(null);
+            school.setPrincipalEmail(null);
         }
 
-        // 2. Delete or unlink students/teachers?
-        // Ideally we should delete or deactivate them. For now, strict deletion.
-        // Or check if students exist and block deletion?
-        // Assuming cascade deletion isn't automatic in MongoRepository without DBRefs
-        // or events.
-        // Let's keep it simple: just delete the school doc. Frontend Logic handles
-        // warning.
+        // 2. Soft Delete
+        school.setStatus(School.Status.DELETED);
+        school.setUpdatedAt(LocalDateTime.now());
+        schoolRepository.save(school);
+    }
 
-        schoolRepository.delete(school);
+    @Transactional(readOnly = true)
+    public List<SchoolResponse> getDeletedSchools() {
+        List<School> schools = schoolRepository.findByStatus(School.Status.DELETED);
+        return schools.stream().map(this::mapToSchoolResponse).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void restoreSchool(String schoolId) {
+        School school = schoolRepository.findById(schoolId)
+                .orElseThrow(() -> new RuntimeException("School not found"));
+
+        if (school.getStatus() != School.Status.DELETED) {
+            throw new RuntimeException("School is not in trash");
+        }
+
+        school.setStatus(School.Status.INACTIVE); // Default to INACTIVE after restore
+        school.setUpdatedAt(LocalDateTime.now());
+        schoolRepository.save(school);
     }
 
     @Transactional

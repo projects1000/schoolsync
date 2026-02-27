@@ -40,7 +40,7 @@ public class Teacher {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     public enum Status {
-        ACTIVE, INACTIVE, ON_LEAVE
+        ACTIVE, INACTIVE, ON_LEAVE, DELETED
     }
 
     public enum EmploymentType {

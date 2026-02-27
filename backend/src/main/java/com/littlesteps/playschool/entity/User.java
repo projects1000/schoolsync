@@ -52,7 +52,7 @@ public class User {
     }
 
     public enum Status {
-        ACTIVE, INACTIVE, SUSPENDED, BLOCKED
+        ACTIVE, INACTIVE, SUSPENDED, BLOCKED, DELETED
     }
 
     // Constructors

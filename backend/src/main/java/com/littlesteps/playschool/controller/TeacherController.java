@@ -18,7 +18,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/teachers")
 @CrossOrigin(origins = { "http://localhost:3000", "http://localhost:3001", "http://localhost:5173" })
-@PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
 public class TeacherController {
 
     @Autowired
@@ -99,18 +99,34 @@ public class TeacherController {
         }
     }
 
-    /**
-     * Delete (deactivate) teacher
-     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Object>> deleteTeacher(
             @PathVariable String id,
             Authentication authentication) {
         try {
-            teacherService.deactivateTeacher(id, authentication.getName());
+            teacherService.deleteTeacher(id, authentication.getName());
             return ResponseEntity.ok(Map.of(
                     "success", true,
-                    "message", "Teacher deactivated successfully"));
+                    "message", "Teacher deleted successfully"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()));
+        }
+    }
+
+    /**
+     * Restore teacher
+     */
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<Map<String, Object>> restoreTeacher(
+            @PathVariable String id,
+            Authentication authentication) {
+        try {
+            teacherService.restoreTeacher(id, authentication.getName());
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Teacher restored successfully"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,

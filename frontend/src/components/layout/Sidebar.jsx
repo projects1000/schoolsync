@@ -28,7 +28,8 @@ import {
   User,
   TrendingUp,
   Bell,
-  ArrowUpCircle
+  ArrowUpCircle,
+  Trash2
 } from 'lucide-react';
 import { MODULE_TO_PATH } from '@/routeConfig';
 
@@ -43,6 +44,7 @@ const Sidebar = ({ activeModule, currentUser, onClose, sidebarOpen, onLogout }) 
     { id: 'fee-settings', label: 'Fee Settings', icon: CreditCard, roles: ['superadmin'] },
     { id: 'security-logs', label: 'Security & Logs', icon: Shield, roles: ['superadmin'] },
     { id: 'system-health', label: 'System Health', icon: Activity, roles: ['superadmin'] },
+    { id: 'trash', label: 'Trash', icon: Trash2, roles: ['superadmin'] },
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin'] },
     { id: 'teacher-dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['teacher'] },
     { id: 'teacher-classes', label: 'My Classes', icon: GraduationCap, roles: ['teacher'] },
@@ -57,13 +59,14 @@ const Sidebar = ({ activeModule, currentUser, onClose, sidebarOpen, onLogout }) 
     { id: 'students', label: 'Students', icon: GraduationCap, roles: ['admin'] },
     { id: 'communications', label: 'Communication', icon: MessageSquare, roles: ['superadmin', 'admin'] },
     { id: 'parents', label: 'Parents', icon: Heart, roles: ['admin'] },
-    { id: 'parent-registrations', label: 'Parent Registrations', icon: UserPlus, roles: ['admin'] },
+
     { id: 'school-profile', label: 'School Profile', icon: Building, roles: ['admin'] },
     { id: 'classes', label: 'Class Management', icon: Box, roles: ['admin'] },
     { id: 'academics', label: 'Academics', icon: GraduationCap, roles: ['admin'] },
     { id: 'fees', label: 'Fees & Billing', icon: CreditCard, roles: ['superadmin', 'admin'] },
     { id: 'timetable', label: 'Timetable', icon: BookOpen, roles: ['admin', 'teacher'] },
     { id: 'notification-management', label: 'Notifications', icon: Bell, roles: ['superadmin', 'admin'] },
+    { id: 'trash', label: 'Trash', icon: Trash2, roles: ['admin'] },
     { id: 'parent-overview', label: 'Dashboard', icon: LayoutDashboard, roles: ['parent'] },
     { id: 'parent-student-profile', label: 'Student Profile', icon: User, roles: ['parent'] },
     { id: 'parent-academics', label: 'Academic Details', icon: GraduationCap, roles: ['parent'] },

@@ -43,6 +43,15 @@ public class AdminController {
     private JwtUtil jwtUtil;
 
     @Autowired
+    private com.littlesteps.playschool.service.StudentService studentService;
+
+    @Autowired
+    private com.littlesteps.playschool.service.TeacherService teacherService;
+
+    @Autowired
+    private com.littlesteps.playschool.service.ParentService parentService;
+
+    @Autowired
     private com.littlesteps.playschool.service.AuditService auditService;
 
     @GetMapping("/audit-logs")
@@ -208,6 +217,49 @@ public class AdminController {
             response.put("success", false);
             response.put("message", "Failed to validate registration code: " + e.getMessage());
             return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    // --- Trash Endpoints ---
+
+    @GetMapping("/trash/students")
+    public ResponseEntity<Map<String, Object>> getDeletedStudents(@RequestHeader("Authorization") String token) {
+        try {
+            User currentUser = getCurrentUser(token);
+            String schoolId = currentUser.getSchoolId();
+            List<com.littlesteps.playschool.dto.StudentDTO> deletedStudents = studentService
+                    .getDeletedStudents(schoolId);
+            return ResponseEntity.ok(Map.of("success", true, "students", deletedStudents));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Failed to fetch deleted students: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/trash/teachers")
+    public ResponseEntity<Map<String, Object>> getDeletedTeachers(@RequestHeader("Authorization") String token) {
+        try {
+            User currentUser = getCurrentUser(token);
+            String schoolId = currentUser.getSchoolId();
+            List<com.littlesteps.playschool.dto.TeacherDTO> deletedTeachers = teacherService
+                    .getDeletedTeachers(schoolId);
+            return ResponseEntity.ok(Map.of("success", true, "teachers", deletedTeachers));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Failed to fetch deleted teachers: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/trash/parents")
+    public ResponseEntity<Map<String, Object>> getDeletedParents(@RequestHeader("Authorization") String token) {
+        try {
+            User currentUser = getCurrentUser(token);
+            String schoolId = currentUser.getSchoolId();
+            List<com.littlesteps.playschool.dto.ParentDTO> deletedParents = parentService.getDeletedParents(schoolId);
+            return ResponseEntity.ok(Map.of("success", true, "parents", deletedParents));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Failed to fetch deleted parents: " + e.getMessage()));
         }
     }
 

@@ -45,12 +45,13 @@ import GlobalAcademicSettings from '@/components/superadmin/GlobalAcademicSettin
 import GlobalFeeSettings from '@/components/superadmin/GlobalFeeSettings';
 import SecurityAuditLogs from '@/components/superadmin/SecurityAuditLogs';
 import SystemHealthBackup from '@/components/superadmin/SystemHealthBackup';
+import TrashManagement from '@/components/superadmin/TrashManagement';
 import SchoolProfile from '@/components/admin/SchoolProfile';
 import AcademicsManagement from '@/components/admin/AcademicsManagement';
 import NotificationManagement from '@/components/admin/NotificationManagement';
 import ClassManagement from '@/components/classes/ClassManagement';
 import { getDefaultPath, PATH_TO_MODULE } from '@/routeConfig';
-
+import AdminTrashManagement from '@/components/admin/AdminTrashManagement';
 // Animated page wrapper to preserve the existing page transition effect
 const AnimatedPage = ({ children }) => {
   const location = useLocation();

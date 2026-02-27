@@ -23,8 +23,31 @@ public class StudentService {
     @Autowired
     private com.littlesteps.playschool.repository.ClassesRepository classesRepository;
 
+    @Autowired
+    private com.littlesteps.playschool.repository.ParentStudentMapRepository parentStudentMapRepository;
+
+    @Autowired
+    private com.littlesteps.playschool.repository.ParentRepository parentRepository;
+
+    @Autowired
+    private com.littlesteps.playschool.repository.UserRepository userRepository;
+
     public List<StudentDTO> getAllStudents(String schoolId) {
-        return studentRepository.findBySchoolId(schoolId)
+        return studentRepository.findBySchoolIdAndStatusNot(schoolId, Student.Status.DELETED)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<StudentDTO> getStudentsByClassId(String schoolId, String classId) {
+        return studentRepository.findBySchoolIdAndClassIdAndStatusNot(schoolId, classId, Student.Status.DELETED)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<StudentDTO> getDeletedStudents(String schoolId) {
+        return studentRepository.findBySchoolIdAndStatus(schoolId, Student.Status.DELETED)
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -206,10 +229,112 @@ public class StudentService {
     }
 
     public void deleteStudent(String id) {
-        if (!studentRepository.existsById(id)) {
-            throw new RuntimeException("Student not found");
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        if (student.getStatus() == Student.Status.DELETED) {
+            throw new RuntimeException("Student is already deleted");
         }
-        studentRepository.deleteById(id);
+
+        String schoolId = student.getSchoolId();
+
+        // 1. Soft Delete Student
+        student.setStatus(Student.Status.DELETED);
+        studentRepository.save(student);
+
+        // 2. Recalculate roll numbers for the section they were removed from
+        if (student.getClassId() != null && student.getSectionId() != null) {
+            recalculateRollNumbers(schoolId, student.getClassId(), student.getSectionId());
+        }
+
+        // 3. Find and soft-delete mapped parents (Cascade)
+        List<com.littlesteps.playschool.entity.ParentStudentMap> mappings = parentStudentMapRepository
+                .findByStudentIdAndSchoolId(id, schoolId);
+
+        for (com.littlesteps.playschool.entity.ParentStudentMap mapping : mappings) {
+            String parentId = mapping.getParentId();
+            // Check if this parent has other ACTIVE children
+            long activeChildrenCount = parentStudentMapRepository.findByParentIdAndSchoolId(parentId, schoolId).stream()
+                    .filter(m -> {
+                        return studentRepository.findById(m.getStudentId())
+                                .map(s -> s.getStatus() != Student.Status.DELETED)
+                                .orElse(false);
+                    }).count();
+
+            // If no active children left, soft-delete the parent too
+            // Admin can choose to restore them later.
+            if (activeChildrenCount == 0) {
+                com.littlesteps.playschool.entity.Parent parent = parentRepository.findById(parentId).orElse(null);
+                if (parent != null && parent.getStatus() != com.littlesteps.playschool.entity.Parent.Status.DELETED) {
+                    parent.setStatus(com.littlesteps.playschool.entity.Parent.Status.DELETED);
+                    parentRepository.save(parent);
+
+                    // Disable User account for parent
+                    if (parent.getUserId() != null) {
+                        userRepository.findById(parent.getUserId()).ifPresent(user -> {
+                            user.setStatus(com.littlesteps.playschool.entity.User.Status.DELETED);
+                            user.setActive(false);
+                            userRepository.save(user);
+                        });
+                    }
+                }
+            }
+        }
+
+        String username = "SYSTEM";
+        try {
+            username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication()
+                    .getName();
+        } catch (Exception e) {
+        }
+        auditService.logAction(username, "DELETE", "STUDENT", id, null, "Soft deleted student: " + student.getName());
+    }
+
+    public void restoreStudent(String id) {
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        if (student.getStatus() != Student.Status.DELETED) {
+            throw new RuntimeException("Student is not deleted");
+        }
+
+        String schoolId = student.getSchoolId();
+
+        // 1. Restore Student to INACTIVE status
+        student.setStatus(Student.Status.INACTIVE);
+        studentRepository.save(student);
+
+        // 2. Find and restore mapped parents if they were deleted
+        List<com.littlesteps.playschool.entity.ParentStudentMap> mappings = parentStudentMapRepository
+                .findByStudentIdAndSchoolId(id, schoolId);
+
+        for (com.littlesteps.playschool.entity.ParentStudentMap mapping : mappings) {
+            String parentId = mapping.getParentId();
+            com.littlesteps.playschool.entity.Parent parent = parentRepository.findById(parentId).orElse(null);
+
+            if (parent != null && parent.getStatus() == com.littlesteps.playschool.entity.Parent.Status.DELETED) {
+                parent.setStatus(com.littlesteps.playschool.entity.Parent.Status.INACTIVE);
+                parentRepository.save(parent);
+
+                // Re-enable User account for parent
+                if (parent.getUserId() != null) {
+                    userRepository.findById(parent.getUserId()).ifPresent(user -> {
+                        user.setStatus(com.littlesteps.playschool.entity.User.Status.ACTIVE);
+                        user.setActive(true);
+                        userRepository.save(user);
+                    });
+                }
+            }
+        }
+
+        String username = "SYSTEM";
+        try {
+            username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication()
+                    .getName();
+        } catch (Exception e) {
+        }
+        auditService.logAction(username, "RESTORE", "STUDENT", id, null,
+                "Restored soft deleted student: " + student.getName());
     }
 
     public List<StudentDTO> getStudentsByClass(String schoolId, String classId) {

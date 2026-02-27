@@ -5,7 +5,6 @@ import adminService from '@/services/adminService';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     Select,
     SelectContent,
@@ -40,8 +39,10 @@ const AcademicsManagement = () => {
 
     // Subject Management state
     const [newSubjectName, setNewSubjectName] = useState('');
-    const [newSubjectCode, setNewSubjectCode] = useState('');
     const [isCreatingSubject, setIsCreatingSubject] = useState(false);
+    const [newSubjectType, setNewSubjectType] = useState('UNIVERSAL');
+    const [newSubjectTargetGrade, setNewSubjectTargetGrade] = useState('');
+    const [newSubjectExcludedGrades, setNewSubjectExcludedGrades] = useState([]);
 
     // Selected Class
     const [selectedGrade, setSelectedGrade] = useState('');
@@ -50,12 +51,11 @@ const AcademicsManagement = () => {
 
     // Assignments for selected class
     const [classTeacherId, setClassTeacherId] = useState('');
-    const [classSubjects, setClassSubjects] = useState([]); // { subjectId, subjectName, teacherId, teacherName }
+    const [classSubjects, setClassSubjects] = useState([]);
 
     // Available subjects (not yet assigned to class)
     const [availableSubjects, setAvailableSubjects] = useState([]);
     const [selectedSubjectsToAdd, setSelectedSubjectsToAdd] = useState([]);
-    const [showAddSubjects, setShowAddSubjects] = useState(false);
 
     // Track changes
     const [originalClassTeacherId, setOriginalClassTeacherId] = useState('');
@@ -92,20 +92,16 @@ const AcademicsManagement = () => {
         }
     };
 
-    // Compute available class teachers (exclude those already assigned as class teachers to other sections)
     const availableClassTeachers = useMemo(() => {
-        // Get all teacher IDs who are already class teachers (excluding the currently selected class)
         const assignedTeacherIds = classes
             .filter(c => c.id !== selectedClassId && c.classTeacherId)
             .map(c => c.classTeacherId);
 
-        // Filter teachers to only include those not already assigned
         return teachers.filter(t =>
             !assignedTeacherIds.includes(t.id) || t.id === classTeacherId
         );
     }, [teachers, classes, selectedClassId, classTeacherId]);
 
-    // Filtered class teachers based on search
     const filteredClassTeachers = useMemo(() => {
         if (!classTeacherSearch.trim()) return availableClassTeachers;
         const search = classTeacherSearch.toLowerCase();
@@ -115,7 +111,6 @@ const AcademicsManagement = () => {
         );
     }, [availableClassTeachers, classTeacherSearch]);
 
-    // Filtered subject teachers based on search
     const filteredSubjectTeachers = useMemo(() => {
         if (!subjectTeacherSearch.trim()) return teachers;
         const search = subjectTeacherSearch.toLowerCase();
@@ -145,15 +140,12 @@ const AcademicsManagement = () => {
             return;
         }
 
-        // Set Class Teacher
         const ctId = cls.classTeacherId || '';
         setClassTeacherId(ctId);
         setOriginalClassTeacherId(ctId);
 
-        // Fetch subjects assigned to this class
         try {
             const classSubjectsData = await adminService.getClassSubjects(classId);
-            // Transform to UI format
             const mapped = (classSubjectsData || []).map(cs => ({
                 id: cs.id,
                 subjectId: cs.subjectId,
@@ -163,18 +155,27 @@ const AcademicsManagement = () => {
             }));
             setClassSubjects(mapped);
 
-            // Calculate available subjects (not yet assigned to this class)
             const assignedSubjectIds = mapped.map(cs => cs.subjectId);
-            const available = subjects.filter(s => !assignedSubjectIds.includes(s.id));
+            const available = subjects.filter(s => {
+                if (assignedSubjectIds.includes(s.id)) return false;
+                const clsGrade = cls.grade || cls.name;
+                if (s.type === 'CLASS_SPECIFIC') return s.targetGrade === clsGrade;
+                if (s.type === 'UNIVERSAL') return !(s.excludedGrades || []).includes(clsGrade);
+                return true;
+            });
             setAvailableSubjects(available);
         } catch (error) {
             console.error('Failed to fetch class subjects:', error);
             setClassSubjects([]);
-            setAvailableSubjects(subjects); // All subjects available if fetch failed
+            setAvailableSubjects(subjects.filter(s => {
+                const clsGrade = cls.grade || cls.name;
+                if (s.type === 'CLASS_SPECIFIC') return s.targetGrade === clsGrade;
+                if (s.type === 'UNIVERSAL') return !(s.excludedGrades || []).includes(clsGrade);
+                return true;
+            }));
         }
 
         setSelectedSubjectsToAdd([]);
-        setShowAddSubjects(false);
         setHasChanges(false);
     };
 
@@ -198,12 +199,10 @@ const AcademicsManagement = () => {
 
         setSaving(true);
         try {
-            // Save Class Teacher if changed
             if (classTeacherId !== originalClassTeacherId) {
                 await adminService.assignClassTeacher(selectedClassId, classTeacherId);
             }
 
-            // Save Subject Teachers
             for (const cs of classSubjects) {
                 if (cs.teacherId) {
                     await adminService.assignTeacherToSubject(selectedClassId, cs.subjectId, cs.teacherId);
@@ -218,7 +217,6 @@ const AcademicsManagement = () => {
             setOriginalClassTeacherId(classTeacherId);
             setHasChanges(false);
 
-            // Refresh classes to get updated classTeacherId
             const updatedClasses = await adminService.getClasses();
             setClasses(updatedClasses);
 
@@ -232,11 +230,6 @@ const AcademicsManagement = () => {
         } finally {
             setSaving(false);
         }
-    };
-
-    const getTeacherDisplay = (teacherId) => {
-        const teacher = teachers.find(t => t.id === teacherId);
-        return teacher ? teacher.name : 'Select Teacher';
     };
 
     const toggleSubjectSelection = (subjectId) => {
@@ -259,7 +252,6 @@ const AcademicsManagement = () => {
                 description: `${selectedSubjectsToAdd.length} subject(s) assigned to class`
             });
 
-            // Refresh data for this class
             await handleClassSelect(selectedClassId);
         } catch (error) {
             console.error('Failed to add subjects:', error);
@@ -289,15 +281,18 @@ const AcademicsManagement = () => {
         try {
             await adminService.createSubject({
                 name: newSubjectName,
-                code: newSubjectCode
+                type: newSubjectType,
+                targetGrade: newSubjectTargetGrade || null,
+                excludedGrades: newSubjectExcludedGrades
             });
             toast({
                 title: "Success",
                 description: "Subject created successfully"
             });
             setNewSubjectName('');
-            setNewSubjectCode('');
-            // Refresh subjects
+            setNewSubjectType('UNIVERSAL');
+            setNewSubjectTargetGrade('');
+            setNewSubjectExcludedGrades([]);
             const subjectsData = await adminService.getSubjects();
             setSubjects(subjectsData || []);
         } catch (error) {
@@ -323,10 +318,8 @@ const AcademicsManagement = () => {
                 title: "Success",
                 description: "Subject deleted successfully"
             });
-            // Refresh subjects
             const subjectsData = await adminService.getSubjects();
             setSubjects(subjectsData || []);
-            // If the deleted subject was selected for a class, refresh class details
             if (selectedClassId) {
                 handleClassSelect(selectedClassId);
             }
@@ -342,351 +335,507 @@ const AcademicsManagement = () => {
         }
     };
 
+    const getInitials = (name) => {
+        if (!name) return '?';
+        return name
+            .split(' ')
+            .map(word => word.charAt(0))
+            .join('')
+            .toUpperCase()
+            .substring(0, 2);
+    };
+
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="relative">
+                    <div className="h-16 w-16 rounded-full border-4 border-purple-100 border-t-purple-600 animate-spin"></div>
+                    <div className="mt-4 text-purple-600 font-medium animate-pulse text-center">Loading...</div>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                        <GraduationCap className="h-6 w-6 text-purple-600" />
-                        Academics Management
-                    </h1>
-                    <p className="text-gray-500">Manage subjects and academic assignments</p>
+        <div className="space-y-8 pb-12">
+            {/* Header Section */}
+            <div className="relative overflow-hidden bg-white rounded-3xl p-8 border border-gray-100 shadow-sm transition-all hover:shadow-md">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-purple-50 rounded-full -mr-20 -mt-20 opacity-50 blur-3xl"></div>
+                <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-3 bg-purple-100 rounded-2xl">
+                                <GraduationCap className="h-6 w-6 text-purple-600" />
+                            </div>
+                            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-purple-900 to-indigo-900">
+                                Academics Management
+                            </h1>
+                        </div>
+                        <p className="text-gray-500 text-lg">Orchestrate your school's curriculum and teaching assignments</p>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <div className="hidden md:flex flex-col items-end text-right">
+                            <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">Academic Year</span>
+                            <span className="text-gray-900 font-bold">2025-2026</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <Tabs defaultValue="assignments" className="w-full">
-                <TabsList className="mb-4">
-                    <TabsTrigger value="assignments">Academic Assignments</TabsTrigger>
-                    <TabsTrigger value="subjects">Subject Master</TabsTrigger>
+            <Tabs defaultValue="assignments" className="w-full space-y-6">
+                <TabsList className="bg-white/50 backdrop-blur-sm p-1.5 rounded-2xl border border-gray-100 shadow-sm w-auto mb-2">
+                    <TabsTrigger
+                        value="assignments"
+                        className="rounded-xl px-8 py-2.5 text-base font-semibold data-[state=active]:bg-purple-600 data-[state=active]:text-white transition-all"
+                    >
+                        Academic Assignments
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="subjects"
+                        className="rounded-xl px-8 py-2.5 text-base font-semibold data-[state=active]:bg-purple-600 data-[state=active]:text-white transition-all"
+                    >
+                        Subject Master
+                    </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="assignments">
-                    <div className="space-y-6">
-                        {/* Save Button for Assignments */}
-                        <div className="flex justify-end">
-                            {hasChanges && (
-                                <Button
-                                    onClick={handleSave}
-                                    disabled={saving}
-                                    className="bg-green-600 hover:bg-green-700"
+                <TabsContent value="assignments" className="space-y-8">
+                    {/* Interactive Selection Canvas */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        {/* Selector Sidebar */}
+                        <Card className="lg:col-span-4 rounded-3xl border-gray-100 shadow-sm overflow-hidden h-fit">
+                            <CardHeader className="bg-gray-50/50 border-b border-gray-100 py-6">
+                                <CardTitle className="text-xl flex items-center gap-2">
+                                    <BookOpen className="h-5 w-5 text-purple-600" />
+                                    Select Target Class
+                                </CardTitle>
+                                <CardDescription>Pick a grade and section to manage</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-6 space-y-6">
+                                <div className="space-y-4">
+                                    <Label className="text-sm font-bold text-gray-700 uppercase tracking-wide">Step 1: Grade</Label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {[...new Set(classes.map(c => c.grade || c.name))].sort().map(grade => (
+                                            <button
+                                                key={grade}
+                                                onClick={() => handleGradeSelect(grade)}
+                                                className={`px-4 py-3 rounded-xl border-2 transition-all flex items-center justify-center font-bold text-sm ${selectedGrade === grade
+                                                    ? 'bg-purple-50 border-purple-600 text-purple-700 shadow-sm'
+                                                    : 'bg-white border-gray-100 text-gray-500 hover:border-purple-200 hover:bg-purple-50/30'
+                                                    }`}
+                                            >
+                                                {grade}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {selectedGrade && (
+                                    <motion.div
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        className="space-y-4"
+                                    >
+                                        <Label className="text-sm font-bold text-gray-700 uppercase tracking-wide">Step 2: Section</Label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {classes
+                                                .filter(c => (c.grade || c.name) === selectedGrade)
+                                                .sort((a, b) => (a.section || '').localeCompare(b.section || ''))
+                                                .map(cls => (
+                                                    <button
+                                                        key={cls.id}
+                                                        onClick={() => handleClassSelect(cls.id)}
+                                                        className={`px-3 py-4 rounded-xl border-2 transition-all flex flex-col items-center gap-1 font-bold ${selectedClassId === cls.id
+                                                            ? 'bg-purple-600 border-purple-600 text-white shadow-lg scale-105'
+                                                            : 'bg-white border-gray-100 text-gray-600 hover:border-purple-200'
+                                                            }`}
+                                                    >
+                                                        <span className="text-xs opacity-70">Sec</span>
+                                                        <span className="text-lg">{cls.section || 'N/A'}</span>
+                                                    </button>
+                                                ))
+                                            }
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Main Assignment Area */}
+                        <div className="lg:col-span-8 space-y-8">
+                            {!selectedClass ? (
+                                <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-gray-50/50 rounded-[32px] border-2 border-dashed border-gray-200 text-gray-400 p-8 text-center group">
+                                    <div className="p-6 bg-white rounded-3xl shadow-sm mb-4 transition-transform group-hover:scale-110">
+                                        <GraduationCap className="h-12 w-12 text-gray-200" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-700 mb-2">No Class Selected</h3>
+                                    <p className="max-w-[280px]">Please select a grade and section from the left panel to begin managing academics.</p>
+                                </div>
+                            ) : (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="space-y-8"
                                 >
-                                    <Save className="w-4 h-4 mr-2" />
-                                    {saving ? 'Saving...' : 'Save Changes'}
-                                </Button>
+                                    {/* Action Bar */}
+                                    {hasChanges && (
+                                        <div className="flex items-center justify-between bg-purple-900 text-white p-4 rounded-2xl shadow-xl animate-in fade-in slide-in-from-top-4">
+                                            <p className="flex items-center gap-2 font-medium px-2">
+                                                <div className="h-2 w-2 rounded-full bg-yellow-400 animate-pulse"></div>
+                                                You have unsaved changes in teaching assignments
+                                            </p>
+                                            <Button
+                                                onClick={handleSave}
+                                                disabled={saving}
+                                                className="bg-white text-purple-900 hover:bg-purple-50 font-bold rounded-xl px-6"
+                                            >
+                                                {saving ? 'Syncing...' : 'Save Assignments'}
+                                                {!saving && <Save className="ml-2 h-4 w-4" />}
+                                            </Button>
+                                        </div>
+                                    )}
+
+                                    {/* Class Teacher Card */}
+                                    <Card className="rounded-[32px] border-none shadow-xl shadow-purple-900/[0.03] overflow-hidden">
+                                        <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50/30 p-8">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <CardTitle className="text-2xl flex items-center gap-3">
+                                                    <div className="p-2 bg-white rounded-xl shadow-sm">
+                                                        <UserCheck className="h-6 w-6 text-green-500" />
+                                                    </div>
+                                                    Class Teacher
+                                                </CardTitle>
+                                                <div className="px-4 py-1.5 bg-white/80 rounded-full text-xs font-bold text-purple-700 border border-purple-100">
+                                                    PRIMARY MENTOR
+                                                </div>
+                                            </div>
+                                            <CardDescription className="text-lg">
+                                                The dedicated mentor for class <span className="font-bold text-purple-900">{selectedClass.name}</span>
+                                            </CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="p-8">
+                                            <div className="max-w-md space-y-4">
+                                                <div className="relative group">
+                                                    <div className="absolute left-4 top-4 z-10">
+                                                        <Search className="h-5 w-5 text-gray-400 group-focus-within:text-purple-500 transition-colors" />
+                                                    </div>
+                                                    <Input
+                                                        placeholder="Search all teachers..."
+                                                        value={classTeacherSearch}
+                                                        onChange={(e) => setClassTeacherSearch(e.target.value)}
+                                                        className="pl-12 h-14 rounded-2xl border-gray-100 bg-gray-50/30 text-lg transition-all focus:ring-purple-200 focus:bg-white"
+                                                    />
+                                                </div>
+                                                <Select value={classTeacherId || '_none_'} onValueChange={handleClassTeacherChange}>
+                                                    <SelectTrigger className="h-16 rounded-2xl border-gray-100 shadow-sm text-lg font-medium px-6">
+                                                        <SelectValue placeholder="Assign a mentor..." />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="rounded-2xl p-2">
+                                                        <SelectItem value="_none_" className="rounded-xl py-3 cursor-pointer">Unassigned</SelectItem>
+                                                        {filteredClassTeachers.map(teacher => (
+                                                            <SelectItem key={teacher.id} value={teacher.id} className="rounded-xl py-4 cursor-pointer">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-xs">
+                                                                        {getInitials(teacher.name)}
+                                                                    </div>
+                                                                    <div className="flex flex-col">
+                                                                        <span className="font-bold">{teacher.name}</span>
+                                                                        <span className="text-xs text-gray-400">{teacher.department || 'Academic Dept'}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* Subject Teachers Management */}
+                                    <div className="space-y-6">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-2xl font-bold flex items-center gap-3">
+                                                <div className="p-2 bg-orange-100 rounded-xl">
+                                                    <Users className="h-6 w-6 text-orange-600" />
+                                                </div>
+                                                Subject Assignments
+                                            </h3>
+                                            <div className="flex items-center gap-2">
+                                                <div className="relative">
+                                                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                                    <Input
+                                                        placeholder="Quick filter..."
+                                                        value={subjectTeacherSearch}
+                                                        onChange={(e) => setSubjectTeacherSearch(e.target.value)}
+                                                        className="pl-9 h-10 bg-white rounded-xl border-gray-100 w-48 text-sm"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Available Subjects Pool (Premium Chip Cloud) */}
+                                        {availableSubjects.length > 0 && (
+                                            <Card className="rounded-[32px] border-2 border-dashed border-purple-100 bg-purple-50/10 p-2 overflow-hidden">
+                                                <div className="p-6">
+                                                    <div className="flex flex-col gap-1 mb-6">
+                                                        <h4 className="font-bold text-purple-900 flex items-center gap-2">
+                                                            <Plus className="h-4 w-4" />
+                                                            Assign New Subjects
+                                                        </h4>
+                                                        <p className="text-sm text-gray-500">Enable additional curriculum for this section</p>
+                                                    </div>
+
+                                                    <div className="flex flex-wrap gap-3 mb-6">
+                                                        {availableSubjects.map(subject => (
+                                                            <button
+                                                                key={subject.id}
+                                                                onClick={() => toggleSubjectSelection(subject.id)}
+                                                                className={`group flex items-center gap-2 px-5 py-3 rounded-2xl border-2 transition-all font-bold text-sm ${selectedSubjectsToAdd.includes(subject.id)
+                                                                    ? 'bg-purple-600 border-purple-600 text-white shadow-lg'
+                                                                    : 'bg-white border-gray-100 text-gray-600 hover:border-purple-300'
+                                                                    }`}
+                                                            >
+                                                                <div className={`p-1 rounded-md transition-colors ${selectedSubjectsToAdd.includes(subject.id) ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-purple-100'
+                                                                    }`}>
+                                                                    <BookOpen className={`h-3 w-3 ${selectedSubjectsToAdd.includes(subject.id) ? 'text-white' : 'text-gray-400 group-hover:text-purple-600'
+                                                                        }`} />
+                                                                </div>
+                                                                {subject.name}
+                                                                {selectedSubjectsToAdd.includes(subject.id) && <Plus className="h-3 w-3" />}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+
+                                                    {selectedSubjectsToAdd.length > 0 && (
+                                                        <Button
+                                                            onClick={handleAddSubjects}
+                                                            disabled={saving}
+                                                            className="w-full h-14 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-2xl shadow-lg transition-transform hover:scale-[1.01] active:scale-[0.99]"
+                                                        >
+                                                            {saving ? 'Processing...' : `Assign ${selectedSubjectsToAdd.length} selected subjects`}
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </Card>
+                                        )}
+
+                                        {/* Assigned Subjects Grid */}
+                                        {classSubjects.length === 0 ? (
+                                            <div className="text-center py-20 bg-white rounded-[40px] border-2 border-dashed border-gray-100 shadow-sm">
+                                                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                    <BookOpen className="h-10 w-10 text-gray-200" />
+                                                </div>
+                                                <h4 className="text-lg font-bold text-gray-700 mb-2">Empty Curriculum</h4>
+                                                <p className="text-gray-400 max-w-sm mx-auto px-4">This section has no subjects assigned. Use the panel above to start building the curriculum.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {classSubjects.map((cs, idx) => (
+                                                    <motion.div
+                                                        key={cs.subjectId}
+                                                        initial={{ opacity: 0, scale: 0.95 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        transition={{ delay: idx * 0.05 }}
+                                                        className="group bg-white rounded-3xl border border-gray-100 p-6 shadow-sm transition-all hover:shadow-xl hover:shadow-purple-900/[0.04] hover:-translate-y-1"
+                                                    >
+                                                        <div className="flex flex-col gap-6">
+                                                            <div className="flex items-start justify-between">
+                                                                <div className="flex items-center gap-4">
+                                                                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-inner">
+                                                                        {cs.subjectName.charAt(0)}
+                                                                    </div>
+                                                                    <div>
+                                                                        <h4 className="text-xl font-bold text-gray-800">{cs.subjectName}</h4>
+                                                                        <div className="flex items-center gap-2 mt-1">
+                                                                            <span className={`w-2 h-2 rounded-full ${cs.teacherId ? 'bg-green-500' : 'bg-red-400 animate-pulse'}`}></span>
+                                                                            <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                                                                                {cs.teacherId ? 'Teaching Staff Assigned' : 'Unassigned'}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="rounded-xl text-gray-300 hover:text-red-500 hover:bg-red-50"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+
+                                                            <div className="space-y-2">
+                                                                <Label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1">Instructor</Label>
+                                                                <Select
+                                                                    value={cs.teacherId || '_none_'}
+                                                                    onValueChange={(val) => handleSubjectTeacherChange(cs.subjectId, val)}
+                                                                >
+                                                                    <SelectTrigger className="h-14 rounded-2xl border-gray-100 bg-gray-50/50 group-hover:bg-white group-hover:border-purple-100 shadow-none font-bold transition-all">
+                                                                        <SelectValue placeholder="Assign teacher..." />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent className="rounded-2xl">
+                                                                        <SelectItem value="_none_">Unassigned</SelectItem>
+                                                                        {filteredSubjectTeachers.map(teacher => (
+                                                                            <SelectItem key={teacher.id} value={teacher.id} className="py-3">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <div className="w-6 h-6 rounded-full bg-gray-100 text-[10px] flex items-center justify-center font-bold">
+                                                                                        {getInitials(teacher.name)}
+                                                                                    </div>
+                                                                                    {teacher.name}
+                                                                                </div>
+                                                                            </SelectItem>
+                                                                        ))}
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            </div>
+                                                        </div>
+                                                    </motion.div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
                             )}
                         </div>
+                    </div>
+                </TabsContent>
 
-                        {/* Class Selection */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg flex items-center gap-2">
-                                    <BookOpen className="h-5 w-5 text-blue-500" />
-                                    Select Class & Section
+                <TabsContent value="subjects" className="animate-in fade-in slide-in-from-bottom-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        {/* Creation Panel */}
+                        <Card className="lg:col-span-4 rounded-[32px] border-none shadow-xl shadow-purple-900/[0.04]">
+                            <CardHeader className="p-8">
+                                <CardTitle className="text-2xl font-bold flex items-center gap-3">
+                                    <div className="p-2 bg-purple-100 rounded-xl">
+                                        <Plus className="h-6 w-6 text-purple-600" />
+                                    </div>
+                                    Define Subject
                                 </CardTitle>
-                                <CardDescription>Manage academic assignments by section</CardDescription>
+                                <CardDescription className="text-base text-gray-500">Establish a new standard curriculum component</CardDescription>
                             </CardHeader>
-                            <CardContent>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <Label className="mb-2 block">Grade</Label>
-                                        <Select value={selectedGrade} onValueChange={handleGradeSelect}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select Grade" />
+                            <CardContent className="p-8 space-y-6">
+                                <div className="space-y-5">
+                                    <div className="space-y-2">
+                                        <Label className="font-bold text-gray-700 ml-1">Subject Name</Label>
+                                        <Input
+                                            placeholder="e.g. Creative Writing"
+                                            value={newSubjectName}
+                                            onChange={(e) => setNewSubjectName(e.target.value)}
+                                            className="h-14 rounded-2xl border-gray-100 bg-gray-50/50 focus:bg-white text-lg"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="font-bold text-gray-700 ml-1">Subject Code</Label>
+                                        <div className="relative">
+                                            <Input
+                                                disabled
+                                                placeholder="Auto-Generated by System"
+                                                className="h-14 rounded-2xl border-gray-100 bg-gray-50/70 font-mono text-gray-400 cursor-not-allowed italic pr-20"
+                                            />
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                                <div className="px-2 py-1 bg-purple-100 rounded text-[10px] font-black tracking-widest text-purple-600">
+                                                    SYSTEM
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="font-bold text-gray-700 ml-1">Subject Scope (Type)</Label>
+                                        <Select value={newSubjectType} onValueChange={(val) => {
+                                            setNewSubjectType(val);
+                                            setNewSubjectTargetGrade('');
+                                            setNewSubjectExcludedGrades([]);
+                                        }}>
+                                            <SelectTrigger className="h-14 rounded-2xl border-gray-100 bg-gray-50/50 hover:bg-white text-lg">
+                                                <SelectValue placeholder="Select scope..." />
                                             </SelectTrigger>
-                                            <SelectContent>
-                                                {[...new Set(classes.map(c => c.grade || c.name))].sort().map(grade => (
-                                                    <SelectItem key={grade} value={grade}>{grade}</SelectItem>
-                                                ))}
+                                            <SelectContent className="rounded-2xl">
+                                                <SelectItem value="UNIVERSAL" className="rounded-xl py-3">Universal (All Grades)</SelectItem>
+                                                <SelectItem value="CLASS_SPECIFIC" className="rounded-xl py-3">Grade-Specific (One Grade)</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
 
-                                    {selectedGrade && (
-                                        <div className="animate-in fade-in slide-in-from-left-2">
-                                            <Label className="mb-2 block">Section</Label>
-                                            <div className="flex flex-wrap gap-2">
-                                                {classes
-                                                    .filter(c => (c.grade || c.name) === selectedGrade)
-                                                    .sort((a, b) => (a.section || '').localeCompare(b.section || ''))
-                                                    .map(cls => (
-                                                        <Button
-                                                            key={cls.id}
-                                                            variant={selectedClassId === cls.id ? "default" : "outline"}
-                                                            onClick={() => handleClassSelect(cls.id)}
-                                                            className="min-w-[60px]"
-                                                        >
-                                                            {cls.section || 'N/A'}
-                                                        </Button>
-                                                    ))
-                                                }
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Class Details */}
-                        {selectedClass && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="space-y-6"
-                            >
-                                {/* Class Teacher */}
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle className="text-lg flex items-center gap-2">
-                                            <UserCheck className="h-5 w-5 text-green-500" />
-                                            Class Teacher
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Assign the class teacher for {selectedClass.name}
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="max-w-md space-y-3">
-                                            <Label className="block">Class Teacher</Label>
-                                            <div className="relative">
-                                                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                                <Input
-                                                    placeholder="Search teachers..."
-                                                    value={classTeacherSearch}
-                                                    onChange={(e) => setClassTeacherSearch(e.target.value)}
-                                                    className="pl-9 mb-2"
-                                                />
-                                            </div>
-                                            <Select value={classTeacherId || '_none_'} onValueChange={handleClassTeacherChange}>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select class teacher..." />
+                                    {newSubjectType === 'CLASS_SPECIFIC' && (
+                                        <div className="space-y-2">
+                                            <Label className="font-bold text-gray-700 ml-1">Target Grade</Label>
+                                            <Select value={newSubjectTargetGrade} onValueChange={setNewSubjectTargetGrade}>
+                                                <SelectTrigger className="h-14 rounded-2xl border-gray-100 bg-gray-50/50 hover:bg-white text-lg">
+                                                    <SelectValue placeholder="Select target grade..." />
                                                 </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="_none_">None</SelectItem>
-                                                    {filteredClassTeachers.length === 0 ? (
-                                                        <div className="px-2 py-4 text-center text-sm text-gray-500">No teachers found</div>
-                                                    ) : (
-                                                        filteredClassTeachers.map(teacher => (
-                                                            <SelectItem key={teacher.id} value={teacher.id}>
-                                                                {teacher.name} ({teacher.department || 'General'})
-                                                            </SelectItem>
-                                                        ))
-                                                    )}
+                                                <SelectContent className="rounded-2xl max-h-[200px]">
+                                                    {[...new Set(classes.map(c => c.grade || c.name))].sort().map(g => (
+                                                        <SelectItem key={g} value={g} className="rounded-xl py-3">{g}</SelectItem>
+                                                    ))}
                                                 </SelectContent>
                                             </Select>
                                         </div>
-                                    </CardContent>
-                                </Card>
-
-                                {/* Add Subjects to Class */}
-                                {availableSubjects.length > 0 && (
-                                    <Card className="border-dashed border-2 border-blue-200 bg-blue-50/30">
-                                        <CardHeader>
-                                            <CardTitle className="text-lg flex items-center gap-2">
-                                                <Plus className="h-5 w-5 text-blue-500" />
-                                                Add Subjects to Class
-                                            </CardTitle>
-                                            <CardDescription>
-                                                Select subjects to assign to {selectedClass.name}
-                                            </CardDescription>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
-                                                {availableSubjects.map(subject => (
-                                                    <div
-                                                        key={subject.id}
-                                                        className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${selectedSubjectsToAdd.includes(subject.id)
-                                                            ? 'bg-blue-100 border-blue-400'
-                                                            : 'bg-white border-gray-200 hover:border-blue-300'
-                                                            }`}
-                                                        onClick={() => toggleSubjectSelection(subject.id)}
-                                                    >
-                                                        <Checkbox
-                                                            checked={selectedSubjectsToAdd.includes(subject.id)}
-                                                            onCheckedChange={() => toggleSubjectSelection(subject.id)}
-                                                        />
-                                                        <span className="text-sm font-medium">{subject.name}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            {selectedSubjectsToAdd.length > 0 && (
-                                                <Button
-                                                    onClick={handleAddSubjects}
-                                                    disabled={saving}
-                                                    className="bg-blue-600 hover:bg-blue-700"
-                                                >
-                                                    <Plus className="w-4 h-4 mr-2" />
-                                                    {saving ? 'Adding...' : `Add ${selectedSubjectsToAdd.length} Subject(s)`}
-                                                </Button>
-                                            )}
-                                        </CardContent>
-                                    </Card>
-                                )}
-
-                                {/* Subject Teachers */}
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle className="text-lg flex items-center gap-2">
-                                            <Users className="h-5 w-5 text-orange-500" />
-                                            Subject Teachers
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Assign teachers to each subject for {selectedClass.name}
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        {classSubjects.length === 0 ? (
-                                            <div className="text-center py-8 text-gray-500">
-                                                <BookOpen className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                                                <p>No subjects assigned to this class yet.</p>
-                                                <p className="text-sm">Use Class Management to assign subjects first.</p>
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-4">
-                                                {/* Search input for subject teachers */}
-                                                <div className="relative max-w-sm">
-                                                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                                    <Input
-                                                        placeholder="Search teachers for subjects..."
-                                                        value={subjectTeacherSearch}
-                                                        onChange={(e) => setSubjectTeacherSearch(e.target.value)}
-                                                        className="pl-9"
-                                                    />
-                                                </div>
-                                                {classSubjects.map(cs => (
-                                                    <div key={cs.subjectId} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                                                                <BookOpen className="h-5 w-5 text-purple-600" />
-                                                            </div>
-                                                            <div>
-                                                                <p className="font-medium text-gray-800">{cs.subjectName}</p>
-                                                                <p className="text-sm text-gray-500">
-                                                                    {cs.teacherId ? getTeacherDisplay(cs.teacherId) : 'Unassigned'}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                        <div className="w-64">
-                                                            <Select
-                                                                value={cs.teacherId || '_none_'}
-                                                                onValueChange={(val) => handleSubjectTeacherChange(cs.subjectId, val)}
-                                                            >
-                                                                <SelectTrigger>
-                                                                    <SelectValue placeholder="Assign teacher..." />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    <SelectItem value="_none_">Unassigned</SelectItem>
-                                                                    {filteredSubjectTeachers.length === 0 ? (
-                                                                        <div className="px-2 py-4 text-center text-sm text-gray-500">No teachers found</div>
-                                                                    ) : (
-                                                                        filteredSubjectTeachers.map(teacher => (
-                                                                            <SelectItem key={teacher.id} value={teacher.id}>
-                                                                                {teacher.name}
-                                                                            </SelectItem>
-                                                                        ))
-                                                                    )}
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            </motion.div>
-                        )}
-                    </div>
-                </TabsContent>
-
-                <TabsContent value="subjects">
-                    <div className="space-y-6">
-                        {/* Create Subject */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg flex items-center gap-2">
-                                    <Plus className="h-5 w-5 text-purple-600" />
-                                    Define New Subject
-                                </CardTitle>
-                                <CardDescription>Add a new subject to the school's master list</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="subjectName">Subject Name</Label>
-                                        <Input
-                                            id="subjectName"
-                                            placeholder="e.g. Mathematics"
-                                            value={newSubjectName}
-                                            onChange={(e) => setNewSubjectName(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="subjectCode">Subject Code (Optional)</Label>
-                                        <Input
-                                            id="subjectCode"
-                                            placeholder="e.g. MATH101"
-                                            value={newSubjectCode}
-                                            onChange={(e) => setNewSubjectCode(e.target.value)}
-                                        />
-                                    </div>
+                                    )}
                                 </div>
                                 <Button
-                                    className="mt-4 bg-purple-600 hover:bg-purple-700"
+                                    className="w-full h-16 bg-purple-600 hover:bg-purple-700 text-white text-lg font-bold rounded-2xl shadow-lg transition-all active:scale-95"
                                     onClick={handleCreateSubject}
                                     disabled={isCreatingSubject}
                                 >
-                                    {isCreatingSubject ? 'Creating...' : 'Create Subject'}
+                                    {isCreatingSubject ? 'Creating Master Entry...' : 'Create Subject Entry'}
                                 </Button>
                             </CardContent>
                         </Card>
 
-                        {/* Subjects List */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg flex items-center gap-2">
-                                    <BookOpen className="h-5 w-5 text-blue-500" />
-                                    Master Subject List
-                                </CardTitle>
-                                <CardDescription>List of all subjects defined for the school</CardDescription>
+                        {/* Master List */}
+                        <Card className="lg:col-span-8 rounded-[32px] border-none shadow-xl shadow-purple-900/[0.03]">
+                            <CardHeader className="p-8 flex flex-row items-center justify-between border-b border-gray-50">
+                                <div>
+                                    <CardTitle className="text-2xl font-bold">Curriculum Repository</CardTitle>
+                                    <CardDescription className="text-base">All globally defined subjects for this academy</CardDescription>
+                                </div>
+                                <div className="p-2 bg-gray-50 rounded-full text-xs font-bold text-gray-400 px-4">
+                                    {subjects.length} TOTAL ENTRIES
+                                </div>
                             </CardHeader>
-                            <CardContent>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <CardContent className="p-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {subjects.length === 0 ? (
-                                        <div className="col-span-full py-12 text-center text-gray-500">
-                                            No subjects created yet
+                                        <div className="col-span-full py-20 text-center">
+                                            <Search className="h-16 w-16 text-gray-100 mx-auto mb-4" />
+                                            <p className="text-xl font-bold text-gray-300 italic">No subject meta-data found</p>
                                         </div>
                                     ) : (
-                                        subjects.map(subject => (
-                                            <div key={subject.id} className="flex items-center justify-between p-4 bg-white rounded-lg border shadow-sm group hover:border-purple-300 transition-colors">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 font-bold">
+                                        subjects.map((subject, idx) => (
+                                            <motion.div
+                                                key={subject.id}
+                                                initial={{ opacity: 0, x: 20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: idx * 0.03 }}
+                                                className="flex items-center justify-between p-5 bg-gray-50/30 rounded-3xl border border-gray-100 group transition-all hover:bg-white hover:shadow-lg hover:shadow-purple-900/[0.03]"
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-purple-600 font-black text-lg transition-transform group-hover:rotate-6">
                                                         {subject.name.charAt(0).toUpperCase()}
                                                     </div>
                                                     <div>
-                                                        <p className="font-medium text-gray-800">{subject.name}</p>
+                                                        <p className="font-bold text-gray-800 text-lg">{subject.name}</p>
                                                         {subject.code && (
-                                                            <p className="text-xs text-gray-400 font-mono">{subject.code}</p>
+                                                            <div className="flex items-center gap-1.5 mt-0.5">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                                                                <span className="text-[10px] font-black text-purple-300 uppercase tracking-widest">{subject.code}</span>
+                                                            </div>
                                                         )}
+                                                        <div className="mt-1">
+                                                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider ${subject.type === 'CLASS_SPECIFIC' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}`}>
+                                                                {subject.type === 'CLASS_SPECIFIC' ? `SPECIFIC: ${subject.targetGrade}` : 'UNIVERSAL'}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    className="rounded-xl text-gray-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all active:scale-75"
                                                     onClick={() => handleDeleteSubject(subject.id)}
                                                 >
-                                                    <Trash2 className="h-4 w-4" />
+                                                    <Trash2 className="h-5 w-5" />
                                                 </Button>
-                                            </div>
+                                            </motion.div>
                                         ))
                                     )}
                                 </div>

@@ -57,6 +57,22 @@ const adminService = {
             throw error;
         }
     },
+    getClassStudents: async (classId) => {
+        try {
+            const response = await api.get(`/admin/classes/${classId}/students`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    getClassSubjects: async (classId) => {
+        try {
+            const response = await api.get(`/admin/classes/${classId}/subjects`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
 
     // Sections
     getSections: async (classId) => {
@@ -406,6 +422,56 @@ const adminService = {
     assignClassTeacher: async (classId, teacherId) => {
         try {
             const response = await api.post(`/admin/classes/${classId}/assign-class-teacher`, { teacherId });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    // --- Trash Endpoints ---
+    getDeletedStudents: async () => {
+        try {
+            const response = await api.get('/admin/trash/students');
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    getDeletedTeachers: async () => {
+        try {
+            const response = await api.get('/admin/trash/teachers');
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    getDeletedParents: async () => {
+        try {
+            const response = await api.get('/admin/trash/parents');
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    restoreStudent: async (id) => {
+        try {
+            const response = await api.put(`/admin/students/${id}/restore`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    restoreTeacher: async (id) => {
+        try {
+            const response = await api.put(`/admin/teachers/${id}/restore`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    restoreParent: async (id) => {
+        try {
+            const response = await api.put(`/admin/parents/${id}/restore`);
             return response.data;
         } catch (error) {
             throw error;

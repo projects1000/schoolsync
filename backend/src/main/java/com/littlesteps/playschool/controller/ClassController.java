@@ -6,6 +6,7 @@ import com.littlesteps.playschool.entity.Classes;
 import com.littlesteps.playschool.security.SchoolContext;
 import com.littlesteps.playschool.service.ClassService;
 import com.littlesteps.playschool.service.ClassSubjectService;
+import com.littlesteps.playschool.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,8 +26,11 @@ public class ClassController {
     @Autowired
     private ClassSubjectService classSubjectService;
 
+    @Autowired
+    private StudentService studentService;
+
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
     public ResponseEntity<List<Classes>> getClasses() {
         String schoolId = SchoolContext.getSchoolId();
         if (schoolId == null) {
@@ -39,7 +43,7 @@ public class ClassController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
     public ResponseEntity<?> createClass(@RequestBody ClassDTO classDTO, Authentication authentication) {
         String schoolId = SchoolContext.getSchoolId();
         if (schoolId == null) {
@@ -54,7 +58,7 @@ public class ClassController {
     }
 
     @GetMapping("/{classId}/subjects")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
     public ResponseEntity<List<ClassSubject>> getSubjectsForClass(@PathVariable String classId) {
         String schoolId = SchoolContext.getSchoolId();
         if (schoolId == null) {
@@ -63,8 +67,19 @@ public class ClassController {
         return ResponseEntity.ok(classSubjectService.getSubjectsForClass(classId, schoolId));
     }
 
+    @GetMapping("/{classId}/students")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
+    public ResponseEntity<List<com.littlesteps.playschool.dto.StudentDTO>> getStudentsForClass(
+            @PathVariable String classId) {
+        String schoolId = SchoolContext.getSchoolId();
+        if (schoolId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(studentService.getStudentsByClassId(schoolId, classId));
+    }
+
     @PostMapping("/{classId}/subjects")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
     public ResponseEntity<?> assignSubjectToClass(@PathVariable String classId,
             @RequestBody Map<String, Object> payload, Authentication authentication) {
         String schoolId = SchoolContext.getSchoolId();
@@ -101,7 +116,7 @@ public class ClassController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
     public ResponseEntity<?> updateClass(@PathVariable String id, @RequestBody ClassDTO classDTO,
             Authentication authentication) {
         try {
@@ -114,7 +129,7 @@ public class ClassController {
     }
 
     @PostMapping("/{id}/assign-class-teacher")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
     public ResponseEntity<?> assignClassTeacher(@PathVariable String id,
             @RequestBody java.util.Map<String, String> payload, Authentication authentication) {
         String schoolId = SchoolContext.getSchoolId();
@@ -132,7 +147,7 @@ public class ClassController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
     public ResponseEntity<?> deleteClass(@PathVariable String id, Authentication authentication) {
         try {
             classService.deleteClass(id, authentication.getName());
