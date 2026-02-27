@@ -187,4 +187,53 @@ public class ParentAccessController {
                 return ResponseEntity
                                 .ok(parentService.getAcademicInfoForChildren(parent.getId(), parent.getSchoolId()));
         }
+
+        @Autowired
+        private com.littlesteps.playschool.service.StudentService studentService;
+
+        @PutMapping("/children/{studentId}/profile")
+        public ResponseEntity<?> updateChildProfile(
+                        @PathVariable String studentId,
+                        @RequestBody StudentDTO profileData,
+                        Authentication authentication) {
+                String email = authentication.getName();
+                User user = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+
+                com.littlesteps.playschool.entity.Parent parent = parentRepository.findByUserId(user.getId())
+                                .orElseThrow(() -> new RuntimeException("Parent profile not found"));
+
+                // Verify that the student belongs to this parent
+                List<StudentDTO> children = parentService.getStudentsByParentId(parent.getId(), parent.getSchoolId());
+                boolean isParentOfStudent = children.stream().anyMatch(child -> child.getId().equals(studentId));
+
+                if (!isParentOfStudent) {
+                        return ResponseEntity.status(403).body("Unauthorized: You are not the parent of this student");
+                }
+
+                // Only allow updating profile fields, not core fields like class/section
+                StudentDTO updateDTO = new StudentDTO();
+                updateDTO.setDateOfBirth(profileData.getDateOfBirth());
+                updateDTO.setGender(profileData.getGender());
+                updateDTO.setBloodGroup(profileData.getBloodGroup());
+                updateDTO.setNewToEducation(profileData.getNewToEducation());
+                updateDTO.setPreviousSchool(profileData.getPreviousSchool());
+                updateDTO.setMedicalConditions(profileData.getMedicalConditions());
+                updateDTO.setTransportMode(profileData.getTransportMode());
+                updateDTO.setProfileCompleted(profileData.getProfileCompleted());
+
+                // Preserve existing core fields by fetching current student
+                StudentDTO existingStudent = studentService.getStudentById(studentId);
+                updateDTO.setName(existingStudent.getName());
+                updateDTO.setAge(existingStudent.getAge());
+                updateDTO.setGuardian(existingStudent.getGuardian());
+                updateDTO.setGuardianPhone(existingStudent.getGuardianPhone());
+                updateDTO.setGuardianEmail(existingStudent.getGuardianEmail());
+                updateDTO.setAddress(existingStudent.getAddress());
+                updateDTO.setClassId(existingStudent.getClassId());
+                updateDTO.setSectionId(existingStudent.getSectionId());
+
+                StudentDTO updated = studentService.updateStudent(studentId, updateDTO);
+                return ResponseEntity.ok(updated);
+        }
 }

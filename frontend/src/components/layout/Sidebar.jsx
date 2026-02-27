@@ -63,6 +63,7 @@ const Sidebar = ({ activeModule, setActiveModule, currentUser, onClose, sidebarO
     { id: 'announcements', label: 'Announcements', icon: MessageSquare, roles: ['superadmin', 'admin'] },
     { id: 'notification-management', label: 'Notifications', icon: Bell, roles: ['superadmin', 'admin'] },
     { id: 'parent-overview', label: 'Dashboard', icon: LayoutDashboard, roles: ['parent'] },
+    { id: 'parent-student-profile', label: 'Student Profile', icon: User, roles: ['parent'] },
     { id: 'parent-academics', label: 'Academic Details', icon: GraduationCap, roles: ['parent'] },
     { id: 'parent-attendance', label: 'Attendance', icon: Calendar, roles: ['parent'] },
     { id: 'parent-messages', label: 'Messages', icon: MessageSquare, roles: ['parent'] },

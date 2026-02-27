@@ -500,6 +500,16 @@ public class ParentService {
         dto.setGuardianEmail(student.getGuardianEmail());
         dto.setAddress(student.getAddress());
         dto.setStatus(student.getStatus() != null ? student.getStatus().name() : null);
+        dto.setDateOfBirth(student.getDateOfBirth());
+        dto.setGender(student.getGender());
+        dto.setBloodGroup(student.getBloodGroup());
+        dto.setNewToEducation(student.getNewToEducation());
+        dto.setPreviousSchool(student.getPreviousSchool());
+        dto.setPreviousClass(student.getPreviousClass());
+        dto.setPreviousPercentage(student.getPreviousPercentage());
+        dto.setMedicalConditions(student.getMedicalConditions());
+        dto.setTransportMode(student.getTransportMode());
+        dto.setProfileCompleted(student.getProfileCompleted());
         return dto;
     }
 

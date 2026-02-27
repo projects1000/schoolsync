@@ -17,6 +17,15 @@ const parentService = {
         } catch (error) {
             throw error;
         }
+    },
+
+    updateChildProfile: async (studentId, profileData) => {
+        try {
+            const response = await api.put(`/parent/children/${studentId}/profile`, profileData);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
     }
 };
 
