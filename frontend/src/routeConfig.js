@@ -11,6 +11,7 @@ export const MODULE_TO_PATH = {
     'super-announcements': '/superadmin/announcements',
     'security-logs': '/superadmin/security',
     'system-health': '/superadmin/system-health',
+    'superadmin-trash': '/superadmin/trash',
 
     // Admin
     'dashboard': '/dashboard',
@@ -27,6 +28,7 @@ export const MODULE_TO_PATH = {
     'school-profile': '/school-profile',
     'classes': '/classes',
     'academics': '/academics',
+    'admin-trash': '/trash',
 
     // Teacher
     'teacher-dashboard': '/teacher',

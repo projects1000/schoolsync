@@ -156,4 +156,25 @@ public class ClassController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @GetMapping("/deleted")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
+    public ResponseEntity<List<Classes>> getDeletedClasses() {
+        String schoolId = SchoolContext.getSchoolId();
+        if (schoolId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(classService.getDeletedClassesBySchoolId(schoolId));
+    }
+
+    @PostMapping("/{id}/restore")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
+    public ResponseEntity<?> restoreClass(@PathVariable String id, Authentication authentication) {
+        try {
+            Classes restoredClass = classService.restoreClass(id, authentication.getName());
+            return ResponseEntity.ok(restoredClass);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

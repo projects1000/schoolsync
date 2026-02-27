@@ -57,6 +57,22 @@ const adminService = {
             throw error;
         }
     },
+    getDeletedClasses: async () => {
+        try {
+            const response = await api.get('/admin/classes/deleted');
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    restoreClass: async (id) => {
+        try {
+            const response = await api.post(`/admin/classes/${id}/restore`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
     getClassStudents: async (classId) => {
         try {
             const response = await api.get(`/admin/classes/${classId}/students`);

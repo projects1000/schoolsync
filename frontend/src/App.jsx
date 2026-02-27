@@ -127,6 +127,7 @@ const AuthenticatedLayout = ({ currentUser, onLogout }) => {
                   <Route path="/superadmin/fees" element={<GlobalFeeSettings currentUser={currentUser} />} />
                   <Route path="/superadmin/security" element={<SecurityAuditLogs currentUser={currentUser} />} />
                   <Route path="/superadmin/system-health" element={<SystemHealthBackup currentUser={currentUser} />} />
+                  <Route path="/superadmin/trash" element={<TrashManagement currentUser={currentUser} />} />
 
                   {/* Admin Routes */}
                   <Route path="/dashboard" element={<Dashboard currentUser={currentUser} />} />
@@ -142,6 +143,7 @@ const AuthenticatedLayout = ({ currentUser, onLogout }) => {
                   <Route path="/school-profile" element={<SchoolProfile />} />
                   <Route path="/classes" element={<ClassManagement />} />
                   <Route path="/academics" element={<AcademicsManagement />} />
+                  <Route path="/trash" element={<AdminTrashManagement currentUser={currentUser} />} />
 
                   {/* Teacher Routes */}
                   <Route path="/teacher" element={<TeacherDashboard />} />

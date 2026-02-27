@@ -14,6 +14,16 @@ import {
     DialogTrigger,
     DialogFooter,
 } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Switch } from "@/components/ui/switch";
 import ClassProfileModal from './ClassProfileModal';
 
@@ -33,6 +43,7 @@ const ClassManagement = () => {
     // Profile state
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [profileClass, setProfileClass] = useState(null);
+    const [classToDelete, setClassToDelete] = useState(null);
 
     // Wizard State
     const [wizardStep, setWizardStep] = useState(1);
@@ -285,15 +296,21 @@ const ClassManagement = () => {
         }
     };
 
-    const handleDelete = async (cls) => {
-        if (!window.confirm(`Are you sure you want to delete section "${cls.section}" from ${cls.grade}?`)) return;
+    const handleDeleteClick = (cls) => {
+        setClassToDelete(cls);
+    };
+
+    const confirmDelete = async () => {
+        if (!classToDelete) return;
+
         try {
-            await adminService.deleteClass(cls.id);
-            toast({ title: "Success", description: "Section deleted successfully" });
+            await adminService.deleteClass(classToDelete.id);
+            toast({ title: "Moved to Trash", description: `Section ${classToDelete.section} has been moved to trash.` });
+            setClassToDelete(null);
             fetchClasses();
         } catch (error) {
             console.error(error);
-            toast({ title: "Error", description: error.response?.data || "Failed to delete section", variant: "destructive" });
+            toast({ title: "Error", description: error.response?.data || "Failed to move section to trash", variant: "destructive" });
         }
     };
 
@@ -712,7 +729,10 @@ const ClassManagement = () => {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 className="h-10 w-10 rounded-xl hover:bg-rose-50 hover:text-rose-600"
-                                                                onClick={() => handleDelete(cls)}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDeleteClick(cls);
+                                                                }}
                                                                 disabled={cls.locked}
                                                                 title="Remove Section"
                                                             >
@@ -809,6 +829,41 @@ const ClassManagement = () => {
                     </form>
                 </DialogContent>
             </Dialog>
+
+            {/* Custom Delete Confirmation Dialog */}
+            <AlertDialog open={!!classToDelete} onOpenChange={(open) => !open && setClassToDelete(null)}>
+                <AlertDialogContent className="rounded-2xl border-0 shadow-2xl overflow-hidden p-0 max-w-md">
+                    <div className="bg-gradient-to-br from-rose-500 to-rose-600 p-6 flex flex-col items-center justify-center text-center">
+                        <div className="bg-white/20 p-4 rounded-full mb-3 backdrop-blur-sm">
+                            <Trash2 className="w-8 h-8 text-white" />
+                        </div>
+                        <AlertDialogTitle className="text-2xl font-bold text-white mb-1">Delete Section?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-rose-50 font-medium">
+                            Move {classToDelete?.grade} - {classToDelete?.section} to trash
+                        </AlertDialogDescription>
+                    </div>
+
+                    <div className="p-6 bg-white space-y-4">
+                        <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 text-sm text-rose-800 leading-relaxed font-medium text-center">
+                            Are you sure you want to delete <span className="font-bold">Section "{classToDelete?.section}"</span> from <span className="font-bold">{classToDelete?.grade}</span>?
+                            <br /><br />
+                            This will automatically <span className="font-bold bg-rose-100 px-1 rounded text-rose-900 border border-rose-200">un-assign {classToDelete?.studentCount || 0} enrolled students</span> and move the class structure to the Trash. You can restore it later from Trash Management.
+                        </div>
+
+                        <AlertDialogFooter className="pt-4 flex items-center justify-between sm:justify-end gap-3 w-full">
+                            <AlertDialogCancel className="w-full sm:w-auto h-12 rounded-xl font-semibold border-gray-200 hover:bg-gray-50 flex-1">
+                                Keep Class
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={confirmDelete}
+                                className="w-full sm:w-auto h-12 rounded-xl font-bold bg-rose-500 hover:bg-rose-600 shadow-lg shadow-rose-200 px-8 flex-1 border-0"
+                            >
+                                Move to Trash
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </div>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <ClassProfileModal
                 isOpen={isProfileModalOpen}
