@@ -29,25 +29,60 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import {
-    loginHistory as initialLoginHistory,
-    activityLogs,
-    dataChangeLogs,
-    passwordRules as initialPasswordRules,
-    securityStats
+    passwordRules as initialPasswordRules
 } from './mockSecurityData';
+import adminService from '@/services/adminService';
 
 const SecurityAuditLogs = ({ currentUser }) => {
     const { toast } = useToast();
+    const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('logins');
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
-    const [loginHistory, setLoginHistory] = useState(initialLoginHistory);
+
+    const [loginHistory, setLoginHistory] = useState([]);
+    const [activityLogs, setActivityLogs] = useState([]);
+    const [dataChangeLogs, setDataChangeLogs] = useState([]);
+    const [securityStats, setSecurityStats] = useState({
+        totalLogins24h: 0,
+        failedLogins24h: 0,
+        activeSessions: 0,
+        blockedIPs: 0,
+        lastSecurityAudit: '-'
+    });
+
     const [showLogDetail, setShowLogDetail] = useState(null);
     const [showPasswordRules, setShowPasswordRules] = useState(false);
     const [passwordRules, setPasswordRules] = useState(initialPasswordRules);
+
+    React.useEffect(() => {
+        fetchSecurityLogs();
+    }, []);
+
+    const fetchSecurityLogs = async () => {
+        setIsLoading(true);
+        try {
+            const data = await adminService.getSecurityLogs();
+            setLoginHistory(data.loginHistory || []);
+            setActivityLogs(data.activityLogs || []);
+            setDataChangeLogs(data.dataChangeLogs || []);
+            setSecurityStats(data.securityStats || {
+                totalLogins24h: 0, failedLogins24h: 0, activeSessions: 0, blockedIPs: 0, lastSecurityAudit: '-'
+            });
+        } catch (error) {
+            console.error("Failed to fetch security logs", error);
+            toast({
+                title: "Error",
+                description: "Failed to load security logs from the server.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     // Filter login history
     const filteredLogins = useMemo(() => {
@@ -124,6 +159,14 @@ const SecurityAuditLogs = ({ currentUser }) => {
         { id: 'activity', label: 'Activity Logs', icon: Activity, count: activityLogs.length },
         { id: 'changes', label: 'Data Changes', icon: Database, count: dataChangeLogs.length }
     ];
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">

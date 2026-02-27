@@ -310,4 +310,109 @@ public class AuditService {
         }
         return java.util.Collections.emptyList();
     }
+
+    public com.littlesteps.playschool.dto.SecurityLogsResponse getSecurityLogsDashboard(String schoolId) {
+        // 1. Fetch recent logs for the school (last 30 days or so, limiting for
+        // performance)
+        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+        List<AuditLog> recentLogs = auditLogRepository.findBySchoolId(schoolId).stream()
+                .filter(log -> log.getCreatedAt().isAfter(thirtyDaysAgo))
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                .toList();
+
+        // 2. Map to DTOs
+        List<com.littlesteps.playschool.dto.AuditLogDTO> loginHistory = new java.util.ArrayList<>();
+        List<com.littlesteps.playschool.dto.AuditLogDTO> activityLogs = new java.util.ArrayList<>();
+        List<com.littlesteps.playschool.dto.AuditLogDTO> dataChangeLogs = new java.util.ArrayList<>();
+
+        long totalLogins24h = 0;
+        long failedLogins24h = 0;
+        LocalDateTime twentyFourHoursAgo = LocalDateTime.now().minusHours(24);
+
+        for (AuditLog log : recentLogs) {
+            com.littlesteps.playschool.dto.AuditLogDTO dto = mapToDTO(log);
+
+            String action = log.getAction() != null ? log.getAction().toUpperCase() : "";
+
+            // Categorize Logins
+            if (action.equals("LOGIN") || action.equals("LOGOUT") || action.equals("FAILED_LOGIN")) {
+                loginHistory.add(dto);
+
+                // Calculate 24h Login Stats
+                if (log.getCreatedAt().isAfter(twentyFourHoursAgo)) {
+                    if (action.equals("LOGIN"))
+                        totalLogins24h++;
+                    if (action.equals("FAILED_LOGIN"))
+                        failedLogins24h++;
+                }
+            }
+            // Categorize Data Changes
+            else if (action.startsWith("CREATE_") || action.startsWith("UPDATE_") || action.startsWith("DELETE_") ||
+                    action.equals("MAP_PARENT_STUDENT") || action.equals("UNMAP_PARENT_STUDENT")) {
+                dataChangeLogs.add(dto);
+            }
+            // Everything else goes to Activity Logs
+            else {
+                activityLogs.add(dto);
+            }
+        }
+
+        // 3. Construct Stats
+        com.littlesteps.playschool.dto.SecurityLogsResponse.SecurityStats stats = new com.littlesteps.playschool.dto.SecurityLogsResponse.SecurityStats();
+        stats.setTotalLogins24h(totalLogins24h);
+        stats.setFailedLogins24h(failedLogins24h);
+        stats.setActiveSessions(0); // This typically requires active session tracking in Redis/Spring Security
+        stats.setBlockedIPs(0); // Requires explicit IP blocking table
+        stats.setLastSecurityAudit(LocalDateTime.now().toLocalDate().toString());
+
+        return new com.littlesteps.playschool.dto.SecurityLogsResponse(loginHistory, activityLogs, dataChangeLogs,
+                stats);
+    }
+
+    private com.littlesteps.playschool.dto.AuditLogDTO mapToDTO(AuditLog log) {
+        com.littlesteps.playschool.dto.AuditLogDTO dto = new com.littlesteps.playschool.dto.AuditLogDTO();
+        dto.setId(log.getId());
+        dto.setTimestamp(log.getCreatedAt());
+        dto.setAction(log.getAction());
+        dto.setTargetType(log.getTargetType());
+        dto.setTargetId(log.getTargetId());
+        dto.setPayload(log.getPayload());
+        dto.setIp(log.getIpAddress() != null ? log.getIpAddress() : "Unknown");
+        dto.setDevice(log.getUserAgent() != null ? log.getUserAgent() : "Unknown Device");
+        dto.setLocation("System"); // IP Geolocation would go here
+        dto.setStatus("success"); // Default
+        if ("FAILED_LOGIN".equals(log.getAction())) {
+            dto.setStatus("failed");
+            dto.setReason(log.getDescription());
+        }
+
+        if (log.getActorUser() != null) {
+            dto.setUser(log.getActorUser().getName());
+            dto.setEmail(log.getActorUser().getEmail());
+            dto.setRole(log.getActorUser().getRole().toString().toLowerCase().replace("role_", ""));
+        } else {
+            dto.setUser("System");
+            dto.setRole("system");
+            dto.setEmail("sys@system.local");
+        }
+
+        // Field mapping for specific tabs
+        dto.setModule(log.getTargetType());
+        dto.setDetails(log.getDescription());
+        dto.setEntity(log.getTargetType());
+        dto.setEntityId(log.getTargetId());
+
+        // Simple parsing for old/new values if payload is JSON
+        if (log.getPayload() != null && log.getPayload().contains("{")) {
+            dto.setField("Multiple Fields");
+            dto.setOldValue("-");
+            dto.setNewValue("Updated");
+        } else if (log.getAction().startsWith("CREATE")) {
+            dto.setField("Record");
+            dto.setOldValue("None");
+            dto.setNewValue("Created");
+        }
+
+        return dto;
+    }
 }
