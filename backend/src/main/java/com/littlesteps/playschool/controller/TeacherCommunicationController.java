@@ -39,4 +39,12 @@ public class TeacherCommunicationController {
         String email = authentication.getName();
         return ResponseEntity.ok(teacherCommunicationService.getMessagesByClass(email, classId));
     }
+
+    @GetMapping("/inbox")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<List<com.littlesteps.playschool.entity.Communication>> getTeacherInbox() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return ResponseEntity.ok(teacherCommunicationService.getTeacherInbox(email));
+    }
 }

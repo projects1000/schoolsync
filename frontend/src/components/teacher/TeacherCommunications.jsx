@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Send, History, User, Users } from 'lucide-react';
+import { Send, History, User, Users, Inbox } from 'lucide-react';
 import api from '@/services/api';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ const TeacherCommunications = ({ currentUser }) => {
     const [recipientId, setRecipientId] = useState('ALL');
     const [messageContent, setMessageContent] = useState('');
     const [messages, setMessages] = useState([]);
+    const [inboxMessages, setInboxMessages] = useState([]);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('COMPOSE');
 
@@ -39,6 +40,8 @@ const TeacherCommunications = ({ currentUser }) => {
     useEffect(() => {
         if (selectedClassId && activeTab === 'HISTORY') {
             fetchMessages();
+        } else if (activeTab === 'INBOX') {
+            fetchInboxMessages();
         }
     }, [selectedClassId, activeTab]);
 
@@ -79,6 +82,19 @@ const TeacherCommunications = ({ currentUser }) => {
         }
     };
 
+    const fetchInboxMessages = async () => {
+        setLoading(true);
+        try {
+            const res = await api.get(`/teacher/messages/inbox`);
+            setInboxMessages(res.data);
+        } catch (err) {
+            console.error(err);
+            toast({ title: "Error", description: "Failed to fetch inbox messages", variant: "destructive" });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSendMessage = async () => {
         if (!selectedClassId || !messageContent.trim()) {
             toast({ title: "Error", description: "Please select a class and write a message", variant: "destructive" });
@@ -110,10 +126,59 @@ const TeacherCommunications = ({ currentUser }) => {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-[400px] grid-cols-2 mb-6">
+                <TabsList className="grid w-[600px] grid-cols-3 mb-6">
+                    <TabsTrigger value="INBOX">Inbox</TabsTrigger>
                     <TabsTrigger value="COMPOSE">Compose Message</TabsTrigger>
                     <TabsTrigger value="HISTORY">Message History</TabsTrigger>
                 </TabsList>
+
+                <TabsContent value="INBOX">
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle>Admin Announcements & Direct Messages</CardTitle>
+                                <CardDescription>View messages sent to you by the school administration.</CardDescription>
+                            </div>
+                            <Button variant="outline" size="sm" onClick={fetchInboxMessages}>
+                                <History className="w-4 h-4 mr-2" /> Refresh
+                            </Button>
+                        </CardHeader>
+                        <CardContent>
+                            {loading ? <p className="text-center py-10 text-gray-500">Loading inbox...</p> : (
+                                <div className="space-y-3">
+                                    {inboxMessages.length === 0 ? (
+                                        <div className="text-center py-10 text-gray-500">
+                                            <Inbox className="mx-auto w-12 h-12 text-gray-300 mb-4" />
+                                            No messages in your inbox.
+                                        </div>
+                                    ) : inboxMessages.map((msg) => (
+                                        <div key={msg.id} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm transition-all hover:shadow-md">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`p-2 rounded-full ${msg.type === 'BROADCAST' ? 'bg-amber-50 text-amber-600' : 'bg-purple-50 text-purple-600'}`}>
+                                                        {msg.type === 'BROADCAST' ? <Users className="w-5 h-5" /> : <User className="w-5 h-5" />}
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <h4 className="font-semibold text-gray-800 text-lg">{msg.subject}</h4>
+                                                            <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${msg.type === 'BROADCAST' ? 'bg-amber-100 text-amber-800' : 'bg-purple-100 text-purple-800'}`}>
+                                                                {msg.type}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-xs text-gray-500 mt-1">From: {msg.senderName} ({msg.senderRole}) • {new Date(msg.createdAt).toLocaleString()}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="bg-gray-50 p-3 rounded text-gray-700 text-sm whitespace-pre-wrap ml-12 border border-gray-100 mt-2">
+                                                {msg.body}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
 
                 <TabsContent value="COMPOSE">
                     <Card>

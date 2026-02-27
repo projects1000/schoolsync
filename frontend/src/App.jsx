@@ -27,7 +27,6 @@ import { NotificationProvider } from '@/context/NotificationContext';
 
 import ParentManagement from '@/components/parents/ParentManagement';
 import ParentRegistrationManagement from '@/components/admin/ParentRegistrationManagement';
-import AnnouncementManagement from '@/components/announcements/AnnouncementManagement';
 import Communications from '@/components/communications/Communications';
 import TimetableManagement from '@/components/timetable/TimetableManagement';
 import TeacherDashboard from '@/components/teacher/TeacherDashboard';
@@ -44,7 +43,6 @@ import SuperAdminDashboard from '@/components/superadmin/SuperAdminDashboard';
 import SchoolManagement from '@/components/superadmin/SchoolManagement';
 import GlobalAcademicSettings from '@/components/superadmin/GlobalAcademicSettings';
 import GlobalFeeSettings from '@/components/superadmin/GlobalFeeSettings';
-import SuperAdminAnnouncements from '@/components/superadmin/SuperAdminAnnouncements';
 import SecurityAuditLogs from '@/components/superadmin/SecurityAuditLogs';
 import SystemHealthBackup from '@/components/superadmin/SystemHealthBackup';
 import SchoolProfile from '@/components/admin/SchoolProfile';
@@ -126,7 +124,6 @@ const AuthenticatedLayout = ({ currentUser, onLogout }) => {
                   <Route path="/superadmin/schools" element={<SchoolManagement currentUser={currentUser} />} />
                   <Route path="/superadmin/academics" element={<GlobalAcademicSettings currentUser={currentUser} />} />
                   <Route path="/superadmin/fees" element={<GlobalFeeSettings currentUser={currentUser} />} />
-                  <Route path="/superadmin/announcements" element={<SuperAdminAnnouncements currentUser={currentUser} />} />
                   <Route path="/superadmin/security" element={<SecurityAuditLogs currentUser={currentUser} />} />
                   <Route path="/superadmin/system-health" element={<SystemHealthBackup currentUser={currentUser} />} />
 
@@ -138,7 +135,6 @@ const AuthenticatedLayout = ({ currentUser, onLogout }) => {
                   <Route path="/parent-registrations" element={<ParentRegistrationManagement currentUser={currentUser} />} />
                   <Route path="/attendance" element={<AttendanceManagement currentUser={currentUser} />} />
                   <Route path="/fees" element={<FeesManagement currentUser={currentUser} />} />
-                  <Route path="/announcements" element={<AnnouncementManagement currentUser={currentUser} />} />
                   <Route path="/notifications" element={<NotificationManagement currentUser={currentUser} />} />
                   <Route path="/communications" element={<Communications currentUser={currentUser} />} />
                   <Route path="/timetable" element={<TimetableManagement currentUser={currentUser} />} />

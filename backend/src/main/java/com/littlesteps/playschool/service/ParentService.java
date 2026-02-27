@@ -55,6 +55,9 @@ public class ParentService {
     private com.littlesteps.playschool.repository.AssignmentRepository assignmentRepository;
 
     @Autowired
+    private com.littlesteps.playschool.repository.CommunicationRepository communicationRepository;
+
+    @Autowired
     private com.littlesteps.playschool.repository.StudyMaterialRepository studyMaterialRepository;
 
     @Autowired
@@ -547,6 +550,59 @@ public class ParentService {
             messageMap.put(msg.getId(), msg);
         }
 
+        java.util.List<com.littlesteps.playschool.entity.Communication> communications = new java.util.ArrayList<>();
+        if (classId != null) {
+            java.util.List<com.littlesteps.playschool.entity.Communication> classComms = communicationRepository
+                    .findByTargetClassIdAndRecipientType(classId,
+                            com.littlesteps.playschool.entity.Communication.RecipientType.CLASS_PARENTS);
+            communications.addAll(classComms);
+
+            // Get student to find schoolId
+            com.littlesteps.playschool.entity.Student student = studentRepository.findById(studentId).orElse(null);
+            if (student != null && student.getSchoolId() != null) {
+                java.util.List<com.littlesteps.playschool.entity.Communication> allParentBroadcasts = communicationRepository
+                        .findBySchoolIdAndRecipientType(
+                                student.getSchoolId(),
+                                com.littlesteps.playschool.entity.Communication.RecipientType.ALL_PARENTS);
+                if (allParentBroadcasts != null) {
+                    communications.addAll(allParentBroadcasts);
+                }
+            }
+        }
+
+        // Find parent IDs for the student
+        java.util.List<com.littlesteps.playschool.entity.ParentStudentMap> parentMaps = parentStudentMapRepository
+                .findByStudentId(studentId);
+
+        java.util.List<com.littlesteps.playschool.entity.Communication> parentComms = new java.util.ArrayList<>();
+        for (com.littlesteps.playschool.entity.ParentStudentMap map : parentMaps) {
+            com.littlesteps.playschool.entity.Parent parentEntity = parentRepository.findById(map.getParentId())
+                    .orElse(null);
+            if (parentEntity != null && parentEntity.getUserId() != null) {
+                java.util.List<com.littlesteps.playschool.entity.Communication> comms = communicationRepository
+                        .findByRecipientIdsContaining(parentEntity.getUserId());
+                parentComms.addAll(comms);
+            }
+        }
+        java.util.List<com.littlesteps.playschool.entity.Communication> filteredParentComms = new java.util.ArrayList<>();
+        for (com.littlesteps.playschool.entity.Communication comm : parentComms) {
+            if (comm.getTargetStudentId() == null || comm.getTargetStudentId().equals(studentId)) {
+                filteredParentComms.add(comm);
+            }
+        }
+        communications.addAll(filteredParentComms);
+
+        for (com.littlesteps.playschool.entity.Communication comm : communications) {
+            com.littlesteps.playschool.entity.Message adaptedMsg = new com.littlesteps.playschool.entity.Message();
+            adaptedMsg.setId(comm.getId());
+            adaptedMsg.setSubject(comm.getSubject());
+            adaptedMsg.setContent(comm.getBody());
+            adaptedMsg.setCreatedAt(comm.getCreatedAt());
+            adaptedMsg.setSenderId(comm.getSenderId());
+            adaptedMsg.setSenderName(comm.getSenderName() + " (Admin)");
+            messageMap.put(comm.getId(), adaptedMsg);
+        }
+
         // Sort by date (newest first) and return
         return messageMap.values().stream()
                 .sorted((m1, m2) -> m2.getCreatedAt().compareTo(m1.getCreatedAt()))
@@ -577,6 +633,53 @@ public class ParentService {
                     .findByRecipientId(studentId);
             for (com.littlesteps.playschool.entity.Message msg : individualMessages) {
                 messageMap.put(msg.getId(), msg);
+            }
+
+            // FETCH FROM ADMIN COMMUNICATIONS
+            java.util.List<com.littlesteps.playschool.entity.Communication> communications = new java.util.ArrayList<>();
+            if (classId != null) {
+                java.util.List<com.littlesteps.playschool.entity.Communication> classComms = communicationRepository
+                        .findByTargetClassIdAndRecipientType(classId,
+                                com.littlesteps.playschool.entity.Communication.RecipientType.CLASS_PARENTS);
+                communications.addAll(classComms);
+
+                // Fetch ALL_PARENTS broadcasts
+                java.util.List<com.littlesteps.playschool.entity.Communication> allParentBroadcasts = new java.util.ArrayList<>();
+                com.littlesteps.playschool.entity.Student student = studentRepository.findById(studentId).orElse(null);
+                if (student != null && student.getSchoolId() != null) {
+                    allParentBroadcasts = communicationRepository.findBySchoolIdAndRecipientType(
+                            student.getSchoolId(),
+                            com.littlesteps.playschool.entity.Communication.RecipientType.ALL_PARENTS);
+                }
+                if (allParentBroadcasts != null) {
+                    communications.addAll(allParentBroadcasts);
+                }
+            }
+            // Fetch direct messages targeting this child via parent
+            com.littlesteps.playschool.entity.Parent parentEntity = parentRepository.findById(parentId).orElse(null);
+            String userIdForComms = parentEntity != null ? parentEntity.getUserId() : parentId;
+            java.util.List<com.littlesteps.playschool.entity.Communication> parentComms = communicationRepository
+                    .findByRecipientIdsContaining(userIdForComms); // In admin ctrl we pass user ID
+
+            // Filter by targetStudentId so messages directed to one child dont show up for
+            // the other
+            java.util.List<com.littlesteps.playschool.entity.Communication> filteredParentComms = new java.util.ArrayList<>();
+            for (com.littlesteps.playschool.entity.Communication comm : parentComms) {
+                if (comm.getTargetStudentId() == null || comm.getTargetStudentId().equals(studentId)) {
+                    filteredParentComms.add(comm);
+                }
+            }
+            communications.addAll(filteredParentComms);
+
+            for (com.littlesteps.playschool.entity.Communication comm : communications) {
+                com.littlesteps.playschool.entity.Message adaptedMsg = new com.littlesteps.playschool.entity.Message();
+                adaptedMsg.setId(comm.getId());
+                adaptedMsg.setSubject(comm.getSubject());
+                adaptedMsg.setContent(comm.getBody());
+                adaptedMsg.setCreatedAt(comm.getCreatedAt());
+                adaptedMsg.setSenderId(comm.getSenderId());
+                adaptedMsg.setSenderName(comm.getSenderName() + " (Admin)");
+                messageMap.put(comm.getId(), adaptedMsg);
             }
         }
 

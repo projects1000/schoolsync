@@ -12,6 +12,7 @@ public class Message {
     private String senderName;
     private String classId; // Target Class
     private String recipientId; // "ALL" or specific parent ID (future use)
+    private String subject;
     private String content;
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -54,6 +55,14 @@ public class Message {
 
     public void setRecipientId(String recipientId) {
         this.recipientId = recipientId;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
     }
 
     public String getContent() {

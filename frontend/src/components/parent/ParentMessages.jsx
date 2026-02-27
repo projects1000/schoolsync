@@ -112,7 +112,14 @@ const ParentMessages = ({ currentUser }) => {
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-gray-700 text-sm ml-10">{message.content}</p>
+                                    <div className="ml-10">
+                                        {message.subject && (
+                                            <p className="font-semibold text-gray-900 text-sm mb-1">
+                                                {message.subject}
+                                            </p>
+                                        )}
+                                        <p className="text-gray-700 text-sm">{message.content}</p>
+                                    </div>
                                 </div>
                             ))}
                         </div>
