@@ -25,10 +25,11 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request,
+            jakarta.servlet.http.HttpServletRequest httpServletRequest) {
         try {
             logger.info("Login attempt for email: {}", request.getEmail());
-            LoginResponse response = authService.login(request);
+            LoginResponse response = authService.login(request, httpServletRequest);
             logger.info("Login successful for user: {}", response.getEmail());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
