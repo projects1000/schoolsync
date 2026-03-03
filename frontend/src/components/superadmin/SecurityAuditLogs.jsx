@@ -87,9 +87,9 @@ const SecurityAuditLogs = ({ currentUser }) => {
     // Filter login history
     const filteredLogins = useMemo(() => {
         return loginHistory.filter(log => {
-            const matchesSearch = log.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                log.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                log.ip.includes(searchQuery);
+            const matchesSearch = (log.user?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                (log.email?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                (log.ip || '').includes(searchQuery);
             const matchesRole = roleFilter === 'all' || log.role === roleFilter;
             const matchesStatus = statusFilter === 'all' || log.status === statusFilter;
             return matchesSearch && matchesRole && matchesStatus;
@@ -99,23 +99,23 @@ const SecurityAuditLogs = ({ currentUser }) => {
     // Filter activity logs
     const filteredActivity = useMemo(() => {
         return activityLogs.filter(log => {
-            const matchesSearch = log.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                log.target.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesSearch = (log.user?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                (log.action?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                (log.target?.toLowerCase() || '').includes(searchQuery.toLowerCase());
             const matchesRole = roleFilter === 'all' || log.role === roleFilter;
             return matchesSearch && matchesRole;
         });
-    }, [searchQuery, roleFilter]);
+    }, [activityLogs, searchQuery, roleFilter]);
 
     // Filter data change logs
     const filteredDataChanges = useMemo(() => {
         return dataChangeLogs.filter(log => {
-            const matchesSearch = log.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                log.entity.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                log.field.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesSearch = (log.user?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                (log.entity?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                (log.field?.toLowerCase() || '').includes(searchQuery.toLowerCase());
             return matchesSearch;
         });
-    }, [searchQuery]);
+    }, [dataChangeLogs, searchQuery]);
 
     const handleForceLogout = (sessionId, userName) => {
         setLoginHistory(loginHistory.map(log =>

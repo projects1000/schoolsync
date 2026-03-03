@@ -1,6 +1,5 @@
 package com.littlesteps.playschool.service;
 
-import com.littlesteps.playschool.dto.LoginRequest;
 import com.littlesteps.playschool.dto.LoginResponse;
 import com.littlesteps.playschool.dto.ParentRegistrationResponse;
 import com.littlesteps.playschool.dto.RegisterRequest;
@@ -23,6 +22,9 @@ public class AuthService {
     private UserRepository userRepository;
 
     @Autowired
+    private AuditService auditService;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -34,11 +36,14 @@ public class AuthService {
     @Autowired
     private ParentRegistrationService parentRegistrationService;
 
-    public LoginResponse login(LoginRequest request) {
+    public LoginResponse login(com.littlesteps.playschool.dto.LoginRequest request,
+            jakarta.servlet.http.HttpServletRequest httpServletRequest) {
         User user = userRepository.findByEmailAndActive(request.getEmail(), true)
                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            auditService.logActionWithContext(request.getEmail(), "FAILED_LOGIN", "USER", null, null,
+                    "Invalid credentials", httpServletRequest);
             throw new RuntimeException("Invalid credentials");
         }
 
@@ -118,6 +123,9 @@ public class AuthService {
         }
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name(), user.getId(), user.getSchoolId());
+
+        // Log successful login
+        auditService.logUserLogin(user.getEmail(), httpServletRequest);
 
         return new LoginResponse(
                 user.getId(),

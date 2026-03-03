@@ -312,13 +312,24 @@ public class AuditService {
     }
 
     public com.littlesteps.playschool.dto.SecurityLogsResponse getSecurityLogsDashboard(String schoolId) {
-        // 1. Fetch recent logs for the school (last 30 days or so, limiting for
-        // performance)
+        // 1. Fetch recent logs
         LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
-        List<AuditLog> recentLogs = auditLogRepository.findBySchoolId(schoolId).stream()
-                .filter(log -> log.getCreatedAt().isAfter(thirtyDaysAgo))
-                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
-                .toList();
+        List<AuditLog> recentLogs;
+
+        if (schoolId == null || schoolId.isEmpty() || "SCH-001".equals(schoolId)) {
+            // Fetch all logs or specifically filter for schoolId null OR schoolId =
+            // "SCH-001"
+            // For Super Admin, we'll fetch everything for now as a simplification
+            recentLogs = auditLogRepository.findAll().stream()
+                    .filter(log -> log.getCreatedAt().isAfter(thirtyDaysAgo))
+                    .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                    .toList();
+        } else {
+            recentLogs = auditLogRepository.findBySchoolId(schoolId).stream()
+                    .filter(log -> log.getCreatedAt().isAfter(thirtyDaysAgo))
+                    .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                    .toList();
+        }
 
         // 2. Map to DTOs
         List<com.littlesteps.playschool.dto.AuditLogDTO> loginHistory = new java.util.ArrayList<>();
@@ -401,6 +412,7 @@ public class AuditService {
         dto.setDetails(log.getDescription());
         dto.setEntity(log.getTargetType());
         dto.setEntityId(log.getTargetId());
+        dto.setTarget(log.getTargetId() != null ? log.getTargetId() : "N/A");
 
         // Simple parsing for old/new values if payload is JSON
         if (log.getPayload() != null && log.getPayload().contains("{")) {

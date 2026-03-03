@@ -33,8 +33,8 @@ public class AuditController {
         String targetSchoolId = currentUser.getSchoolId();
 
         // Superadmins might view all / default if not bound
-        if (currentUser.getRole() == User.Role.SUPERADMIN && targetSchoolId == null) {
-            targetSchoolId = "SCH-001"; // Fallback to default
+        if (currentUser.getRole() == User.Role.SUPERADMIN) {
+            targetSchoolId = null; // Fetch all for Super Admin
         }
 
         SecurityLogsResponse response = auditService.getSecurityLogsDashboard(targetSchoolId);

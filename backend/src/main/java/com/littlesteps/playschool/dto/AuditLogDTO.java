@@ -25,8 +25,17 @@ public class AuditLogDTO {
     private String newValue; // For data changes
     private String module; // For activity logs
     private String details; // For activity logs
+    private String target; // For activity logs
 
     // Getters and Setters
+
+    public String getTarget() {
+        return target;
+    }
+
+    public void setTarget(String target) {
+        this.target = target;
+    }
 
     public String getId() {
         return id;
