@@ -1,8 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ClipboardList, FileCheck, UserPlus, FileText, ChevronRight } from 'lucide-react';
 
 const PendingActionsWidget = ({ actions }) => {
+    const navigate = useNavigate();
     const getActionConfig = (type) => {
         switch (type) {
             case 'approval':
@@ -83,7 +85,10 @@ const PendingActionsWidget = ({ actions }) => {
             </div>
 
             <div className="p-3 bg-gray-50 border-t border-gray-100">
-                <button className="w-full text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                <button
+                    onClick={() => navigate('/superadmin/schools')}
+                    className="w-full text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                >
                     View All Actions →
                 </button>
             </div>

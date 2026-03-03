@@ -17,6 +17,11 @@ public class DashboardStats {
     private List<Map<String, Object>> recentSchools;
     private List<Map<String, Object>> activeAdmins;
 
+    private List<Map<String, Object>> schoolGrowth;
+    private List<Map<String, Object>> attendanceTrend;
+    private List<Map<String, Object>> systemAlerts;
+    private List<Map<String, Object>> pendingActions;
+
     public DashboardStats() {
     }
 
@@ -99,5 +104,37 @@ public class DashboardStats {
 
     public void setActiveAdmins(List<Map<String, Object>> activeAdmins) {
         this.activeAdmins = activeAdmins;
+    }
+
+    public List<Map<String, Object>> getSchoolGrowth() {
+        return schoolGrowth;
+    }
+
+    public void setSchoolGrowth(List<Map<String, Object>> schoolGrowth) {
+        this.schoolGrowth = schoolGrowth;
+    }
+
+    public List<Map<String, Object>> getAttendanceTrend() {
+        return attendanceTrend;
+    }
+
+    public void setAttendanceTrend(List<Map<String, Object>> attendanceTrend) {
+        this.attendanceTrend = attendanceTrend;
+    }
+
+    public List<Map<String, Object>> getSystemAlerts() {
+        return systemAlerts;
+    }
+
+    public void setSystemAlerts(List<Map<String, Object>> systemAlerts) {
+        this.systemAlerts = systemAlerts;
+    }
+
+    public List<Map<String, Object>> getPendingActions() {
+        return pendingActions;
+    }
+
+    public void setPendingActions(List<Map<String, Object>> pendingActions) {
+        this.pendingActions = pendingActions;
     }
 }

@@ -1,8 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { AlertTriangle, AlertCircle, Info, CheckCircle, Bell } from 'lucide-react';
 
 const SystemAlertsWidget = ({ alerts }) => {
+    const navigate = useNavigate();
     const getAlertConfig = (type) => {
         switch (type) {
             case 'error':
@@ -87,7 +89,10 @@ const SystemAlertsWidget = ({ alerts }) => {
             </div>
 
             <div className="p-3 bg-gray-50 border-t border-gray-100">
-                <button className="w-full text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                <button
+                    onClick={() => navigate('/superadmin/security')}
+                    className="w-full text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                >
                     View All Alerts →
                 </button>
             </div>

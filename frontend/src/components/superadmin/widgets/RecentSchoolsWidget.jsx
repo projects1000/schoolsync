@@ -1,8 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Building2, MapPin, Users, Calendar } from 'lucide-react';
 
 const RecentSchoolsWidget = ({ schools }) => {
+    const navigate = useNavigate();
     // Get 5 most recently added schools
     const recentSchools = [...schools]
         .sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate))
@@ -74,7 +76,10 @@ const RecentSchoolsWidget = ({ schools }) => {
             </div>
 
             <div className="p-3 bg-gray-50 border-t border-gray-100">
-                <button className="w-full text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                <button
+                    onClick={() => navigate('/superadmin/schools')}
+                    className="w-full text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                >
                     View All Schools →
                 </button>
             </div>
