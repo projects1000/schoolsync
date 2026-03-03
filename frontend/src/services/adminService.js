@@ -493,6 +493,16 @@ const adminService = {
             throw error;
         }
     },
+
+    // Security & Audit Logs
+    getSecurityLogs: async () => {
+        try {
+            const response = await api.get('/admin/audit-logs/dashboard');
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
 };
 
 export default adminService;

@@ -1,8 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { UserCheck, Clock } from 'lucide-react';
 
 const ActiveAdminsWidget = ({ admins }) => {
+    const navigate = useNavigate();
     return (
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-slate-50 to-gray-50">
@@ -44,7 +46,10 @@ const ActiveAdminsWidget = ({ admins }) => {
             </div>
 
             <div className="p-3 bg-gray-50 border-t border-gray-100">
-                <button className="w-full text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                <button
+                    onClick={() => navigate('/superadmin/admins')}
+                    className="w-full text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                >
                     View All Admins →
                 </button>
             </div>
