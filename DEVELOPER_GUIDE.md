@@ -5,6 +5,21 @@
 
 ---
 
+## 🔑 Test Credentials (Login & Testing)
+
+> Use these credentials to log in and test each role. The **Super Admin** is auto-seeded on first startup.
+
+| Role | Email | Password |
+|------|-------|----------|
+| **Super Admin** | `superadmin@aayratechx.com` | `Aayratechx@superadmin` |
+| **Admin** | `tanish@gmail.com` | `Tanish@123` |
+| **Teacher** | `teacher5@gmail.com` | `Teacher@123` |
+| **Parent** | `parent2@gmail.com` | `Parent@123` |
+
+> **💡 Tip:** After first startup, log in as Super Admin to create an Admin. Then log in as Admin to create Teachers and invite Parents.
+
+---
+
 ## Table of Contents
 
 1. [Project Overview](#1-project-overview)
@@ -69,7 +84,7 @@ SchoolSync is a multi-role school management system with four user roles:
 ┌──────────────────────────────────┐
 │           FRONTEND               │
 │     React + Vite + Tailwind      │
-│     (Port 3005 in dev)           │
+│     (Port 3000 in dev)           │
 │                                  │
 │  Axios ──► /api/* proxy ─────────┼──┐
 └──────────────────────────────────┘  │
@@ -77,7 +92,7 @@ SchoolSync is a multi-role school management system with four user roles:
                                       ▼
 ┌──────────────────────────────────┐
 │            BACKEND               │
-│   Spring Boot (Port 8089)        │
+│   Spring Boot (Port 8080)        │
 │                                  │
 │  Controllers → Services → Repos  │
 │        ↕ JWT Auth Filter         │
@@ -86,7 +101,7 @@ SchoolSync is a multi-role school management system with four user roles:
 └──────────────────────────────────┘
 ```
 
-- The frontend dev server proxies `/api/*` requests to the backend at `http://localhost:8089`.
+- The frontend dev server proxies `/api/*` requests to the backend at `http://localhost:8080`.
 - JWT tokens are stored in `localStorage` and sent via `Authorization: Bearer <token>` header.
 - A `DataInitializer` seeds the Super Admin account on first startup.
 
@@ -277,7 +292,7 @@ mvn spring-boot:run
 ../tools/apache-maven-3.9.9/bin/mvn spring-boot:run
 ```
 
-The backend starts on **port 8089** by default.
+The backend starts on **port 8080** by default.
 
 > **First Run:** The `DataInitializer` automatically creates the Super Admin account. See [Environment Configuration](#7-environment-configuration) for credentials.
 
@@ -295,15 +310,15 @@ npm install
 npm run dev
 ```
 
-The frontend starts on **http://localhost:3005**.
+The frontend starts on **http://localhost:3000**.
 
 ### Step 4: Open the Application
 
-Navigate to `http://localhost:3005` in your browser.
+Navigate to `http://localhost:3000` in your browser.
 
 **Default Super Admin Login:**
-- Email: `admin@littlesteps.com`
-- Password: `SecureLittleSteps2024!`
+- Email: `superadmin@aayratechx.com`
+- Password: `Aayratechx@superadmin`
 
 ---
 
@@ -313,13 +328,13 @@ Navigate to `http://localhost:3005` in your browser.
 
 | Property | Default | Description |
 |----------|---------|-------------|
-| `server.port` | `8089` | Backend server port (override with `PORT` env var) |
+| `server.port` | `8080` | Backend server port (override with `PORT` env var) |
 | `spring.data.mongodb.uri` | Atlas cluster URI | MongoDB connection string (override with `MONGODB_URI`) |
-| `cors.allowed.origins` | `http://localhost:3005, http://localhost:5173` | Allowed frontend origins (override with `CORS_ORIGINS`) |
+| `cors.allowed.origins` | `http://localhost:3000, http://localhost:5173` | Allowed frontend origins (override with `CORS_ORIGINS`) |
 | `jwt.secret` | Default secret key | JWT signing secret (override with `JWT_SECRET`) |
 | `jwt.expiration` | `1800000` (30 min) | JWT token expiry in milliseconds |
-| `app.superadmin.email` | `admin@littlesteps.com` | Super Admin email (override with `SUPER_ADMIN_EMAIL`) |
-| `app.superadmin.password` | `SecureLittleSteps2024!` | Super Admin password (override with `SUPER_ADMIN_PASSWORD`) |
+| `app.superadmin.email` | `superadmin@aayratechx.com` | Super Admin email (override with `SUPER_ADMIN_EMAIL`) |
+| `app.superadmin.password` | `Aayratechx@superadmin` | Super Admin password (override with `SUPER_ADMIN_PASSWORD`) |
 
 ### Frontend
 
@@ -327,7 +342,7 @@ Navigate to `http://localhost:3005` in your browser.
 |------|----------|-------------|
 | `.env.production` | `VITE_API_BASE_URL` | Production API URL (`https://schoolsync-1-iysg.onrender.com/api`) |
 | `.env.production` | `VITE_APP_TITLE` | App title |
-| `vite.config.js` | Proxy `/api` → `http://localhost:8089` | Dev server proxy (no `.env` needed for local dev) |
+| `vite.config.js` | Proxy `/api` → `http://localhost:8080` | Dev server proxy (no `.env` needed for local dev) |
 
 > **💡 Tip:** For local development, the Vite proxy handles API routing automatically. You don't need to set `VITE_API_BASE_URL`.
 
@@ -521,7 +536,7 @@ docker-compose up
 | **API calls return 403** | User role doesn't have permission for that endpoint. Check `SecurityConfig.java`. |
 | **CORS errors in browser** | Ensure the frontend URL is listed in `cors.allowed.origins` in `application.properties`. |
 | **MongoDB connection fails** | Check `MONGODB_URI`. Ensure IP is whitelisted in MongoDB Atlas. |
-| **Port conflict** | Backend defaults to 8089, frontend to 3005. Change in `application.properties` or `package.json` dev script. |
+| **Port conflict** | Backend defaults to 8080, frontend to 3000. Change in `application.properties` or `package.json` dev script. |
 
 ### Useful Commands
 
@@ -557,13 +572,13 @@ git branch -a
 │             projects1000/schoolsync.git              │
 │                                                     │
 │  Backend:   cd backend && mvn spring-boot:run       │
-│             → http://localhost:8089                  │
+│             → http://localhost:8080                  │
 │                                                     │
 │  Frontend:  cd frontend && npm install && npm run dev│
-│             → http://localhost:3005                  │
+│             → http://localhost:3000                  │
 │                                                     │
-│  Login:     admin@littlesteps.com                   │
-│             SecureLittleSteps2024!                   │
+│  Login:     superadmin@aayratechx.com               │
+│             Aayratechx@superadmin                   │
 │                                                     │
 │  DB:        MongoDB Atlas (see application.properties│
 │  Auth:      JWT (30 min expiry)                     │
