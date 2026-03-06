@@ -55,8 +55,26 @@ const ParentMessages = ({ currentUser }) => {
 
     if (isLoading) {
         return (
-            <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+            <div className="space-y-6 animate-pulse">
+                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                    <div className="h-7 bg-gray-200 rounded w-40 mb-2" />
+                    <div className="h-4 bg-gray-100 rounded w-64" />
+                </div>
+                <div className="space-y-3">
+                    {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 bg-gray-200 rounded-full" />
+                                <div className="flex-1">
+                                    <div className="h-4 bg-gray-200 rounded w-36 mb-1" />
+                                    <div className="h-3 bg-gray-100 rounded w-24" />
+                                </div>
+                                <div className="h-3 bg-gray-100 rounded w-16" />
+                            </div>
+                            <div className="ml-13 h-12 bg-gray-50 rounded" />
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }

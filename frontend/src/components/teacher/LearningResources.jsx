@@ -213,7 +213,27 @@ const LearningResources = () => {
 };
 
 const MaterialList = ({ materials, loading, type }) => {
-    if (loading) return <p className="text-gray-500 py-10 text-center">Loading resources...</p>;
+    if (loading) return (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 animate-pulse">
+            {[1, 2, 3].map(i => (
+                <div key={i} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="p-5">
+                        <div className="flex justify-between items-start mb-3">
+                            <div>
+                                <div className="h-5 bg-gray-200 rounded w-36 mb-2" />
+                                <div className="h-3 bg-gray-100 rounded w-28" />
+                            </div>
+                            <div className="w-9 h-9 bg-gray-200 rounded-lg" />
+                        </div>
+                        <div className="h-10 bg-gray-50 rounded mb-3" />
+                        <div className="pt-2 border-t border-gray-100">
+                            <div className="h-9 bg-gray-100 rounded" />
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
 
     if (materials.length === 0) return (
         <div className="text-center py-16 bg-gray-50 rounded-xl border border-dashed border-gray-200">

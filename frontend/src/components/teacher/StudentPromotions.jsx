@@ -101,8 +101,40 @@ const StudentPromotions = () => {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center h-64">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            <div className="space-y-6 animate-pulse">
+                <div className="bg-gray-100 rounded-xl p-6 border border-gray-200">
+                    <div className="h-6 bg-gray-200 rounded w-48 mb-2" />
+                    <div className="h-4 bg-gray-200 rounded w-72" />
+                </div>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                    <div className="flex justify-between items-center">
+                        <div className="h-9 bg-gray-200 rounded w-40" />
+                        <div className="flex gap-3">
+                            <div className="h-9 bg-gray-200 rounded w-52" />
+                            <div className="h-9 bg-gray-200 rounded w-24" />
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-3 flex gap-8">
+                        {[1, 2, 3, 4, 5, 6].map(i => (
+                            <div key={i} className="h-3 bg-gray-200 rounded w-16" />
+                        ))}
+                    </div>
+                    {[1, 2, 3, 4, 5].map(i => (
+                        <div key={i} className="px-4 py-4 border-t border-gray-100 flex items-center gap-6">
+                            <div className="w-5 h-5 bg-gray-200 rounded" />
+                            <div className="h-4 bg-gray-200 rounded w-10" />
+                            <div className="flex items-center gap-3 flex-1">
+                                <div className="w-8 h-8 bg-gray-200 rounded-full" />
+                                <div className="h-4 bg-gray-200 rounded w-28" />
+                            </div>
+                            <div className="h-4 bg-gray-100 rounded w-20" />
+                            <div className="h-4 bg-gray-100 rounded w-16" />
+                            <div className="h-5 bg-gray-200 rounded-full w-14" />
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }

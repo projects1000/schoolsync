@@ -26,7 +26,29 @@ const TeacherProfile = () => {
         }
     };
 
-    if (loading) return <div className="text-center py-10">Loading Profile...</div>;
+    if (loading) return (
+        <div className="space-y-6 animate-pulse">
+            <div className="bg-gradient-to-r from-gray-300 to-gray-400 p-8 rounded-xl h-36" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[1, 2].map(i => (
+                    <div key={i} className="bg-white rounded-xl border border-gray-200 p-6">
+                        <div className="h-5 bg-gray-200 rounded w-40 mb-4" />
+                        <div className="space-y-4">
+                            {[1, 2, 3].map(j => (
+                                <div key={j} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                    <div className="w-5 h-5 bg-gray-200 rounded" />
+                                    <div className="flex-1">
+                                        <div className="h-3 bg-gray-200 rounded w-20 mb-1" />
+                                        <div className="h-4 bg-gray-300 rounded w-36" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
     if (!profile) return <div className="text-center py-10">Profile Not Found</div>;
 
     return (

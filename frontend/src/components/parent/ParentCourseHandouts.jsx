@@ -105,8 +105,32 @@ const ParentCourseHandouts = ({ currentUser, onBack }) => {
 
             {/* Handouts List */}
             {loading ? (
-                <div className="flex justify-center items-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                <div className="space-y-4 animate-pulse">
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                            <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <div className="h-5 bg-gray-200 rounded w-28" />
+                                        <div className="h-5 bg-gray-100 rounded-full w-20" />
+                                        <div className="h-5 bg-gray-100 rounded-full w-16" />
+                                    </div>
+                                    <div className="mt-3">
+                                        <div className="flex justify-between mb-1">
+                                            <div className="h-3 bg-gray-100 rounded w-16" />
+                                            <div className="h-3 bg-gray-200 rounded w-32" />
+                                        </div>
+                                        <div className="w-full bg-gray-200 rounded-full h-3">
+                                            <div className="bg-gray-300 h-3 rounded-full w-2/5" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="ml-4 flex items-center gap-2">
+                                    <div className="h-4 bg-gray-200 rounded w-20" />
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             ) : filteredHandouts.length === 0 ? (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">

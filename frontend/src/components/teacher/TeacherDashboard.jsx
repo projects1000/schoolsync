@@ -40,7 +40,45 @@ const TeacherDashboard = () => {
         fetchDashboard();
     }, []);
 
-    if (loading) return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
+    if (loading) return (
+        <div className="space-y-6 animate-pulse">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+                    <div>
+                        <div className="h-7 bg-gray-200 rounded w-64 mb-2" />
+                        <div className="h-4 bg-gray-100 rounded w-40" />
+                    </div>
+                    <div className="flex gap-3 mt-4 md:mt-0">
+                        <div className="h-9 bg-gray-200 rounded-full w-36" />
+                        <div className="h-9 bg-gray-200 rounded-full w-36" />
+                    </div>
+                </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[1, 2, 3].map(i => (
+                    <div key={i} className="border p-5 rounded-xl flex items-center space-x-4 bg-gray-50">
+                        <div className="p-3 bg-gray-200 rounded-full w-12 h-12" />
+                        <div>
+                            <div className="h-4 bg-gray-200 rounded w-20 mb-1" />
+                            <div className="h-5 bg-gray-300 rounded w-16" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div className="h-5 bg-gray-200 rounded w-44 mb-6" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="p-4 border border-gray-200 rounded-xl bg-gray-50">
+                            <div className="h-5 bg-gray-200 rounded w-24 mb-2" />
+                            <div className="h-4 bg-gray-100 rounded w-32 mb-2" />
+                            <div className="h-4 bg-gray-100 rounded w-20" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
 
     if (error) return (
         <div className="bg-red-50 text-red-600 p-6 rounded-xl border border-red-200">

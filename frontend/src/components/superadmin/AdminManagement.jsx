@@ -267,11 +267,25 @@ const AdminManagement = ({ currentUser }) => {
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {isLoading ? (
-                                <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                                        Loading admins...
-                                    </td>
-                                </tr>
+                                <>
+                                    {[1, 2, 3, 4, 5].map(i => (
+                                        <tr key={i} className="animate-pulse">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 bg-gray-200 rounded-full" />
+                                                    <div>
+                                                        <div className="h-4 bg-gray-200 rounded w-28 mb-1" />
+                                                        <div className="h-3 bg-gray-100 rounded w-36" />
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-32" /></td>
+                                            <td className="px-6 py-4"><div className="h-5 bg-gray-200 rounded-full w-16" /></td>
+                                            <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-20" /></td>
+                                            <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-8 ml-auto" /></td>
+                                        </tr>
+                                    ))}
+                                </>
                             ) : filteredAdmins.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="px-6 py-12 text-center">
@@ -379,7 +393,23 @@ const AdminManagement = ({ currentUser }) => {
                 {/* Mobile Card View */}
                 <div className="md:hidden space-y-4 p-4">
                     {isLoading ? (
-                        <div className="text-center py-10 text-gray-500">Loading admins...</div>
+                        <div className="space-y-4 animate-pulse">
+                            {[1, 2, 3, 4].map(i => (
+                                <div key={i} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm space-y-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-gray-200 rounded-full" />
+                                        <div className="flex-1">
+                                            <div className="h-4 bg-gray-200 rounded w-32 mb-1" />
+                                            <div className="h-3 bg-gray-100 rounded w-44" />
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                                        <div className="h-4 bg-gray-200 rounded w-28" />
+                                        <div className="h-5 bg-gray-200 rounded-full w-16" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     ) : filteredAdmins.length === 0 ? (
                         <div className="text-center py-10">
                             <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />

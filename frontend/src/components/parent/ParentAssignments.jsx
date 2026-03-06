@@ -66,8 +66,36 @@ const ParentAssignments = ({ currentUser }) => {
 
     if (isLoading) {
         return (
-            <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+            <div className="space-y-6 animate-pulse">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <div className="h-7 bg-gray-200 rounded w-40 mb-2" />
+                        <div className="h-4 bg-gray-100 rounded w-64" />
+                    </div>
+                    <div className="text-right">
+                        <div className="h-3 bg-gray-200 rounded w-28 mb-2" />
+                        <div className="h-9 bg-gray-300 rounded w-12" />
+                    </div>
+                </div>
+                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 space-y-4">
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="border border-gray-200 rounded-lg p-4">
+                            <div className="flex justify-between items-start mb-3">
+                                <div className="flex items-start space-x-4">
+                                    <div className="w-10 h-10 bg-gray-200 rounded-lg" />
+                                    <div>
+                                        <div className="h-5 bg-gray-200 rounded w-44 mb-2" />
+                                        <div className="h-3 bg-gray-100 rounded w-72" />
+                                    </div>
+                                </div>
+                                <div className="h-5 bg-gray-200 rounded-full w-24" />
+                            </div>
+                            <div className="flex items-center space-x-4 mt-4 pt-4 border-t border-gray-100">
+                                <div className="h-3 bg-gray-100 rounded w-32" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }

@@ -156,7 +156,25 @@ const Assignments = ({ currentUser }) => {
             {/* Assignment List */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {loading ? (
-                    <p className="text-gray-500 col-span-full text-center py-10">Loading assignments...</p>
+                    <>
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden animate-pulse">
+                                <div className="p-5">
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div>
+                                            <div className="h-5 bg-gray-200 rounded w-40 mb-2" />
+                                            <div className="h-3 bg-gray-100 rounded w-28" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <div className="h-3 bg-gray-100 rounded w-full" />
+                                        <div className="h-3 bg-gray-100 rounded w-3/4" />
+                                        <div className="h-3 bg-gray-100 rounded w-1/2" />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </>
                 ) : assignments.length === 0 ? (
                     <div className="col-span-full text-center py-16 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                         <p className="text-gray-500">No assignments found for this class.</p>

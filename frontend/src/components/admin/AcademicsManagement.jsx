@@ -347,10 +347,30 @@ const AcademicsManagement = () => {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="relative">
-                    <div className="h-16 w-16 rounded-full border-4 border-purple-100 border-t-purple-600 animate-spin"></div>
-                    <div className="mt-4 text-purple-600 font-medium animate-pulse text-center">Loading...</div>
+            <div className="space-y-8 pb-12 animate-pulse">
+                <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-3 bg-gray-200 rounded-2xl w-12 h-12" />
+                        <div className="h-8 bg-gray-200 rounded w-64" />
+                    </div>
+                    <div className="h-4 bg-gray-100 rounded w-80 mt-2" />
+                </div>
+                <div className="flex gap-2">
+                    <div className="h-12 bg-gray-200 rounded-2xl w-48" />
+                    <div className="h-12 bg-gray-200 rounded-2xl w-40" />
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <div className="lg:col-span-4 bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
+                        <div className="h-5 bg-gray-200 rounded w-40 mb-4" />
+                        <div className="grid grid-cols-2 gap-2">
+                            {[1, 2, 3, 4, 5, 6].map(i => (
+                                <div key={i} className="h-12 bg-gray-100 rounded-xl" />
+                            ))}
+                        </div>
+                    </div>
+                    <div className="lg:col-span-8 space-y-6">
+                        <div className="h-80 bg-gray-50 rounded-[32px] border-2 border-dashed border-gray-200" />
+                    </div>
                 </div>
             </div>
         );
