@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 
 // Creates super admin only if none exists - uses secure environment-based credentials
 @Component
@@ -72,13 +74,34 @@ public class DataInitializer implements CommandLineRunner {
         return schoolRepository.findAll().get(0);
     }
 
+    private void cleanupDuplicateSuperAdmins() {
+        List<User> allUsers = userRepository.findAll();
+        List<User> duplicates = allUsers.stream()
+                .filter(u -> superAdminEmail.equals(u.getEmail()))
+                .collect(Collectors.toList());
+
+        if (duplicates.size() > 1) {
+            System.out.println("=== FOUND " + duplicates.size() + " DUPLICATE SUPERADMIN ENTRIES ===");
+            // Keep the first one, delete the rest
+            for (int i = 1; i < duplicates.size(); i++) {
+                userRepository.delete(duplicates.get(i));
+                System.out.println("Deleted duplicate superadmin with id: " + duplicates.get(i).getId());
+            }
+            System.out.println("=== CLEANUP COMPLETE ===");
+        }
+    }
+
     private void initializeUsers(School school) {
+        // Clean up duplicate superadmin entries if any exist
+        cleanupDuplicateSuperAdmins();
+
         // Check if super admin already exists
-        if (userRepository.findByEmail(superAdminEmail).isEmpty()) {
-            // Only create super admin if password is provided via environment variable
+        if (!userRepository.existsByEmail(superAdminEmail)) {
+            // Only create super admin if password is provided
             if (superAdminPassword != null && !superAdminPassword.trim().isEmpty()) {
                 User superAdmin = new User();
                 superAdmin.setEmail(superAdminEmail);
+                superAdmin.setUsername(superAdminEmail);
                 superAdmin.setPassword(passwordEncoder.encode(superAdminPassword));
                 superAdmin.setName(superAdminName);
                 superAdmin.setPhone("+1 234-567-8901");
@@ -87,32 +110,39 @@ public class DataInitializer implements CommandLineRunner {
                 superAdmin.setActive(true);
                 userRepository.save(superAdmin);
 
-                System.out.println("=== SUPER ADMIN CREATED FROM ENVIRONMENT ===");
+                System.out.println("=== SUPER ADMIN CREATED ===");
                 System.out.println("Email: " + superAdminEmail);
                 System.out.println("School ID: " + school.getId());
-                System.out.println("============================================");
+                System.out.println("===========================");
             } else {
                 System.out.println("=== WARNING: NO SUPER ADMIN PASSWORD SET ===");
             }
         } else {
-            // Fix existing superadmin if missing schoolId
+            // Sync existing superadmin with configured values
             User existingAdmin = userRepository.findByEmail(superAdminEmail).get();
+            boolean updated = false;
+
+            if (!superAdminName.equals(existingAdmin.getName())) {
+                existingAdmin.setName(superAdminName);
+                updated = true;
+            }
             if (existingAdmin.getSchoolId() == null) {
                 existingAdmin.setSchoolId(school.getId());
-                userRepository.save(existingAdmin);
-                System.out.println("=== UPDATED SUPER ADMIN WITH SCHOOL ID ===");
-                System.out.println("School ID: " + school.getId());
-                System.out.println("==========================================");
-            } else {
-                System.out.println("=== SUPER ADMIN ALREADY EXISTS ===");
-                System.out.println("Email: " + superAdminEmail);
-                // FORCE RESET PASSWORD FOR DEV
-                // Reuse existingAdmin from outer scope
-                existingAdmin.setPassword(passwordEncoder.encode("password"));
-                userRepository.save(existingAdmin);
-                System.out.println("=== RESET SUPER ADMIN PASSWORD TO 'password' ===");
-                System.out.println("===================================");
+                updated = true;
             }
+            if (superAdminPassword != null && !superAdminPassword.trim().isEmpty()) {
+                existingAdmin.setPassword(passwordEncoder.encode(superAdminPassword));
+                updated = true;
+            }
+
+            if (updated) {
+                userRepository.save(existingAdmin);
+                System.out.println("=== SUPER ADMIN SYNCED WITH CONFIG ===");
+            }
+            System.out.println("=== SUPER ADMIN ALREADY EXISTS ===");
+            System.out.println("Email: " + superAdminEmail);
+            System.out.println("Name: " + existingAdmin.getName());
+            System.out.println("===================================");
         }
 
         // Retroactive fix: Ensure ALL users have a schoolId
