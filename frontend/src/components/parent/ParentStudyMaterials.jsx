@@ -65,8 +65,46 @@ const ParentStudyMaterials = ({ currentUser }) => {
 
     if (isLoading) {
         return (
-            <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+            <div className="space-y-6 animate-pulse">
+                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <div className="h-7 bg-gray-200 rounded w-44 mb-2" />
+                            <div className="h-4 bg-gray-100 rounded w-64" />
+                        </div>
+                        <div className="flex items-center space-x-4">
+                            <div className="text-center">
+                                <div className="h-3 bg-gray-200 rounded w-16 mb-1" />
+                                <div className="h-7 bg-gray-300 rounded w-8" />
+                            </div>
+                            <div className="text-center">
+                                <div className="h-3 bg-gray-200 rounded w-16 mb-1" />
+                                <div className="h-7 bg-gray-300 rounded w-8" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 flex gap-2">
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="h-9 bg-gray-200 rounded w-24" />
+                    ))}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                            <div className="flex items-start justify-between mb-3">
+                                <div className="w-12 h-12 bg-gray-100 rounded-lg" />
+                                <div className="h-5 bg-gray-200 rounded-full w-16" />
+                            </div>
+                            <div className="h-5 bg-gray-200 rounded w-36 mb-2" />
+                            <div className="h-8 bg-gray-50 rounded mb-4" />
+                            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                                <div className="h-3 bg-gray-100 rounded w-24" />
+                                <div className="h-4 bg-gray-200 rounded w-20" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }

@@ -144,7 +144,22 @@ const TeacherCommunications = ({ currentUser }) => {
                             </Button>
                         </CardHeader>
                         <CardContent>
-                            {loading ? <p className="text-center py-10 text-gray-500">Loading inbox...</p> : (
+                            {loading ? (
+                                <div className="space-y-3 animate-pulse">
+                                    {[1, 2, 3].map(i => (
+                                        <div key={i} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <div className="w-9 h-9 bg-gray-200 rounded-full" />
+                                                <div className="flex-1">
+                                                    <div className="h-5 bg-gray-200 rounded w-44 mb-1" />
+                                                    <div className="h-3 bg-gray-100 rounded w-64" />
+                                                </div>
+                                            </div>
+                                            <div className="ml-12 h-16 bg-gray-50 rounded" />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
                                 <div className="space-y-3">
                                     {inboxMessages.length === 0 ? (
                                         <div className="text-center py-10 text-gray-500">
@@ -260,7 +275,22 @@ const TeacherCommunications = ({ currentUser }) => {
                             </Button>
                         </div>
 
-                        {loading ? <p className="text-center py-10 text-gray-500">Loading history...</p> : (
+                        {loading ? (
+                            <div className="space-y-3 animate-pulse">
+                                {[1, 2, 3].map(i => (
+                                    <div key={i} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-9 h-9 bg-gray-200 rounded-full" />
+                                            <div className="flex-1">
+                                                <div className="h-4 bg-gray-200 rounded w-48 mb-1" />
+                                                <div className="h-3 bg-gray-100 rounded w-32" />
+                                            </div>
+                                        </div>
+                                        <div className="ml-12 h-12 bg-gray-50 rounded" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
                             <div className="space-y-3">
                                 {messages.length === 0 ? (
                                     <div className="text-center py-10 text-gray-500">No messages sent to this class yet.</div>

@@ -47,8 +47,33 @@ const ParentAttendance = ({ currentUser }) => {
 
     if (isLoading) {
         return (
-            <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+            <div className="space-y-6 animate-pulse">
+                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <div className="h-7 bg-gray-200 rounded w-48 mb-2" />
+                            <div className="h-4 bg-gray-100 rounded w-64" />
+                        </div>
+                        <div className="text-right">
+                            <div className="h-3 bg-gray-200 rounded w-28 mb-2" />
+                            <div className="h-9 bg-gray-300 rounded w-16" />
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="bg-gray-50 px-6 py-3 flex gap-16">
+                        <div className="h-3 bg-gray-200 rounded w-12" />
+                        <div className="h-3 bg-gray-200 rounded w-14" />
+                        <div className="h-3 bg-gray-200 rounded w-16" />
+                    </div>
+                    {[1, 2, 3, 4, 5].map(i => (
+                        <div key={i} className="px-6 py-4 border-t border-gray-100 flex gap-16">
+                            <div className="h-4 bg-gray-200 rounded w-24" />
+                            <div className="h-5 bg-gray-200 rounded-full w-16" />
+                            <div className="h-4 bg-gray-100 rounded w-12" />
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }

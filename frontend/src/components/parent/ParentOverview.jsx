@@ -149,8 +149,35 @@ const ParentOverview = ({ currentUser }) => {
             </motion.div>
 
             {isLoading ? (
-                <div className="flex justify-center items-center h-64">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                <div className="space-y-6 animate-pulse">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="h-4 bg-gray-200 rounded w-24" />
+                                    <div className="w-10 h-10 bg-gray-100 rounded-lg" />
+                                </div>
+                                <div className="h-8 bg-gray-300 rounded w-16 mb-1" />
+                                <div className="h-3 bg-gray-100 rounded w-32" />
+                            </div>
+                        ))}
+                    </div>
+                    <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                        <div className="h-5 bg-gray-200 rounded w-36 mb-4" />
+                        <div className="space-y-3">
+                            {[1, 2, 3].map(i => (
+                                <div key={i} className="p-4 bg-gray-50 rounded-lg">
+                                    <div className="flex gap-3 items-start">
+                                        <div className="w-8 h-8 bg-gray-200 rounded-full" />
+                                        <div className="flex-1">
+                                            <div className="h-4 bg-gray-200 rounded w-48 mb-2" />
+                                            <div className="h-3 bg-gray-100 rounded w-72" />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             ) : (
                 <>
