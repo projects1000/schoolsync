@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Bell, Users, User, History } from 'lucide-react';
+import { Send, Bell, Users, User, History, Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,7 +24,9 @@ const Communications = ({ currentUser }) => {
   const [classes, setClasses] = useState([]);
   const [parents, setParents] = useState([]); // Loaded dynamically based on class
   const [history, setHistory] = useState([]);
+  const [inbox, setInbox] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [inboxLoading, setInboxLoading] = useState(false);
 
   // Direct Message state
   const [dmAudience, setDmAudience] = useState('TEACHER'); // 'TEACHER' or 'PARENT'
@@ -43,6 +45,7 @@ const Communications = ({ currentUser }) => {
   useEffect(() => {
     fetchInitialData();
     fetchHistory();
+    fetchInbox();
   }, []);
 
   useEffect(() => {
@@ -85,6 +88,18 @@ const Communications = ({ currentUser }) => {
       console.error('Failed to fetch history:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchInbox = async () => {
+    setInboxLoading(true);
+    try {
+      const res = await api.get('/admin/communications/inbox');
+      setInbox(res.data);
+    } catch (error) {
+      console.error('Failed to fetch inbox:', error);
+    } finally {
+      setInboxLoading(false);
     }
   };
 
@@ -192,7 +207,8 @@ const Communications = ({ currentUser }) => {
       </motion.div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full md:w-[600px] grid-cols-3 mb-6">
+        <TabsList className="grid w-full md:w-[750px] grid-cols-4 mb-6">
+          <TabsTrigger value="INBOX">Inbox</TabsTrigger>
           <TabsTrigger value="DIRECT">Direct Message</TabsTrigger>
           <TabsTrigger value="BROADCAST">Broadcast</TabsTrigger>
           <TabsTrigger value="HISTORY">Sent History</TabsTrigger>
@@ -401,6 +417,65 @@ const Communications = ({ currentUser }) => {
                               {comm.type === 'BROADCAST' ? <Users className="w-4 h-4" /> : <User className="w-4 h-4" />}
                               <span>{renderRecipientDisplay(comm)}</span>
                             </div>
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-500 text-right">
+                          {new Date(comm.createdAt).toLocaleString()}
+                        </div>
+                      </div>
+                      <div className="bg-gray-50 p-3 rounded text-gray-700 text-sm whitespace-pre-wrap ml-12 border border-gray-100">
+                        {comm.body}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        {/* INBOX TAB */}
+        <TabsContent value="INBOX">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Inbox</CardTitle>
+                <CardDescription>Messages received from Super Admin and others.</CardDescription>
+              </div>
+              <Button variant="outline" size="sm" onClick={fetchInbox}>
+                <History className="w-4 h-4 mr-2" /> Refresh
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {inboxLoading ? (
+                <p className="text-center py-10 text-gray-500">Loading inbox...</p>
+              ) : inbox.length === 0 ? (
+                <div className="text-center py-10">
+                  <Inbox className="mx-auto w-12 h-12 text-gray-300" />
+                  <h3 className="mt-4 text-lg font-medium text-gray-800">No Messages Received</h3>
+                  <p className="mt-1 text-sm text-gray-500">You have no messages in your inbox yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {inbox.map((comm) => (
+                    <motion.div
+                      key={comm.id}
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm transition-all hover:shadow-md"
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-full ${comm.senderRole === 'SUPERADMIN' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
+                            {comm.senderRole === 'SUPERADMIN' ? <Users className="w-5 h-5" /> : <User className="w-5 h-5" />}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-semibold text-gray-800 text-lg">{comm.subject}</h4>
+                              <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${comm.senderRole === 'SUPERADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                                {comm.senderRole === 'SUPERADMIN' ? 'Super Admin' : comm.senderRole}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1">From: {comm.senderName}</p>
                           </div>
                         </div>
                         <div className="text-xs text-gray-500 text-right">

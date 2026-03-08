@@ -52,11 +52,11 @@ public class Communication {
     }
 
     public enum RecipientType {
-        TEACHER, PARENT, ALL_TEACHERS, CLASS_PARENTS, ALL_PARENTS
+        TEACHER, PARENT, ALL_TEACHERS, CLASS_PARENTS, ALL_PARENTS, ADMIN, ALL_ADMINS
     }
 
     public enum SenderRole {
-        ADMIN, TEACHER, PARENT, SYSTEM
+        ADMIN, TEACHER, PARENT, SYSTEM, SUPERADMIN
     }
 
     // Constructors

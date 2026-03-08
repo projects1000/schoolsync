@@ -12,6 +12,7 @@ export const MODULE_TO_PATH = {
     'security-logs': '/superadmin/security',
     'system-health': '/superadmin/system-health',
     'superadmin-trash': '/superadmin/trash',
+    'superadmin-communications': '/superadmin/communications',
 
     // Admin
     'dashboard': '/dashboard',

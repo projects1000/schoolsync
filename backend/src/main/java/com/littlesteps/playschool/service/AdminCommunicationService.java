@@ -169,4 +169,15 @@ public class AdminCommunicationService {
 
         return communicationRepository.findBySchoolIdAndSenderRole(admin.getSchoolId(), Communication.SenderRole.ADMIN);
     }
+
+    public List<Communication> getInbox(String email) {
+        User admin = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+
+        if (!admin.getRole().equals(User.Role.ADMIN) && !admin.getRole().equals(User.Role.SUPERADMIN)) {
+            throw new RuntimeException("Unauthorized: Only Admins can view inbox");
+        }
+
+        return communicationRepository.findByRecipientIdsContaining(admin.getId());
+    }
 }

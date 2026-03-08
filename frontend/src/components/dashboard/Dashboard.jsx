@@ -68,7 +68,83 @@ const Dashboard = ({ currentUser }) => {
   }));
 
   if (loading) {
-    return <div className="flex items-center justify-center h-full">Loading dashboard...</div>;
+    return (
+      <div className="space-y-6 animate-pulse">
+        {/* Header Skeleton */}
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="h-7 bg-gray-200 rounded w-40 mb-2" />
+              <div className="h-4 bg-gray-100 rounded w-32" />
+            </div>
+            <div className="text-right">
+              <div className="h-3 bg-gray-100 rounded w-36 mb-2 ml-auto" />
+              <div className="h-5 bg-gray-200 rounded w-20 ml-auto" />
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Grid Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-100 rounded w-24 mb-3" />
+                  <div className="h-7 bg-gray-200 rounded w-20 mb-3" />
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-gray-100 rounded" />
+                    <div className="h-3 bg-gray-100 rounded w-24" />
+                  </div>
+                </div>
+                <div className="w-12 h-12 bg-gray-200 rounded-xl" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Main Content Grid Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Quick Actions Skeleton */}
+          <div className="lg:col-span-1 bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <div className="h-5 bg-gray-200 rounded w-28 mb-4" />
+            <div className="grid grid-cols-2 gap-3">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="h-20 bg-gray-100 rounded-lg" />
+              ))}
+            </div>
+          </div>
+
+          {/* Attendance Overview Skeleton */}
+          <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <div className="h-5 bg-gray-200 rounded w-40 mb-4" />
+            <div className="flex items-center justify-center p-10">
+              <div className="text-center">
+                <div className="h-10 bg-gray-200 rounded w-24 mx-auto mb-2" />
+                <div className="h-4 bg-gray-100 rounded w-32 mx-auto" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Activity Skeleton */}
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+          <div className="h-5 bg-gray-200 rounded w-32 mb-4" />
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="flex items-center space-x-4 p-3">
+                <div className="w-9 h-9 bg-gray-200 rounded-lg" />
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
+                  <div className="h-3 bg-gray-100 rounded w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="h-4 bg-gray-100 rounded w-28 mx-auto mt-4" />
+        </div>
+      </div>
+    );
   }
 
   return (

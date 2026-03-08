@@ -46,6 +46,7 @@ import GlobalFeeSettings from '@/components/superadmin/GlobalFeeSettings';
 import SecurityAuditLogs from '@/components/superadmin/SecurityAuditLogs';
 import SystemHealthBackup from '@/components/superadmin/SystemHealthBackup';
 import TrashManagement from '@/components/superadmin/TrashManagement';
+import SuperAdminCommunications from '@/components/superadmin/SuperAdminCommunications';
 import SchoolProfile from '@/components/admin/SchoolProfile';
 import AcademicsManagement from '@/components/admin/AcademicsManagement';
 import NotificationManagement from '@/components/admin/NotificationManagement';
@@ -128,6 +129,7 @@ const AuthenticatedLayout = ({ currentUser, onLogout }) => {
                   <Route path="/superadmin/security" element={<SecurityAuditLogs currentUser={currentUser} />} />
                   <Route path="/superadmin/system-health" element={<SystemHealthBackup currentUser={currentUser} />} />
                   <Route path="/superadmin/trash" element={<TrashManagement currentUser={currentUser} />} />
+                  <Route path="/superadmin/communications" element={<SuperAdminCommunications currentUser={currentUser} />} />
 
                   {/* Admin Routes */}
                   <Route path="/dashboard" element={<Dashboard currentUser={currentUser} />} />
