@@ -190,9 +190,22 @@ function AppInner() {
     const user = localStorage.getItem('currentUser');
 
     if (token && user) {
-      setIsAuthenticated(true);
-      const parsedUser = JSON.parse(user);
-      setCurrentUser(parsedUser);
+      // Decode JWT to check if it's expired (without needing a backend call)
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const isExpired = payload.exp * 1000 < Date.now();
+        if (isExpired) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('currentUser');
+          return; // Stay on login page
+        }
+        setIsAuthenticated(true);
+        setCurrentUser(JSON.parse(user));
+      } catch (e) {
+        // Invalid token format — clear and show login
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('currentUser');
+      }
     }
   }, []);
 
