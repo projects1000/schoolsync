@@ -1,10 +1,16 @@
 import axios from 'axios';
+import { setupCache } from 'axios-cache-interceptor';
 
-const api = axios.create({
+const axiosInstance = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
     headers: {
         'Content-Type': 'application/json',
     },
+});
+
+// Wrap the axios instance with a 30-second TTL cache for GET requests
+const api = setupCache(axiosInstance, {
+    ttl: 1000 * 30, 
 });
 
 api.interceptors.request.use(

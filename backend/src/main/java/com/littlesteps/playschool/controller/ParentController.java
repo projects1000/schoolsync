@@ -7,6 +7,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 import java.util.Map;
@@ -31,10 +35,13 @@ public class ParentController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ParentDTO>> getAllParents(
+    public ResponseEntity<?> getAllParents(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             org.springframework.security.core.Authentication authentication) {
         String schoolId = getSchoolId(authentication);
-        return ResponseEntity.ok(parentService.getAllParents(schoolId));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return ResponseEntity.ok(parentService.getAllParents(schoolId, pageable));
     }
 
     @GetMapping("/{id}")

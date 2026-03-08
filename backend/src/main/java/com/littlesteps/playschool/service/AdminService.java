@@ -18,8 +18,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import java.util.stream.Collectors;
+
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import com.littlesteps.playschool.entity.EmailVerificationToken;
+import com.littlesteps.playschool.repository.EmailVerificationTokenRepository;
+import com.littlesteps.playschool.util.EmailValidationUtil;
+import java.util.UUID;
+
 @Service
 @Transactional
+@CacheConfig(cacheNames = "admins")
 public class AdminService {
 
     private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
@@ -33,10 +44,17 @@ public class AdminService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private EmailVerificationTokenRepository tokenRepository;
+
+    @Autowired
+    private EmailService emailService;
+
     /**
      * Create a new admin user - Only SUPERADMIN can create new admins
      */
     @Transactional
+    @CacheEvict(value = {"admins", "schools"}, allEntries = true)
     public AdminResponse createAdmin(CreateAdminRequest request, User currentUser) {
         logger.info("Creating new admin with email: {} by user: {}", request.getEmail(), currentUser.getEmail());
 
@@ -45,6 +63,10 @@ public class AdminService {
             logger.error("Access denied. User {} with role {} attempted to create admin",
                     currentUser.getEmail(), currentUser.getRole());
             throw new RuntimeException("Access denied. Only Super Admin can create new admins.");
+        }
+
+        if (!EmailValidationUtil.isValidEmail(request.getEmail() != null ? request.getEmail() : "")) {
+            throw new RuntimeException("Invalid email address. Please use a real email with valid routing (MX) records.");
         }
 
         // Check if user already exists
@@ -71,7 +93,7 @@ public class AdminService {
             admin.setName(request.getName());
             admin.setEmail(request.getEmail());
             admin.setPhone(request.getPhone());
-            admin.setPassword(passwordEncoder.encode(request.getPassword()));
+            admin.setPassword(passwordEncoder.encode(request.getPassword() != null ? request.getPassword() : ""));
             admin.setRole(User.Role.ADMIN);
             admin.setActive(true);
             admin.setSchoolId(request.getSchoolId());
@@ -81,6 +103,15 @@ public class AdminService {
 
             // Save admin to database
             User savedAdmin = userRepository.save(admin);
+            
+            // Generate Verification Token for the new Admin
+            String tokenString = UUID.randomUUID().toString();
+            EmailVerificationToken evalToken = new EmailVerificationToken(tokenString, savedAdmin, LocalDateTime.now().plusHours(24));
+            tokenRepository.save(evalToken);
+
+            // Dispatch Verification Email
+            emailService.sendVerificationEmail(savedAdmin.getEmail(), savedAdmin.getName(), tokenString);
+
             logger.info("Successfully created admin with ID: {} and email: {}",
                     savedAdmin.getId(), savedAdmin.getEmail());
 
@@ -104,6 +135,7 @@ public class AdminService {
      * Get all admins - Both SUPERADMIN and ADMIN can view
      */
     @Transactional(readOnly = true)
+    @Cacheable(key = "'all'")
     public List<AdminResponse> getAllAdmins(User currentUser) {
         logger.info("Fetching all admins requested by user: {}", currentUser.getEmail());
 
@@ -138,6 +170,7 @@ public class AdminService {
     /**
      * Update admin status - Only SUPERADMIN can update
      */
+    @CacheEvict(value = {"admins", "schools"}, allEntries = true)
     public AdminResponse updateAdminStatus(String adminId, boolean active, User currentUser) {
         // Check if current user is SUPERADMIN
         if (currentUser.getRole() != User.Role.SUPERADMIN) {
@@ -186,6 +219,7 @@ public class AdminService {
      * Get count of admins in database for verification
      */
     @Transactional(readOnly = true)
+    @Cacheable(key = "'count'")
     public long getAdminCount() {
         long superAdminCount = userRepository.countByRoleAndActive(User.Role.SUPERADMIN, true);
         long adminCount = userRepository.countByRoleAndActive(User.Role.ADMIN, true);
@@ -201,6 +235,7 @@ public class AdminService {
      * Verify admin exists in database by email
      */
     @Transactional(readOnly = true)
+    @Cacheable(key = "#email")
     public boolean adminExistsByEmail(String email) {
         boolean exists = userRepository.findByEmail(email).isPresent();
         logger.info("Admin exists check for email {}: {}", email, exists);

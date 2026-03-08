@@ -51,6 +51,8 @@ public class User {
         SUPERADMIN, ADMIN, TEACHER, PARENT
     }
 
+    private boolean isEmailVerified = false;
+
     public enum Status {
         ACTIVE, INACTIVE, SUSPENDED, BLOCKED, DELETED
     }
@@ -163,6 +165,14 @@ public class User {
 
     public void setSchoolId(String schoolId) {
         this.schoolId = schoolId;
+    }
+
+    public boolean isEmailVerified() {
+        return isEmailVerified;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        isEmailVerified = emailVerified;
     }
 
     public Status getStatus() {

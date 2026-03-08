@@ -7,6 +7,8 @@ import com.littlesteps.playschool.repository.SubjectRepository;
 import com.littlesteps.playschool.repository.ClassesRepository;
 import com.littlesteps.playschool.repository.ClassSubjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,10 @@ public class SubjectService {
 
     public List<Subject> getAllSubjects(String schoolId) {
         return subjectRepository.findBySchoolId(schoolId);
+    }
+
+    public Page<Subject> getSubjects(String schoolId, Pageable pageable) {
+        return subjectRepository.findBySchoolId(schoolId, pageable);
     }
 
     @Transactional

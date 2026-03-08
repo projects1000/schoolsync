@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import adminService from '@/services/adminService';
 import { useToast } from '@/components/ui/use-toast';
+import Pagination from '../common/Pagination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,6 +45,12 @@ const StudentManagement = () => {
   const [classes, setClasses] = useState([]);
   const [sections, setSections] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Pagination states
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
   // Filters
   const [filterClass, setFilterClass] = useState('all');
@@ -96,17 +103,29 @@ const StudentManagement = () => {
     if (location.state?.filterClass) {
       setFilterClass(location.state.filterClass);
     }
-  }, []);
+  }, [page, pageSize]);
 
   const fetchInitialData = async () => {
     try {
       setLoading(true);
-      const [studentsData, classesData] = await Promise.all([
-        adminService.getStudents(),
+      const params = { page, size: pageSize };
+      const [studentsRes, classesData] = await Promise.all([
+        adminService.getStudents(params),
         adminService.getClasses()
       ]);
-      setStudents(studentsData);
-      setClasses(classesData);
+      
+      // Handle Page object
+      if (studentsRes && studentsRes.content) {
+        setStudents(studentsRes.content);
+        setTotalPages(studentsRes.totalPages);
+        setTotalElements(studentsRes.totalElements);
+      } else {
+        setStudents(studentsRes || []);
+        setTotalPages(1);
+        setTotalElements(studentsRes?.length || 0);
+      }
+      
+      setClasses(classesData.content || classesData || []);
     } catch (error) {
       console.error("Failed to fetch data", error);
       toast({ title: "Error", description: "Failed to load data", variant: "destructive" });
@@ -459,6 +478,13 @@ const StudentManagement = () => {
               )))}
           </TableBody>
         </Table>
+        <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={(newPage) => setPage(newPage)}
+            totalElements={totalElements}
+            pageSize={pageSize}
+        />
       </div>
 
       {/* Edit Modal */}

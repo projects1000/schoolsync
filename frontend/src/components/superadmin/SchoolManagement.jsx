@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Plus,
@@ -26,21 +27,29 @@ import {
     Check,
     XCircle
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
 import { schoolTypes, cities, statusOptions } from './mockSchoolData';
 import AddEditSchoolForm from './AddEditSchoolForm';
+import Pagination from '../common/Pagination';
+import { useToast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
 
 import SuperAdminService from '../../services/superAdminService';
 
 const SchoolManagement = ({ currentUser }) => {
     const { toast } = useToast();
+    const navigate = useNavigate();
     const [schools, setSchools] = useState([]);
     const [viewMode, setViewMode] = useState('table'); // 'table' or 'card'
     const [searchQuery, setSearchQuery] = useState('');
     const [filters, setFilters] = useState({ city: '', status: '', dateFrom: '', dateTo: '' });
     const [showFilters, setShowFilters] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+
+    // Pagination states
+    const [page, setPage] = useState(0);
+    const [pageSize, setPageSize] = useState(10);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
 
     // Modal states
     const [showAddEditModal, setShowAddEditModal] = useState(false);
@@ -56,8 +65,15 @@ const SchoolManagement = ({ currentUser }) => {
     const fetchSchools = async () => {
         setIsLoading(true);
         try {
-            const response = await SuperAdminService.getAllSchools();
-            setSchools(response.data || []);
+            const params = {
+                page,
+                size: pageSize
+            };
+            const response = await SuperAdminService.getAllSchools(params);
+            const data = response.data;
+            setSchools(data.content || []);
+            setTotalPages(data.totalPages || 0);
+            setTotalElements(data.totalElements || 0);
         } catch (error) {
             console.error(error);
             toast({ title: 'Error', description: 'Failed to fetch schools', variant: 'destructive' });
@@ -69,7 +85,7 @@ const SchoolManagement = ({ currentUser }) => {
     useEffect(() => {
         // console.log('SchoolManagement mounted, fetching schools...');
         fetchSchools();
-    }, []);
+    }, [page, pageSize]);
 
     // Filter schools
     const filteredSchools = useMemo(() => {
@@ -94,8 +110,7 @@ const SchoolManagement = ({ currentUser }) => {
     };
 
     const handleViewDetails = (school) => {
-        setSelectedSchool(school);
-        setShowDetailsModal(true);
+        navigate(`/superadmin/schools/${school.id}`);
     };
 
     const handleAssignAdmin = async (school) => {
@@ -475,6 +490,15 @@ const SchoolManagement = ({ currentUser }) => {
                                 ))}
                             </div>
                         </div>
+
+                        {/* Pagination */}
+                        <Pagination
+                            currentPage={page}
+                            totalPages={totalPages}
+                            onPageChange={(newPage) => setPage(newPage)}
+                            totalElements={totalElements}
+                            pageSize={pageSize}
+                        />
                     </>
                 )}
             </motion.div>

@@ -6,6 +6,8 @@ import com.littlesteps.playschool.repository.CommunicationRepository;
 import com.littlesteps.playschool.repository.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -76,6 +78,17 @@ public class SuperAdminCommunicationService {
 
         comm.markAsReadBy(superAdmin.getId());
         return communicationRepository.save(comm);
+    }
+
+    public Page<Communication> getPaginatedHistory(String email, Pageable pageable) {
+        User superAdmin = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("SuperAdmin not found"));
+
+        if (!superAdmin.getRole().equals(User.Role.SUPERADMIN)) {
+            throw new RuntimeException("Unauthorized: Only SuperAdmins can view this");
+        }
+
+        return communicationRepository.findBySenderId(superAdmin.getId(), pageable);
     }
 
     public List<Communication> getHistory(String email) {

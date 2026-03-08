@@ -10,7 +10,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 @RestController
 @RequestMapping("/api/teacher/study-materials")
@@ -43,9 +46,13 @@ public class TeacherMaterialController {
 
     @GetMapping("/class/{classId}")
     @PreAuthorize("hasRole('TEACHER')")
-    public ResponseEntity<List<StudyMaterial>> getMaterialsByClass(@PathVariable String classId) {
+    public ResponseEntity<?> getMaterialsByClass(
+            @PathVariable String classId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
-        return ResponseEntity.ok(teacherMaterialService.getMaterialsByClass(email, classId));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        return ResponseEntity.ok(teacherMaterialService.getPaginatedMaterialsByClass(email, classId, pageable));
     }
 }

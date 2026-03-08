@@ -11,7 +11,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Service
+@CacheConfig(cacheNames = "students")
 public class StudentService {
 
     @Autowired
@@ -32,13 +39,13 @@ public class StudentService {
     @Autowired
     private com.littlesteps.playschool.repository.UserRepository userRepository;
 
-    public List<StudentDTO> getAllStudents(String schoolId) {
-        return studentRepository.findBySchoolIdAndStatusNot(schoolId, Student.Status.DELETED)
-                .stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    @Cacheable(key = "#schoolId + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
+    public Page<StudentDTO> getAllStudents(String schoolId, Pageable pageable) {
+        return studentRepository.findBySchoolIdAndStatusNot(schoolId, Student.Status.DELETED, pageable)
+                .map(this::convertToDTO);
     }
 
+    @Cacheable(key = "{#schoolId, #classId}")
     public List<StudentDTO> getStudentsByClassId(String schoolId, String classId) {
         return studentRepository.findBySchoolIdAndClassIdAndStatusNot(schoolId, classId, Student.Status.DELETED)
                 .stream()
@@ -46,6 +53,13 @@ public class StudentService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(key = "#schoolId + '_' + #classId + '_byClassId_' + #pageable.pageNumber + '_' + #pageable.pageSize")
+    public Page<StudentDTO> getStudentsByClassId(String schoolId, String classId, Pageable pageable) {
+        return studentRepository.findBySchoolIdAndClassIdAndStatusNot(schoolId, classId, Student.Status.DELETED, pageable)
+                .map(this::convertToDTO);
+    }
+
+    @Cacheable(key = "{#schoolId, 'deleted'}")
     public List<StudentDTO> getDeletedStudents(String schoolId) {
         return studentRepository.findBySchoolIdAndStatus(schoolId, Student.Status.DELETED)
                 .stream()
@@ -53,6 +67,13 @@ public class StudentService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(key = "#schoolId + '_deleted_' + #pageable.pageNumber + '_' + #pageable.pageSize")
+    public Page<StudentDTO> getDeletedStudents(String schoolId, Pageable pageable) {
+        return studentRepository.findBySchoolIdAndStatus(schoolId, Student.Status.DELETED, pageable)
+                .map(this::convertToDTO);
+    }
+
+    @Cacheable(key = "#id")
     public StudentDTO getStudentById(String id) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -60,6 +81,7 @@ public class StudentService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public StudentDTO createStudent(StudentDTO studentDTO, String schoolId) {
         // Auto-generate Admission No
         String admissionNo = generateAdmissionNo();
@@ -101,6 +123,7 @@ public class StudentService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public StudentDTO updateStudent(String id, StudentDTO studentDTO) {
         Student existingStudent = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -192,6 +215,7 @@ public class StudentService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public void promoteStudent(String id, String newClassId, String newSectionId) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -221,6 +245,7 @@ public class StudentService {
         studentRepository.save(student);
     }
 
+    @CacheEvict(allEntries = true)
     public void updateStudentStatus(String id, String status) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -228,6 +253,7 @@ public class StudentService {
         studentRepository.save(student);
     }
 
+    @CacheEvict(allEntries = true)
     public void deleteStudent(String id) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -290,6 +316,7 @@ public class StudentService {
         auditService.logAction(username, "DELETE", "STUDENT", id, null, "Soft deleted student: " + student.getName());
     }
 
+    @CacheEvict(allEntries = true)
     public void restoreStudent(String id) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -337,18 +364,16 @@ public class StudentService {
                 "Restored soft deleted student: " + student.getName());
     }
 
-    public List<StudentDTO> getStudentsByClass(String schoolId, String classId) {
-        return studentRepository.findBySchoolIdAndClassName(schoolId, classId)
-                .stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    @Cacheable(key = "#schoolId + '_' + #classId + '_byClass_' + #pageable.pageNumber + '_' + #pageable.pageSize")
+    public Page<StudentDTO> getStudentsByClass(String schoolId, String classId, Pageable pageable) {
+        return studentRepository.findBySchoolIdAndClassName(schoolId, classId, pageable)
+                .map(this::convertToDTO);
     }
 
-    public List<StudentDTO> searchStudents(String schoolId, String searchTerm) {
-        return studentRepository.searchStudents(schoolId, searchTerm)
-                .stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    @Cacheable(key = "#schoolId + '_' + #searchTerm + '_search_' + #pageable.pageNumber + '_' + #pageable.pageSize")
+    public Page<StudentDTO> searchStudents(String schoolId, String searchTerm, Pageable pageable) {
+        return studentRepository.searchStudents(schoolId, searchTerm, pageable)
+                .map(this::convertToDTO);
     }
 
     private String generateAdmissionNo() {
@@ -411,6 +436,7 @@ public class StudentService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public void unassignStudentsFromClass(String classId) {
         List<Student> students = studentRepository.findByClassId(classId);
         for (Student student : students) {

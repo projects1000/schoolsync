@@ -10,6 +10,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import java.util.List;
 import java.util.Map;
 
@@ -43,12 +47,17 @@ public class ParentCourseHandoutController {
      */
     @GetMapping("/course-handouts/{studentId}")
     @PreAuthorize("hasRole('PARENT')")
-    public ResponseEntity<?> getCourseHandouts(@PathVariable String studentId) {
+    public ResponseEntity<?> getCourseHandouts(
+            @PathVariable String studentId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
 
         try {
-            List<CourseHandoutDTO> handouts = parentCourseHandoutService.getHandoutsForStudent(email, studentId);
+            Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
+            Page<CourseHandoutDTO> handouts = parentCourseHandoutService.getPaginatedHandoutsForStudent(email, studentId,
+                    pageable);
             return ResponseEntity.ok(handouts);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

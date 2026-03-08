@@ -12,9 +12,18 @@ export const NotificationProvider = ({ children, currentUser }) => {
     const fetchNotifications = async () => {
         if (!currentUser || !currentUser.token) return;
         try {
-            const response = await api.get("/notifications");
-            setNotifications(response.data);
-            setUnreadCount(response.data.filter((n) => !n.isRead).length); // Backend uses isRead
+            const [notifResponse, countResponse] = await Promise.all([
+                api.get("/notifications"),
+                api.get("/notifications/unread-count")
+            ]);
+            
+            // Handle paginated response: response.data.content
+            const notificationsList = Array.isArray(notifResponse.data) 
+                ? notifResponse.data 
+                : (notifResponse.data.content || []);
+                
+            setNotifications(notificationsList);
+            setUnreadCount(countResponse.data);
         } catch (error) {
             console.error("Failed to fetch notifications", error);
         }

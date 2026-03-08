@@ -17,6 +17,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.util.HashMap;
 import java.util.List;
@@ -54,24 +58,6 @@ public class AdminController {
     @Autowired
     private com.littlesteps.playschool.service.AuditService auditService;
 
-    @GetMapping("/audit-logs")
-    public ResponseEntity<?> getAuditLogs(
-            @RequestParam(required = false) String targetId,
-            @RequestParam(required = false) String action,
-            Authentication authentication) {
-        try {
-            String email = authentication.getName();
-            User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-            String schoolId = user.getSchoolId();
-
-            List<com.littlesteps.playschool.entity.AuditLog> logs = auditService.getAuditLogs(schoolId, targetId,
-                    action);
-            return ResponseEntity.ok(logs);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to fetch audit logs: " + e.getMessage()));
-        }
-    }
 
     @PostMapping("/clear-and-reset-users")
     public ResponseEntity<Map<String, Object>> clearAndResetUsers() {
@@ -223,43 +209,47 @@ public class AdminController {
     // --- Trash Endpoints ---
 
     @GetMapping("/trash/students")
-    public ResponseEntity<Map<String, Object>> getDeletedStudents(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> getDeletedStudents(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestHeader("Authorization") String token) {
         try {
             User currentUser = getCurrentUser(token);
             String schoolId = currentUser.getSchoolId();
-            List<com.littlesteps.playschool.dto.StudentDTO> deletedStudents = studentService
-                    .getDeletedStudents(schoolId);
-            return ResponseEntity.ok(Map.of("success", true, "students", deletedStudents));
+            Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
+            return ResponseEntity.ok(studentService.getDeletedStudents(schoolId, pageable));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("success", false, "message", "Failed to fetch deleted students: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @GetMapping("/trash/teachers")
-    public ResponseEntity<Map<String, Object>> getDeletedTeachers(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> getDeletedTeachers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestHeader("Authorization") String token) {
         try {
             User currentUser = getCurrentUser(token);
             String schoolId = currentUser.getSchoolId();
-            List<com.littlesteps.playschool.dto.TeacherDTO> deletedTeachers = teacherService
-                    .getDeletedTeachers(schoolId);
-            return ResponseEntity.ok(Map.of("success", true, "teachers", deletedTeachers));
+            Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
+            return ResponseEntity.ok(teacherService.getDeletedTeachers(schoolId, pageable));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("success", false, "message", "Failed to fetch deleted teachers: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @GetMapping("/trash/parents")
-    public ResponseEntity<Map<String, Object>> getDeletedParents(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> getDeletedParents(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestHeader("Authorization") String token) {
         try {
             User currentUser = getCurrentUser(token);
             String schoolId = currentUser.getSchoolId();
-            List<com.littlesteps.playschool.dto.ParentDTO> deletedParents = parentService.getDeletedParents(schoolId);
-            return ResponseEntity.ok(Map.of("success", true, "parents", deletedParents));
+            Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
+            return ResponseEntity.ok(parentService.getDeletedParents(schoolId, pageable));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("success", false, "message", "Failed to fetch deleted parents: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

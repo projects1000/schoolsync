@@ -15,8 +15,15 @@ import java.security.SecureRandom;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 
 @Service
+@CacheConfig(cacheNames = "teachers")
 public class TeacherService {
 
     @Autowired
@@ -40,28 +47,28 @@ public class TeacherService {
     /**
      * Get all teachers with optional filtering
      */
-    public List<TeacherDTO> getAllTeachers(String schoolId, String name, String department, String status) {
-        List<Teacher> teachers;
+    @Cacheable(key = "{#schoolId, #name, #department, #status, #pageable.pageNumber, #pageable.pageSize}")
+    public Page<TeacherDTO> getAllTeachers(String schoolId, String name, String department, String status, Pageable pageable) {
+        Page<Teacher> teachers;
 
         if (name != null && !name.trim().isEmpty()) {
-            teachers = teacherRepository.searchTeachers(schoolId, name.trim());
+            teachers = teacherRepository.searchTeachers(schoolId, name.trim(), pageable);
         } else if (department != null && !department.trim().isEmpty()) {
-            teachers = teacherRepository.findBySchoolIdAndDepartment(schoolId, department);
+            teachers = teacherRepository.findBySchoolIdAndDepartment(schoolId, department, pageable);
         } else if (status != null && !status.trim().isEmpty()) {
             teachers = teacherRepository.findBySchoolIdAndStatus(schoolId,
-                    Teacher.Status.valueOf(status.toUpperCase()));
+                    Teacher.Status.valueOf(status.toUpperCase()), pageable);
         } else {
-            teachers = teacherRepository.findBySchoolIdAndStatusNot(schoolId, Teacher.Status.DELETED);
+            teachers = teacherRepository.findBySchoolIdAndStatusNot(schoolId, Teacher.Status.DELETED, pageable);
         }
 
-        return teachers.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+        return teachers.map(this::convertToDTO);
     }
 
     /**
      * Get all deleted teachers
      */
+    @Cacheable(key = "{#schoolId, 'deleted'}")
     public List<TeacherDTO> getDeletedTeachers(String schoolId) {
         return teacherRepository.findBySchoolIdAndStatus(schoolId, Teacher.Status.DELETED)
                 .stream()
@@ -69,10 +76,17 @@ public class TeacherService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(key = "#schoolId + '_deleted_' + #pageable.pageNumber + '_' + #pageable.pageSize")
+    public Page<TeacherDTO> getDeletedTeachers(String schoolId, Pageable pageable) {
+        return teacherRepository.findBySchoolIdAndStatus(schoolId, Teacher.Status.DELETED, pageable)
+                .map(this::convertToDTO);
+    }
+
     /**
      * Create a new teacher with associated user account
      */
     @Transactional
+    @CacheEvict(allEntries = true)
     public Map<String, Object> createTeacherWithUser(TeacherDTO teacherDTO, String createdBy, String schoolId) {
         // Validate schoolId is present
         if (schoolId == null || schoolId.trim().isEmpty()) {
@@ -120,7 +134,11 @@ public class TeacherService {
         user.setStatus(User.Status.ACTIVE);
         user.setActive(true);
         user.setJoiningDate(teacherDTO.getJoiningDate());
-        user.setAssignedClassIds(assignedClassIds);
+        if (assignedClassIds != null) {
+            user.setAssignedClassIds(assignedClassIds);
+        } else {
+            user.setAssignedClassIds(new ArrayList<>());
+        }
         user.setPassword(passwordEncoder.encode(rawPassword));
 
         user = userRepository.save(user);
@@ -145,8 +163,8 @@ public class TeacherService {
 
         teacher.setJoiningDate(teacherDTO.getJoiningDate());
         teacher.setAddress(teacherDTO.getAddress());
-        teacher.setSubjects(teacherDTO.getSubjects());
-        teacher.setAssignedClasses(teacherDTO.getAssignedClasses());
+        teacher.setSubjects(teacherDTO.getSubjects() != null ? teacherDTO.getSubjects() : new ArrayList<>());
+        teacher.setAssignedClasses(teacherDTO.getAssignedClasses() != null ? teacherDTO.getAssignedClasses() : new ArrayList<>());
         teacher.setUser(user);
         teacher.setSchoolId(schoolId);
 
@@ -165,12 +183,14 @@ public class TeacherService {
     /**
      * Get teacher by ID
      */
+    @Cacheable(key = "#id")
     public TeacherDTO getTeacherById(String id) {
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Teacher not found with ID: " + id));
         return convertToDTO(teacher);
     }
 
+    @CacheEvict(allEntries = true)
     public TeacherDTO updateTeacher(String id, TeacherDTO teacherDTO, String updatedBy) {
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Teacher not found with ID: " + id));
@@ -190,7 +210,7 @@ public class TeacherService {
         teacher.setDepartment(teacherDTO.getDepartment());
         teacher.setJoiningDate(teacherDTO.getJoiningDate());
         teacher.setAddress(teacherDTO.getAddress());
-        teacher.setSubjects(teacherDTO.getSubjects());
+        teacher.setSubjects(teacherDTO.getSubjects() != null ? teacherDTO.getSubjects() : new ArrayList<>());
 
         // Update user details if email changed
         if (!teacher.getEmail().equals(teacherDTO.getEmail()) || !teacher.getPhone().equals(teacherDTO.getPhone())) {
@@ -211,11 +231,12 @@ public class TeacherService {
         Map<String, Object> changes = new HashMap<>();
         changes.put("teacherId", id);
         changes.put("updates", teacherDTO);
-        auditService.logTeacherUpdated(updatedBy, id, changes);
+        auditService.logTeacherUpdated(updatedBy != null ? updatedBy : "SYSTEM", id, changes);
 
         return convertToDTO(updatedTeacher);
     }
 
+    @CacheEvict(allEntries = true)
     public void deactivateTeacher(String id, String deactivatedBy) {
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Teacher not found with ID: " + id));
@@ -233,6 +254,7 @@ public class TeacherService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public void deleteTeacher(String id, String deletedBy) {
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Teacher not found with ID: " + id));
@@ -274,10 +296,11 @@ public class TeacherService {
             classSubjectRepository.save(cs);
         }
 
-        auditService.logAction(deletedBy, "DELETE", "TEACHER", id, null, "Soft deleted teacher: " + teacher.getName());
+        auditService.logAction(deletedBy != null ? deletedBy : "SYSTEM", "DELETE", "TEACHER", id, null, "Soft deleted teacher: " + teacher.getName());
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public void restoreTeacher(String id, String restoredBy) {
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Teacher not found with ID: " + id));
@@ -296,7 +319,7 @@ public class TeacherService {
             userRepository.save(user);
         }
 
-        auditService.logAction(restoredBy, "RESTORE", "TEACHER", id, null, "Restored teacher: " + teacher.getName());
+        auditService.logAction(restoredBy != null ? restoredBy : "SYSTEM", "RESTORE", "TEACHER", id, null, "Restored teacher: " + teacher.getName());
     }
 
     @Autowired
@@ -305,6 +328,7 @@ public class TeacherService {
     @Autowired
     private com.littlesteps.playschool.repository.ClassSubjectRepository classSubjectRepository;
 
+    @CacheEvict(allEntries = true)
     public void assignClasses(String teacherId, List<String> classNames, String assignedBy) {
         Teacher teacher = teacherRepository.findById(teacherId)
                 .orElseThrow(() -> new RuntimeException("Teacher not found with ID: " + teacherId));
@@ -329,31 +353,20 @@ public class TeacherService {
         // typically we store IDs.
         // Let's check if we can validate them.
 
-        for (String classId : classNames) {
-            if (!classesRepository.existsById(classId)) {
-                // Fallback: Check if it's a name? Or just throw.
-                // If the list is mixed or names, this might fail if we strictly expect IDs.
-                // But for a robust system, we should use IDs.
-                // If the logic previously expected names, we might be breaking it.
-                // BUT, the original code just set the list directly without validation.
-                // The safe bet is to assume IDs for a new implementation or strict validation.
-
-                // If doesn't exist by ID, maybe it's a name?
-                // For now, let's strictly validate if it looks like an ID or just warn?
-                // Actually, better to just save what is sent if we aren't 100% sure of the data
-                // model,
-                // but the task was "Add Class Validation".
-                // So I MUST validate.
-                throw new RuntimeException("Class not found with ID" + classId);
+        if (classNames != null) {
+            for (String classId : classNames) {
+                if (!classesRepository.existsById(classId)) {
+                    throw new RuntimeException("Class not found with ID: " + classId);
+                }
             }
         }
 
-        teacher.setAssignedClasses(classNames);
+        teacher.setAssignedClasses(classNames != null ? classNames : new ArrayList<>());
         teacherRepository.save(teacher);
 
         Map<String, Object> changes = new HashMap<>();
         changes.put("assignedClasses", classNames);
-        auditService.logAction(assignedBy, "ASSIGN_CLASSES", "TEACHER", teacherId, changes,
+        auditService.logAction(assignedBy != null ? assignedBy : "SYSTEM", "ASSIGN_CLASSES", "TEACHER", teacherId, changes,
                 "Assigned classes to teacher");
     }
 
@@ -372,7 +385,7 @@ public class TeacherService {
 
         // In a real app, send email/SMS here
 
-        auditService.logAction(resetBy, "RESET_PASSWORD", "TEACHER", teacherId, null, "Reset teacher password");
+        auditService.logAction(resetBy != null ? resetBy : "SYSTEM", "RESET_PASSWORD", "TEACHER", teacherId, null, "Reset teacher password");
 
         return newPassword;
     }
@@ -440,6 +453,7 @@ public class TeacherService {
      * Validates teacher and classes belong to admin's school
      */
     @Transactional
+    @CacheEvict(allEntries = true)
     public Map<String, Object> updateTeacherClassAssignments(String teacherId, java.util.List<String> assignedClassIds,
             String adminEmail, String schoolId) {
         // Validate schoolId is present
@@ -513,6 +527,7 @@ public class TeacherService {
      * ACTIVE → Teacher regains access
      */
     @Transactional
+    @CacheEvict(allEntries = true)
     public Map<String, Object> updateTeacherStatus(String teacherId, String newStatus, String adminEmail,
             String schoolId) {
         // Validate schoolId is present

@@ -9,6 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -43,9 +47,13 @@ public class SuperAdminCommunicationController {
     }
 
     @GetMapping("/history")
-    public ResponseEntity<List<Communication>> getHistory(Authentication authentication) {
+    public ResponseEntity<Page<Communication>> getHistory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Authentication authentication) {
         String email = authentication.getName();
-        return ResponseEntity.ok(superAdminCommunicationService.getHistory(email));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return ResponseEntity.ok(superAdminCommunicationService.getPaginatedHistory(email, pageable));
     }
 
     @GetMapping("/admins")

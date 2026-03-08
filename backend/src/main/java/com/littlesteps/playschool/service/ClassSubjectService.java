@@ -1,5 +1,6 @@
 package com.littlesteps.playschool.service;
 
+import com.littlesteps.playschool.dto.ClassSubjectDTO;
 import com.littlesteps.playschool.entity.ClassSubject;
 import com.littlesteps.playschool.entity.Classes;
 import com.littlesteps.playschool.entity.Subject;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ClassSubjectService {
@@ -33,15 +35,44 @@ public class ClassSubjectService {
     @Autowired
     private AuditService auditService;
 
-    public List<ClassSubject> getSubjectsForClass(String classId, String schoolId) {
-        Classes classes = classesRepository.findById(classId)
+    public List<ClassSubjectDTO> getSubjectsForClass(String classId, String schoolId) {
+        Classes classes = classesRepository.findById(classId != null ? classId : "")
                 .orElseThrow(() -> new IllegalArgumentException("Class not found"));
 
         if (!classes.getSchoolId().equals(schoolId)) {
             throw new IllegalArgumentException("Class does not belong to this school");
         }
 
-        return classSubjectRepository.findByClassId(classId);
+        List<ClassSubject> assignments = classSubjectRepository.findByClassId(classId);
+        return assignments.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private ClassSubjectDTO convertToDTO(ClassSubject entity) {
+        ClassSubjectDTO dto = new ClassSubjectDTO();
+        dto.setId(entity.getId());
+        dto.setSchoolId(entity.getSchoolId());
+        dto.setClassId(entity.getClassId());
+        String subjectId = entity.getSubjectId();
+        dto.setSubjectId(subjectId);
+        dto.setTeacherId(entity.getTeacherId());
+        dto.setCreatedAt(entity.getCreatedAt());
+
+        if (subjectId != null) {
+            subjectRepository.findById(subjectId).ifPresent(s -> {
+                dto.setSubjectName(s.getName());
+                dto.setSubjectCode(s.getCode());
+            });
+        }
+
+        if (entity.getTeacherId() != null && !entity.getTeacherId().isEmpty()) {
+            teacherRepository.findById(entity.getTeacherId()).ifPresent(t -> {
+                dto.setTeacherName(t.getName());
+            });
+        }
+
+        return dto;
     }
 
     @Transactional
@@ -75,8 +106,8 @@ public class ClassSubjectService {
         ClassSubject classSubject = new ClassSubject(schoolId, classId, subjectId, teacherId);
         ClassSubject saved = classSubjectRepository.save(classSubject);
 
-        auditService.logAction(createdBy, "ASSIGN_SUBJECT", "CLASS_SUBJECT", saved.getId(), null,
-                "Assigned subject " + subject.getName() + " to class " + classes.getName());
+        auditService.logAction(createdBy != null ? createdBy : "SYSTEM", "ASSIGN_SUBJECT", "CLASS_SUBJECT", saved.getId(), null,
+                "Assigned subject " + (subject.getName() != null ? subject.getName() : subjectId) + " to class " + (classes.getName() != null ? classes.getName() : classId));
 
         return saved;
     }
@@ -84,7 +115,7 @@ public class ClassSubjectService {
     @Transactional
     public List<ClassSubject> assignSubjectsToClass(String classId, List<String> subjectIds, String schoolId,
             String createdBy) {
-        Classes classes = classesRepository.findById(classId)
+        Classes classes = classesRepository.findById(classId != null ? classId : "")
                 .orElseThrow(() -> new IllegalArgumentException("Class not found"));
         if (!classes.getSchoolId().equals(schoolId)) {
             throw new IllegalArgumentException("Class does not belong to this school");
@@ -105,8 +136,8 @@ public class ClassSubjectService {
             }
         }
 
-        auditService.logAction(createdBy, "BULK_ASSIGN_SUBJECTS", "CLASS_SUBJECT", classId, null,
-                "Assigned " + assigned.size() + " subjects to class " + classes.getName());
+        auditService.logAction(createdBy != null ? createdBy : "SYSTEM", "BULK_ASSIGN_SUBJECTS", "CLASS_SUBJECT", classId != null ? classId : "NEW", null,
+                "Assigned " + assigned.size() + " subjects to class " + (classes.getName() != null ? classes.getName() : classId));
 
         return assigned;
     }
@@ -132,7 +163,7 @@ public class ClassSubjectService {
         classSubject.setTeacherId(teacherId); // Can be null to remove teacher
         ClassSubject updated = classSubjectRepository.save(classSubject);
 
-        auditService.logAction(updatedBy, "UPDATE_SUBJECT_TEACHER", "CLASS_SUBJECT", updated.getId(), null,
+        auditService.logAction(updatedBy != null ? updatedBy : "SYSTEM", "UPDATE_SUBJECT_TEACHER", "CLASS_SUBJECT", updated.getId(), null,
                 "Updated teacher for class subject assignment");
 
         return updated;
@@ -168,12 +199,12 @@ public class ClassSubjectService {
         if (existing.isPresent()) {
             classSubject = existing.get();
             classSubject.setTeacherId(teacherId);
-            auditService.logAction(updatedBy, "UPDATE_SUBJECT_TEACHER", "CLASS_SUBJECT", classSubject.getId(), null,
-                    "Updated teacher for class " + classes.getName() + " subject " + subject.getName());
+            auditService.logAction(updatedBy != null ? updatedBy : "SYSTEM", "UPDATE_SUBJECT_TEACHER", "CLASS_SUBJECT", classSubject.getId(), null,
+                    "Updated teacher for class " + (classes.getName() != null ? classes.getName() : classId) + " subject " + (subject.getName() != null ? subject.getName() : subjectId));
         } else {
             classSubject = new ClassSubject(schoolId, classId, subjectId, teacherId);
-            auditService.logAction(updatedBy, "ASSIGN_SUBJECT_TEACHER", "CLASS_SUBJECT", null, null,
-                    "Created assignment for class " + classes.getName() + " subject " + subject.getName());
+            auditService.logAction(updatedBy != null ? updatedBy : "SYSTEM", "ASSIGN_SUBJECT_TEACHER", "CLASS_SUBJECT", null, null,
+                    "Created assignment for class " + (classes.getName() != null ? classes.getName() : classId) + " subject " + (subject.getName() != null ? subject.getName() : subjectId));
         }
 
         return classSubjectRepository.save(classSubject);
@@ -189,7 +220,7 @@ public class ClassSubjectService {
         }
 
         classSubjectRepository.delete(classSubject);
-        auditService.logAction(deletedBy, "REMOVE_SUBJECT", "CLASS_SUBJECT", classSubjectId, null,
+        auditService.logAction(deletedBy != null ? deletedBy : "SYSTEM", "REMOVE_SUBJECT", "CLASS_SUBJECT", classSubjectId, null,
                 "Removed subject from class");
     }
 }

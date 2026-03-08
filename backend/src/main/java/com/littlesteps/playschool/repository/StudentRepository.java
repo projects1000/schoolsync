@@ -7,6 +7,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Repository
 public interface StudentRepository extends MongoRepository<Student, String> {
@@ -16,15 +18,22 @@ public interface StudentRepository extends MongoRepository<Student, String> {
         List<Student> findBySchoolId(String schoolId);
 
         List<Student> findBySchoolIdAndStatusNot(String schoolId, Student.Status status);
+        Page<Student> findBySchoolIdAndStatusNot(String schoolId, Student.Status status, Pageable pageable);
 
         List<Student> findBySchoolIdAndClassIdAndStatusNot(String schoolId, String classId, Student.Status status);
+        Page<Student> findBySchoolIdAndClassIdAndStatusNot(String schoolId, String classId, Student.Status status, Pageable pageable);
 
         List<Student> findBySchoolIdAndClassName(String schoolId, String className);
+        Page<Student> findBySchoolIdAndClassName(String schoolId, String className, Pageable pageable);
 
         List<Student> findBySchoolIdAndStatus(String schoolId, Student.Status status);
+        Page<Student> findBySchoolIdAndStatus(String schoolId, Student.Status status, Pageable pageable);
 
         @Query("{ 'schoolId': ?0, 'status': { $ne: 'DELETED' }, $or: [ { 'name': { $regex: ?1, $options: 'i' } }, { 'admissionNo': { $regex: ?1, $options: 'i' } } ] }")
         List<Student> searchStudents(String schoolId, String searchTerm);
+
+        @Query("{ 'schoolId': ?0, 'status': { $ne: 'DELETED' }, $or: [ { 'name': { $regex: ?1, $options: 'i' } }, { 'admissionNo': { $regex: ?1, $options: 'i' } } ] }")
+        Page<Student> searchStudents(String schoolId, String searchTerm, Pageable pageable);
 
         boolean existsByAdmissionNo(String admissionNo);
 

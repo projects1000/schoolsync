@@ -52,7 +52,7 @@ const ClassProfileModal = ({ isOpen, onClose, selectedClass, globalSubjects, tea
                     teacherName: teachers.find(t => t.id === cs.teacherId)?.name || 'Unassigned'
                 }));
 
-                setStudents(studentsData || []);
+                setStudents(studentsData.content || []);
                 setClassSubjects(mappedSubjects);
             } catch (err) {
                 console.error("Failed to fetch class profile:", err);

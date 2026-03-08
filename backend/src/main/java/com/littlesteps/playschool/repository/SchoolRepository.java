@@ -5,6 +5,8 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Repository
 public interface SchoolRepository extends MongoRepository<School, String> {
@@ -14,8 +16,10 @@ public interface SchoolRepository extends MongoRepository<School, String> {
     long countByStatus(School.Status status);
 
     java.util.List<School> findByStatusNot(School.Status status);
+    Page<School> findByStatusNot(School.Status status, Pageable pageable);
 
     java.util.List<School> findByStatus(School.Status status);
+    Page<School> findByStatus(School.Status status, Pageable pageable);
 
     boolean existsByCode(String code);
 

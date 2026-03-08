@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/admin/teachers")
@@ -37,14 +40,17 @@ public class TeacherController {
      * Get all teachers with optional filtering
      */
     @GetMapping
-    public ResponseEntity<List<TeacherDTO>> getAllTeachers(
+    public ResponseEntity<Page<TeacherDTO>> getAllTeachers(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String department,
             @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
         try {
             String schoolId = getSchoolId(authentication.getName());
-            List<TeacherDTO> teachers = teacherService.getAllTeachers(schoolId, name, department, status);
+            Pageable pageable = PageRequest.of(page, size);
+            Page<TeacherDTO> teachers = teacherService.getAllTeachers(schoolId, name, department, status, pageable);
             return ResponseEntity.ok(teachers);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -186,11 +192,15 @@ public class TeacherController {
      * Get teachers by department
      */
     @GetMapping("/department/{department}")
-    public ResponseEntity<List<TeacherDTO>> getTeachersByDepartment(@PathVariable String department,
+    public ResponseEntity<Page<TeacherDTO>> getTeachersByDepartment(
+            @PathVariable String department,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
         try {
             String schoolId = getSchoolId(authentication.getName());
-            List<TeacherDTO> teachers = teacherService.getAllTeachers(schoolId, null, department, null);
+            Pageable pageable = PageRequest.of(page, size);
+            Page<TeacherDTO> teachers = teacherService.getAllTeachers(schoolId, null, department, null, pageable);
             return ResponseEntity.ok(teachers);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -201,10 +211,15 @@ public class TeacherController {
      * Search teachers
      */
     @GetMapping("/search")
-    public ResponseEntity<List<TeacherDTO>> searchTeachers(@RequestParam String term, Authentication authentication) {
+    public ResponseEntity<Page<TeacherDTO>> searchTeachers(
+            @RequestParam String term,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Authentication authentication) {
         try {
             String schoolId = getSchoolId(authentication.getName());
-            List<TeacherDTO> teachers = teacherService.getAllTeachers(schoolId, term, null, null);
+            Pageable pageable = PageRequest.of(page, size);
+            Page<TeacherDTO> teachers = teacherService.getAllTeachers(schoolId, term, null, null, pageable);
             return ResponseEntity.ok(teachers);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

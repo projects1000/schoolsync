@@ -8,6 +8,9 @@ import com.littlesteps.playschool.repository.StudentRepository;
 import com.littlesteps.playschool.security.SchoolContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import org.springframework.stereotype.Service;
 
@@ -31,19 +34,27 @@ public class FeeService {
 
         public List<FeeInvoiceDTO> getAllInvoices() {
                 String schoolId = SchoolContext.getSchoolId();
-                System.out.println("[DEBUG FeeService] getAllInvoices - schoolId from context: '" + schoolId + "'");
                 if (schoolId == null || schoolId.isEmpty()) {
-                        System.out.println("[DEBUG FeeService] schoolId is null/empty, returning empty list");
-                        return List.of(); // Return empty list if no schoolId (new school with no invoices)
+                        return List.of();
                 }
                 List<FeeInvoice> invoices = feeInvoiceRepository.findBySchoolId(schoolId);
-                System.out.println(
-                                "[DEBUG FeeService] Found " + invoices.size() + " invoices for schoolId: " + schoolId);
                 return invoices.stream().map(this::convertToDTO).collect(Collectors.toList());
         }
 
+        public Page<FeeInvoiceDTO> getAllInvoices(Pageable pageable) {
+                String schoolId = SchoolContext.getSchoolId();
+                if (schoolId == null || schoolId.isEmpty()) {
+                        return new PageImpl<>(List.of(), pageable != null ? pageable : Pageable.unpaged(), 0);
+                }
+                Page<FeeInvoice> invoicePage = feeInvoiceRepository.findBySchoolId(schoolId, pageable);
+                List<FeeInvoiceDTO> dtos = invoicePage.getContent().stream()
+                                .map(this::convertToDTO)
+                                .collect(Collectors.toList());
+                return new PageImpl<>(dtos, pageable != null ? pageable : Pageable.unpaged(), invoicePage.getTotalElements());
+        }
+
         public FeeInvoiceDTO createInvoice(FeeInvoiceDTO dto) {
-                Student student = studentRepository.findById(dto.getStudentId())
+                Student student = studentRepository.findById(dto.getStudentId() != null ? dto.getStudentId() : "")
                                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
                 FeeInvoice invoice = new FeeInvoice();

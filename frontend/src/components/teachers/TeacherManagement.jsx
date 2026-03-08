@@ -6,6 +6,7 @@ import {
 
 import adminService from '@/services/adminService';
 import { useToast } from '@/components/ui/use-toast';
+import Pagination from '../common/Pagination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,6 +46,12 @@ const TeacherManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
+  // Pagination states
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -70,8 +77,19 @@ const TeacherManagement = () => {
   const fetchTeachers = async () => {
     try {
       setLoading(true);
-      const data = await adminService.getTeachers();
-      setTeachers(data || []);
+      const params = { page, size: pageSize };
+      const data = await adminService.getTeachers(params);
+      
+      // Handle Spring Data Page object
+      if (data && data.content) {
+        setTeachers(data.content);
+        setTotalPages(data.totalPages);
+        setTotalElements(data.totalElements);
+      } else {
+        setTeachers(data || []);
+        setTotalPages(1);
+        setTotalElements(data?.length || 0);
+      }
     } catch (error) {
       console.error("Failed to fetch teachers", error);
       toast({ title: "Error", description: "Failed to load teachers", variant: "destructive" });
@@ -82,9 +100,9 @@ const TeacherManagement = () => {
 
   const fetchClasses = async () => {
     try {
-      const data = await adminService.getClasses();
-      setClasses(data || []);
-      return data || [];
+      const data = await adminService.getClasses({ size: 1000 });
+      setClasses(data.content || []);
+      return data.content || [];
     } catch (error) {
       console.error(error);
       return [];
@@ -93,8 +111,8 @@ const TeacherManagement = () => {
 
   const fetchSubjects = async () => {
     try {
-      const data = await adminService.getSubjects();
-      setSubjects(data || []);
+      const data = await adminService.getSubjects({ size: 1000 });
+      setSubjects(data.content || []);
     } catch (error) {
       console.error(error);
     }
@@ -127,7 +145,7 @@ const TeacherManagement = () => {
       ]);
     };
     loadData();
-  }, []);
+  }, [page, pageSize]);
 
   // Compute teacher roles from classes and class subjects
   const teacherRoles = useMemo(() => {
@@ -477,6 +495,14 @@ const TeacherManagement = () => {
             )}
           </TableBody>
         </Table>
+        
+        <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={(newPage) => setPage(newPage)}
+            totalElements={totalElements}
+            pageSize={pageSize}
+        />
       </div>
 
       {/* Edit Modal */}

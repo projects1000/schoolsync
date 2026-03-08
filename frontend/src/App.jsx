@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/components/ui/use-toast';
 import LoginPage from '@/components/auth/LoginPage';
+import VerifyEmail from '@/components/auth/VerifyEmail';
 import Dashboard from '@/components/dashboard/Dashboard';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
@@ -41,6 +42,7 @@ import StudentPromotions from '@/components/teacher/StudentPromotions';
 import AdminManagement from '@/components/superadmin/AdminManagement';
 import SuperAdminDashboard from '@/components/superadmin/SuperAdminDashboard';
 import SchoolManagement from '@/components/superadmin/SchoolManagement';
+import SchoolDetails from '@/components/superadmin/SchoolDetails';
 import GlobalAcademicSettings from '@/components/superadmin/GlobalAcademicSettings';
 import GlobalFeeSettings from '@/components/superadmin/GlobalFeeSettings';
 import SecurityAuditLogs from '@/components/superadmin/SecurityAuditLogs';
@@ -124,6 +126,7 @@ const AuthenticatedLayout = ({ currentUser, onLogout }) => {
                   <Route path="/superadmin" element={<SuperAdminDashboard currentUser={currentUser} />} />
                   <Route path="/superadmin/admins" element={<AdminManagement currentUser={currentUser} />} />
                   <Route path="/superadmin/schools" element={<SchoolManagement currentUser={currentUser} />} />
+                  <Route path="/superadmin/schools/:schoolId" element={<SchoolDetails currentUser={currentUser} />} />
                   <Route path="/superadmin/academics" element={<GlobalAcademicSettings currentUser={currentUser} />} />
                   <Route path="/superadmin/fees" element={<GlobalFeeSettings currentUser={currentUser} />} />
                   <Route path="/superadmin/security" element={<SecurityAuditLogs currentUser={currentUser} />} />
@@ -281,6 +284,15 @@ function AppInner() {
               <meta name="description" content="Secure login to your playschool management dashboard" />
             </Helmet>
             <LoginPage onLogin={handleLogin} />
+          </>
+        } />
+        <Route path="/verify-email" element={
+          <>
+            <Helmet>
+              <title>Verify Email - SchoolSync</title>
+              <meta name="description" content="Verify your email address for SchoolSync" />
+            </Helmet>
+            <VerifyEmail />
           </>
         } />
         <Route path="*" element={<Navigate to="/login" replace />} />

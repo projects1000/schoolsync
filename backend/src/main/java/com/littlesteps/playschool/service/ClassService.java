@@ -11,7 +11,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Service
+@CacheConfig(cacheNames = "classes")
 public class ClassService {
 
     @Autowired
@@ -26,15 +33,22 @@ public class ClassService {
     @Autowired
     private StudentService studentService;
 
+    @Cacheable(key = "#schoolId")
     public List<Classes> getClassesBySchoolId(String schoolId) {
         return classesRepository.findBySchoolIdAndStatusNot(schoolId, Classes.Status.DELETED);
     }
 
+    public Page<Classes> getClassesBySchoolId(String schoolId, Pageable pageable) {
+        return classesRepository.findBySchoolIdAndStatusNot(schoolId != null ? schoolId : "", Classes.Status.DELETED, pageable);
+    }
+
+    @Cacheable(key = "#id")
     public Optional<Classes> getClassById(String id) {
-        return classesRepository.findById(id);
+        return classesRepository.findById(id != null ? id : "");
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public Classes createClass(ClassDTO classDTO, String schoolId, String createdBy) {
         if (classDTO.getCapacity() != null && classDTO.getCapacity() <= 0) {
             throw new IllegalArgumentException("Capacity must be greater than zero");
@@ -65,12 +79,13 @@ public class ClassService {
         }
 
         Classes savedClass = classesRepository.save(newClass);
-        auditService.logAction(createdBy, "CREATE_CLASS", "CLASS", savedClass.getId(), classDTO,
-                "Created class: " + savedClass.getName());
+        auditService.logAction(createdBy != null ? createdBy : "SYSTEM", "CREATE_CLASS", "CLASS", savedClass.getId() != null ? savedClass.getId() : "NEW", classDTO,
+                "Created class: " + (savedClass.getName() != null ? savedClass.getName() : "NEW"));
         return savedClass;
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public Classes updateClass(String id, ClassDTO classDTO, String updatedBy) {
         Classes existingClass = classesRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Class not found"));
@@ -117,8 +132,8 @@ public class ClassService {
         existingClass.setUpdatedAt(LocalDateTime.now());
 
         Classes updatedClass = classesRepository.save(existingClass);
-        auditService.logAction(updatedBy, "UPDATE_CLASS", "CLASS", id, classDTO,
-                "Updated class: " + updatedClass.getName());
+        auditService.logAction(updatedBy != null ? updatedBy : "SYSTEM", "UPDATE_CLASS", "CLASS", id != null ? id : "", classDTO,
+                "Updated class: " + (updatedClass.getName() != null ? updatedClass.getName() : id));
         return updatedClass;
     }
 
@@ -141,12 +156,13 @@ public class ClassService {
             }
         }
 
-        classesEntity.setClassTeacherId(teacherId);
+        classesEntity.setClassTeacherId(teacherId != null ? teacherId : "");
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public Classes assignClassTeacherToClass(String classId, String teacherId, String schoolId, String updatedBy) {
-        Classes classesEntity = classesRepository.findById(classId)
+        Classes classesEntity = classesRepository.findById(classId != null ? classId : "")
                 .orElseThrow(() -> new IllegalArgumentException("Class not found"));
 
         if (!classesEntity.getSchoolId().equals(schoolId)) {
@@ -166,13 +182,14 @@ public class ClassService {
         classesEntity.setUpdatedAt(LocalDateTime.now());
         Classes updatedClass = classesRepository.save(classesEntity);
 
-        auditService.logAction(updatedBy, "ASSIGN_CLASS_TEACHER", "CLASS", classId, null,
-                "Assigned teacher " + teacherId + " to class " + classesEntity.getName());
+        auditService.logAction(updatedBy != null ? updatedBy : "SYSTEM", "ASSIGN_CLASS_TEACHER", "CLASS", classId != null ? classId : "", null,
+                "Assigned teacher " + (teacherId != null ? teacherId : "NONE") + " to class " + (classesEntity.getName() != null ? classesEntity.getName() : classId));
 
         return updatedClass;
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public void deleteClass(String id, String deletedBy) {
         Classes existingClass = classesRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Class not found"));
@@ -195,11 +212,17 @@ public class ClassService {
                 "Deleted class: " + existingClass.getName());
     }
 
+    @Cacheable(key = "{#schoolId, 'deleted'}")
     public List<Classes> getDeletedClassesBySchoolId(String schoolId) {
-        return classesRepository.findBySchoolIdAndStatus(schoolId, Classes.Status.DELETED);
+        return classesRepository.findBySchoolIdAndStatus(schoolId != null ? schoolId : "", Classes.Status.DELETED);
+    }
+
+    public Page<Classes> getDeletedClassesBySchoolId(String schoolId, Pageable pageable) {
+        return classesRepository.findBySchoolIdAndStatus(schoolId, Classes.Status.DELETED, pageable);
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public Classes restoreClass(String id, String restoredBy) {
         Classes existingClass = classesRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Class not found"));

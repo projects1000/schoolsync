@@ -17,6 +17,9 @@ import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.Map;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/superadmin")
@@ -30,11 +33,14 @@ public class SuperAdminController {
     private SuperAdminService superAdminService;
 
     @GetMapping("/schools")
-    public ResponseEntity<List<SchoolResponse>> getAllSchools() {
+    public ResponseEntity<Page<SchoolResponse>> getAllSchools(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         try {
-            logger.info("Fetching all schools...");
-            List<SchoolResponse> schools = superAdminService.getAllSchools();
-            logger.info("Successfully fetched {} schools", schools.size());
+            logger.info("Fetching schools (page: {}, size: {})...", page, size);
+            Pageable pageable = PageRequest.of(page, size);
+            Page<SchoolResponse> schools = superAdminService.getAllSchools(pageable);
+            logger.info("Successfully fetched {} schools", schools.getNumberOfElements());
             return ResponseEntity.ok(schools);
         } catch (Exception e) {
             logger.error("Error fetching schools: {}", e.getMessage(), e);
@@ -55,12 +61,27 @@ public class SuperAdminController {
         }
     }
 
-    @GetMapping("/admins")
-    public ResponseEntity<List<AdminResponse>> getAllAdmins() {
+    @GetMapping("/schools/{schoolId}/details")
+    public ResponseEntity<com.littlesteps.playschool.dto.SchoolDetailsDto> getSchoolDetails(@PathVariable String schoolId) {
         try {
-            logger.info("Fetching all admins...");
-            List<AdminResponse> admins = superAdminService.getAllAdmins();
-            logger.info("Successfully fetched {} admins", admins.size());
+            logger.info("Fetching expansive details for school: {}", schoolId);
+            com.littlesteps.playschool.dto.SchoolDetailsDto details = superAdminService.getSchoolDetails(schoolId);
+            return ResponseEntity.ok(details);
+        } catch (Exception e) {
+            logger.error("Error fetching school details: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @GetMapping("/admins")
+    public ResponseEntity<Page<AdminResponse>> getAllAdmins(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            logger.info("Fetching admins (page: {}, size: {})...", page, size);
+            Pageable pageable = PageRequest.of(page, size);
+            Page<AdminResponse> admins = superAdminService.getAllAdmins(pageable);
+            logger.info("Successfully fetched {} admins", admins.getNumberOfElements());
             return ResponseEntity.ok(admins);
         } catch (Exception e) {
             logger.error("Error fetching admins: {}", e.getMessage(), e);

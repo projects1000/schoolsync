@@ -1,6 +1,7 @@
 package com.littlesteps.playschool.controller;
 
 import com.littlesteps.playschool.dto.ClassDTO;
+import com.littlesteps.playschool.dto.ClassSubjectDTO;
 import com.littlesteps.playschool.entity.ClassSubject;
 import com.littlesteps.playschool.entity.Classes;
 import com.littlesteps.playschool.security.SchoolContext;
@@ -12,6 +13,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 import java.util.Map;
@@ -31,15 +36,15 @@ public class ClassController {
 
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
-    public ResponseEntity<List<Classes>> getClasses() {
+    public ResponseEntity<?> getClasses(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         String schoolId = SchoolContext.getSchoolId();
         if (schoolId == null) {
-            // For SuperAdmin without a specific school context, return empty list or all
-            // classes
-            // Returning empty list prevents 400 Bad Request which breaks the UI
             return ResponseEntity.ok(java.util.Collections.emptyList());
         }
-        return ResponseEntity.ok(classService.getClassesBySchoolId(schoolId));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return ResponseEntity.ok(classService.getClassesBySchoolId(schoolId, pageable));
     }
 
     @PostMapping
@@ -59,7 +64,7 @@ public class ClassController {
 
     @GetMapping("/{classId}/subjects")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
-    public ResponseEntity<List<ClassSubject>> getSubjectsForClass(@PathVariable String classId) {
+    public ResponseEntity<List<ClassSubjectDTO>> getSubjectsForClass(@PathVariable String classId) {
         String schoolId = SchoolContext.getSchoolId();
         if (schoolId == null) {
             return ResponseEntity.badRequest().build();
@@ -69,13 +74,16 @@ public class ClassController {
 
     @GetMapping("/{classId}/students")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
-    public ResponseEntity<List<com.littlesteps.playschool.dto.StudentDTO>> getStudentsForClass(
-            @PathVariable String classId) {
+    public ResponseEntity<Page<com.littlesteps.playschool.dto.StudentDTO>> getStudentsForClass(
+            @PathVariable String classId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         String schoolId = SchoolContext.getSchoolId();
         if (schoolId == null) {
             return ResponseEntity.badRequest().build();
         }
-        return ResponseEntity.ok(studentService.getStudentsByClassId(schoolId, classId));
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(studentService.getStudentsByClassId(schoolId, classId, pageable));
     }
 
     @PostMapping("/{classId}/subjects")
@@ -159,12 +167,15 @@ public class ClassController {
 
     @GetMapping("/deleted")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
-    public ResponseEntity<List<Classes>> getDeletedClasses() {
+    public ResponseEntity<?> getDeletedClasses(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         String schoolId = SchoolContext.getSchoolId();
         if (schoolId == null) {
             return ResponseEntity.badRequest().build();
         }
-        return ResponseEntity.ok(classService.getDeletedClassesBySchoolId(schoolId));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
+        return ResponseEntity.ok(classService.getDeletedClassesBySchoolId(schoolId, pageable));
     }
 
     @PostMapping("/{id}/restore")

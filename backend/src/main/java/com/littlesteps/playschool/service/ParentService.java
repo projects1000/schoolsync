@@ -1,7 +1,6 @@
 package com.littlesteps.playschool.service;
 
 import com.littlesteps.playschool.dto.ParentDTO;
-import com.littlesteps.playschool.dto.ParentAssignmentDTO;
 import com.littlesteps.playschool.dto.StudentDTO;
 import com.littlesteps.playschool.entity.Parent;
 import com.littlesteps.playschool.entity.ParentStudentMap;
@@ -11,7 +10,6 @@ import com.littlesteps.playschool.repository.ParentRepository;
 import com.littlesteps.playschool.repository.ParentStudentMapRepository;
 import com.littlesteps.playschool.repository.StudentRepository;
 import com.littlesteps.playschool.repository.UserRepository;
-import com.littlesteps.playschool.service.AttendanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,15 +17,21 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
 @Service
+@CacheConfig(cacheNames = "parents")
 public class ParentService {
 
     @Autowired
@@ -80,6 +84,7 @@ public class ParentService {
     /**
      * Get all parents for a school
      */
+    @Cacheable(key = "#schoolId")
     public List<ParentDTO> getAllParents(String schoolId) {
         return parentRepository.findBySchoolIdAndStatusNot(schoolId, Parent.Status.DELETED)
                 .stream()
@@ -87,9 +92,18 @@ public class ParentService {
                 .collect(Collectors.toList());
     }
 
+    public Page<ParentDTO> getAllParents(String schoolId, Pageable pageable) {
+        Page<Parent> parentPage = parentRepository.findBySchoolIdAndStatusNot(schoolId, Parent.Status.DELETED, pageable);
+        List<ParentDTO> dtos = parentPage.getContent().stream()
+                .map(parent -> convertToDTO(parent, schoolId))
+                .collect(Collectors.toList());
+        return new PageImpl<>(dtos, pageable, parentPage.getTotalElements());
+    }
+
     /**
      * Get all deleted parents for a school
      */
+    @Cacheable(key = "{#schoolId, 'deleted'}")
     public List<ParentDTO> getDeletedParents(String schoolId) {
         return parentRepository.findBySchoolIdAndStatus(schoolId, Parent.Status.DELETED)
                 .stream()
@@ -97,9 +111,18 @@ public class ParentService {
                 .collect(Collectors.toList());
     }
 
+    public Page<ParentDTO> getDeletedParents(String schoolId, Pageable pageable) {
+        Page<Parent> parentPage = parentRepository.findBySchoolIdAndStatus(schoolId, Parent.Status.DELETED, pageable);
+        List<ParentDTO> dtos = parentPage.getContent().stream()
+                .map(parent -> convertToDTO(parent, schoolId))
+                .collect(Collectors.toList());
+        return new PageImpl<>(dtos, pageable, parentPage.getTotalElements());
+    }
+
     /**
      * Get parent by ID with school validation
      */
+    @Cacheable(key = "{#id, #schoolId}")
     public ParentDTO getParentById(String id, String schoolId) {
         Parent parent = parentRepository.findByIdAndSchoolId(id, schoolId)
                 .orElseThrow(() -> new RuntimeException("Parent not found"));
@@ -111,6 +134,7 @@ public class ParentService {
      * Following the TeacherService.createTeacherWithUser pattern
      */
     @Transactional
+    @CacheEvict(allEntries = true)
     public Map<String, Object> createParentWithUser(ParentDTO parentDTO, String createdBy, String schoolId) {
         // Validate schoolId is present
         if (schoolId == null || schoolId.trim().isEmpty()) {
@@ -185,6 +209,7 @@ public class ParentService {
      * Update parent profile
      */
     @Transactional
+    @CacheEvict(allEntries = true)
     public ParentDTO updateParent(String id, ParentDTO parentDTO, String updatedBy, String schoolId) {
         Parent parent = parentRepository.findByIdAndSchoolId(id, schoolId)
                 .orElseThrow(() -> new RuntimeException("Parent not found"));
@@ -227,6 +252,7 @@ public class ParentService {
      * Delete parent (Soft delete)
      */
     @Transactional
+    @CacheEvict(allEntries = true)
     public void deleteParent(String id, String deletedBy, String schoolId) {
         Parent parent = parentRepository.findByIdAndSchoolId(id, schoolId)
                 .orElseThrow(() -> new RuntimeException("Parent not found"));
@@ -251,7 +277,7 @@ public class ParentService {
         // Note: Not removing parentStudentMap here. Admin can restore later.
         // The mappings will just contain a deleted parent.
 
-        auditService.logSchoolAction(deletedBy, "DELETE_PARENT", "PARENT", id, schoolId,
+        auditService.logSchoolAction(deletedBy != null ? deletedBy : "SYSTEM", "DELETE_PARENT", "PARENT", id != null ? id : "", schoolId != null ? schoolId : "",
                 null, "Soft deleted parent: " + parent.getName());
     }
 
@@ -259,6 +285,7 @@ public class ParentService {
      * Restore parent
      */
     @Transactional
+    @CacheEvict(allEntries = true)
     public void restoreParent(String id, String restoredBy, String schoolId) {
         Parent parent = parentRepository.findByIdAndSchoolId(id, schoolId)
                 .orElseThrow(() -> new RuntimeException("Parent not found"));
@@ -287,6 +314,7 @@ public class ParentService {
      * Validates cross-school restrictions
      */
     @Transactional
+    @CacheEvict(allEntries = true)
     public void mapStudentToParent(String parentId, String studentId, String createdBy, String schoolId) {
         mapStudentsToParent(parentId, List.of(studentId), createdBy, schoolId);
     }
@@ -296,6 +324,7 @@ public class ParentService {
      * Validates cross-school restrictions for all students
      */
     @Transactional
+    @CacheEvict(allEntries = true)
     public void mapStudentsToParent(String parentId, List<String> studentIds, String createdBy, String schoolId) {
         Parent parent = parentRepository.findByIdAndSchoolId(parentId, schoolId)
                 .orElseThrow(() -> new RuntimeException("Parent not found in this school"));
@@ -345,6 +374,7 @@ public class ParentService {
      * Unmap a student from a parent
      */
     @Transactional
+    @CacheEvict(allEntries = true)
     public void unmapStudentFromParent(String parentId, String studentId, String removedBy, String schoolId) {
         parentRepository.findByIdAndSchoolId(parentId, schoolId)
                 .orElseThrow(() -> new RuntimeException("Parent not found in this school"));
@@ -413,6 +443,7 @@ public class ParentService {
      * Block a parent (disables login)
      */
     @Transactional
+    @CacheEvict(allEntries = true)
     public void blockParent(String parentId, String blockedBy, String schoolId) {
         Parent parent = parentRepository.findByIdAndSchoolId(parentId, schoolId)
                 .orElseThrow(() -> new RuntimeException("Parent not found in this school"));
@@ -438,6 +469,7 @@ public class ParentService {
      * Unblock a parent (enables login)
      */
     @Transactional
+    @CacheEvict(allEntries = true)
     public void unblockParent(String parentId, String unblockedBy, String schoolId) {
         Parent parent = parentRepository.findByIdAndSchoolId(parentId, schoolId)
                 .orElseThrow(() -> new RuntimeException("Parent not found in this school"));
@@ -463,6 +495,7 @@ public class ParentService {
      * Update parent status (Generic method)
      */
     @Transactional
+    @CacheEvict(allEntries = true)
     public void updateParentStatus(String parentId, String statusStr, String updatedBy, String schoolId) {
         if ("BLOCKED".equalsIgnoreCase(statusStr)) {
             blockParent(parentId, updatedBy, schoolId);
@@ -497,6 +530,7 @@ public class ParentService {
      * Reset parent password
      */
     @Transactional
+    @CacheEvict(allEntries = true)
     public Map<String, String> resetParentPassword(String parentId, String resetBy, String schoolId) {
         Parent parent = parentRepository.findByIdAndSchoolId(parentId, schoolId)
                 .orElseThrow(() -> new RuntimeException("Parent not found in this school"));

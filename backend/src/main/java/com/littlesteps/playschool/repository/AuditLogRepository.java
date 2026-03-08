@@ -32,22 +32,28 @@ public interface AuditLogRepository extends MongoRepository<AuditLog, String> {
 
     Page<AuditLog> findByActionOrderByCreatedAtDesc(String action, Pageable pageable);
 
-    // Distinct queries are different in Mongo Data, might need custom
-    // implementation or aggregation
-    // For simplicity, we can fetch distinct values using MongoTemplate in service,
-    // but let's try this:
     @Query(value = "{}", fields = "{ 'action' : 1 }")
-    List<AuditLog> findAllActions(); // We'll process distinct in Service or use aggregation in Custom Repository
+    List<AuditLog> findAllActions();
 
     @Query(value = "{}", fields = "{ 'targetType' : 1 }")
-    List<AuditLog> findAllTargetTypes(); // We'll process distinct in Service
+    List<AuditLog> findAllTargetTypes();
 
     long countByActorUser(User user);
 
     @Query(value = "{ 'createdAt': { '$gte': ?0 } }", count = true)
     long countSince(LocalDateTime since);
 
-    List<AuditLog> findBySchoolId(String schoolId);
+    Page<AuditLog> findBySchoolId(String schoolId, Pageable pageable);
+    
+    Page<AuditLog> findBySchoolIdOrderByCreatedAtDesc(String schoolId, Pageable pageable);
 
-    List<AuditLog> findBySchoolIdAndTargetIdAndAction(String schoolId, String targetId, String action);
-}
+    List<AuditLog> findTop1000ByCreatedAtAfterOrderByCreatedAtDesc(LocalDateTime createdAt);
+
+    List<AuditLog> findTop1000BySchoolIdAndCreatedAtAfterOrderByCreatedAtDesc(String schoolId, LocalDateTime createdAt);
+
+    Page<AuditLog> findBySchoolIdAndTargetIdAndAction(String schoolId, String targetId, String action, Pageable pageable);
+
+    Page<AuditLog> findBySchoolIdAndTargetId(String schoolId, String targetId, Pageable pageable);
+
+    Page<AuditLog> findBySchoolIdAndAction(String schoolId, String action, Pageable pageable);
+}

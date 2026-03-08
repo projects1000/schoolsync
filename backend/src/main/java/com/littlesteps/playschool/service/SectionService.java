@@ -9,7 +9,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+
 @Service
+@CacheConfig(cacheNames = "sections")
 public class SectionService {
 
     @Autowired
@@ -18,6 +23,7 @@ public class SectionService {
     // @Autowired
     // private AuditService auditService;
 
+    @Cacheable(key = "#classId")
     public List<Section> getSectionsByClass(String classId) {
         System.out.println("Processing getSectionsByClass for classId: " + classId);
         if (sectionRepository == null) {
@@ -30,6 +36,7 @@ public class SectionService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public Section createSection(Section section) {
         if (sectionRepository.existsByClassIdAndName(section.getClassId(), section.getName())) {
             throw new IllegalArgumentException(
@@ -49,6 +56,7 @@ public class SectionService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public void deleteSection(String id) {
         // Potentially check if students exist in this section first
         sectionRepository.deleteById(id);
