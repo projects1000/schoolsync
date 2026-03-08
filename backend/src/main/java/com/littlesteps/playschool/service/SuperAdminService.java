@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import com.littlesteps.playschool.entity.Attendance;
 import com.littlesteps.playschool.entity.AuditLog;
@@ -90,10 +92,10 @@ public class SuperAdminService {
     private PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "schools", key = "'all'")
-    public List<SchoolResponse> getAllSchools() {
-        List<School> schools = schoolRepository.findByStatusNot(School.Status.DELETED);
-        return schools.stream().map(this::mapToSchoolResponse).collect(Collectors.toList());
+    @Cacheable(value = "schools", key = "'all_' + #pageable.pageNumber + '_' + #pageable.pageSize")
+    public Page<SchoolResponse> getAllSchools(Pageable pageable) {
+        Page<School> schoolsPage = schoolRepository.findByStatusNot(School.Status.DELETED, pageable);
+        return schoolsPage.map(this::mapToSchoolResponse);
     }
 
     private SchoolResponse mapToSchoolResponse(School school) {
@@ -112,12 +114,12 @@ public class SuperAdminService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "admins", key = "'all'")
-    public List<AdminResponse> getAllAdmins() {
-        List<User> admins = userRepository.findByRole(User.Role.ADMIN);
+    @Cacheable(value = "admins", key = "'all_' + #pageable.pageNumber + '_' + #pageable.pageSize")
+    public Page<AdminResponse> getAllAdmins(Pageable pageable) {
+        Page<User> admins = userRepository.findByRole(User.Role.ADMIN, pageable);
 
         // Optimize school fetching by ID
-        List<String> schoolIds = admins.stream()
+        List<String> schoolIds = admins.getContent().stream()
                 .map(User::getSchoolId)
                 .filter(id -> id != null)
                 .collect(Collectors.toList());
@@ -125,13 +127,13 @@ public class SuperAdminService {
         Map<String, String> schoolIdToNameMap = schools.stream()
                 .collect(Collectors.toMap(School::getId, School::getName));
 
-        return admins.stream().map(admin -> {
+        return admins.map(admin -> {
             String schoolName = null;
             if (admin.getSchoolId() != null) {
                 schoolName = schoolIdToNameMap.getOrDefault(admin.getSchoolId(), "Unknown School");
             }
             return AdminResponse.fromUser(admin, schoolName);
-        }).collect(Collectors.toList());
+        });
     }
 
     @Transactional

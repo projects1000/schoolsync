@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @CacheConfig(cacheNames = "students")
@@ -37,12 +39,10 @@ public class StudentService {
     @Autowired
     private com.littlesteps.playschool.repository.UserRepository userRepository;
 
-    @Cacheable(key = "#schoolId")
-    public List<StudentDTO> getAllStudents(String schoolId) {
-        return studentRepository.findBySchoolIdAndStatusNot(schoolId, Student.Status.DELETED)
-                .stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    @Cacheable(key = "#schoolId + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
+    public Page<StudentDTO> getAllStudents(String schoolId, Pageable pageable) {
+        return studentRepository.findBySchoolIdAndStatusNot(schoolId, Student.Status.DELETED, pageable)
+                .map(this::convertToDTO);
     }
 
     @Cacheable(key = "{#schoolId, #classId}")
@@ -53,12 +53,24 @@ public class StudentService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(key = "#schoolId + '_' + #classId + '_byClassId_' + #pageable.pageNumber + '_' + #pageable.pageSize")
+    public Page<StudentDTO> getStudentsByClassId(String schoolId, String classId, Pageable pageable) {
+        return studentRepository.findBySchoolIdAndClassIdAndStatusNot(schoolId, classId, Student.Status.DELETED, pageable)
+                .map(this::convertToDTO);
+    }
+
     @Cacheable(key = "{#schoolId, 'deleted'}")
     public List<StudentDTO> getDeletedStudents(String schoolId) {
         return studentRepository.findBySchoolIdAndStatus(schoolId, Student.Status.DELETED)
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Cacheable(key = "#schoolId + '_deleted_' + #pageable.pageNumber + '_' + #pageable.pageSize")
+    public Page<StudentDTO> getDeletedStudents(String schoolId, Pageable pageable) {
+        return studentRepository.findBySchoolIdAndStatus(schoolId, Student.Status.DELETED, pageable)
+                .map(this::convertToDTO);
     }
 
     @Cacheable(key = "#id")
@@ -352,20 +364,16 @@ public class StudentService {
                 "Restored soft deleted student: " + student.getName());
     }
 
-    @Cacheable(key = "{#schoolId, #classId, 'byClass'}")
-    public List<StudentDTO> getStudentsByClass(String schoolId, String classId) {
-        return studentRepository.findBySchoolIdAndClassName(schoolId, classId)
-                .stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    @Cacheable(key = "#schoolId + '_' + #classId + '_byClass_' + #pageable.pageNumber + '_' + #pageable.pageSize")
+    public Page<StudentDTO> getStudentsByClass(String schoolId, String classId, Pageable pageable) {
+        return studentRepository.findBySchoolIdAndClassName(schoolId, classId, pageable)
+                .map(this::convertToDTO);
     }
 
-    @Cacheable(key = "{#schoolId, #searchTerm}")
-    public List<StudentDTO> searchStudents(String schoolId, String searchTerm) {
-        return studentRepository.searchStudents(schoolId, searchTerm)
-                .stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    @Cacheable(key = "#schoolId + '_' + #searchTerm + '_search_' + #pageable.pageNumber + '_' + #pageable.pageSize")
+    public Page<StudentDTO> searchStudents(String schoolId, String searchTerm, Pageable pageable) {
+        return studentRepository.searchStudents(schoolId, searchTerm, pageable)
+                .map(this::convertToDTO);
     }
 
     private String generateAdmissionNo() {

@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Pagination from '../common/Pagination';
 
 const ParentManagement = () => {
   const { toast } = useToast();
@@ -37,6 +38,14 @@ const ParentManagement = () => {
   const [parents, setParents] = useState([]);
   const [students, setStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Pagination state
+  const [pagination, setPagination] = useState({
+    currentPage: 0,
+    totalPages: 0,
+    totalElements: 0,
+    pageSize: 10
+  });
 
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -73,21 +82,43 @@ const ParentManagement = () => {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (page = 0) => {
     try {
       setLoading(true);
-      const [parentsData, studentsData] = await Promise.all([
-        adminService.getParents(),
-        adminService.getStudents()
+      const [parentsResponse, studentsData] = await Promise.all([
+        adminService.getParents({ page, size: pagination.pageSize, sort: 'createdAt,desc' }),
+        adminService.getStudents({ size: 1000 }) // Fetch more students for mapping until search is implemented
       ]);
-      setParents(parentsData);
-      setStudents(studentsData);
+      
+      // Handle parents pagination
+      if (parentsResponse && parentsResponse.content) {
+        setParents(parentsResponse.content);
+        setPagination(prev => ({
+          ...prev,
+          currentPage: parentsResponse.number,
+          totalPages: parentsResponse.totalPages,
+          totalElements: parentsResponse.totalElements
+        }));
+      } else {
+        setParents(parentsResponse || []);
+        setPagination(prev => ({
+          ...prev,
+          totalPages: 1,
+          totalElements: (parentsResponse || []).length
+        }));
+      }
+
+      setStudents(studentsData.content || studentsData || []);
     } catch (error) {
       console.error("Failed to fetch data", error);
       toast({ title: "Error", description: "Failed to load data", variant: "destructive" });
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (newPage) => {
+    fetchData(newPage);
   };
 
   const handleInputChange = (e) => {
@@ -409,6 +440,14 @@ const ParentManagement = () => {
             )}
           </TableBody>
         </Table>
+        
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          totalElements={pagination.totalElements}
+          pageSize={pagination.pageSize}
+          onPageChange={handlePageChange}
+        />
       </div>
 
       {/* Map Student Modal */}

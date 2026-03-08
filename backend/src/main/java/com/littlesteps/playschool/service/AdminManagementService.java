@@ -54,7 +54,7 @@ public class AdminManagementService {
         // per school.
         if (user.getSchoolId() != null) {
             // Enforce 1 Admin per specific school
-            if (userRepository.existsBySchoolIdAndRole(user.getSchoolId(), User.Role.ADMIN)) {
+            if (userRepository.existsBySchoolIdAndRole(user.getSchoolId() != null ? user.getSchoolId() : "", User.Role.ADMIN)) {
                 throw new IllegalArgumentException("This school already has an assigned Admin.");
             }
         }

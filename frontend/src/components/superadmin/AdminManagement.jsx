@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import SuperAdminService from '../../services/superAdminService';
 import CreateAdminModal from './CreateAdminModal';
+import Pagination from '../common/Pagination';
 
 const AdminManagement = ({ currentUser }) => {
     const { toast } = useToast();
@@ -29,6 +30,12 @@ const AdminManagement = ({ currentUser }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    
+    // Pagination states
+    const [page, setPage] = useState(0);
+    const [pageSize, setPageSize] = useState(10);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
 
     // Modal states
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -41,22 +48,29 @@ const AdminManagement = ({ currentUser }) => {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [page, pageSize]);
 
     const fetchData = async () => {
         try {
             setIsLoading(true);
+            const params = { page, size: pageSize };
             const [adminsRes, schoolsRes] = await Promise.all([
-                SuperAdminService.getAllAdmins(),
-                SuperAdminService.getAllSchools()
+                SuperAdminService.getAllAdmins(params),
+                SuperAdminService.getAllSchools({ page: 0, size: 1000 }) // Get all schools for dropdowns
             ]);
-            setAdmins(adminsRes.data);
-            setSchools(schoolsRes.data);
+            
+            const adminsData = adminsRes.data;
+            setAdmins(adminsData.content || []);
+            setTotalPages(adminsData.totalPages || 0);
+            setTotalElements(adminsData.totalElements || 0);
+            
+            // For schools, check if it's a page or list
+            const schoolsData = schoolsRes.data;
+            setSchools(schoolsData.content || schoolsData || []);
         } catch (error) {
             console.error("Failed to load admin data:", error);
-            // Default to empty array to avoid crash in filteredAdmins
-            if (admins === undefined) setAdmins([]);
-            if (schools === undefined) setSchools([]);
+            setAdmins([]);
+            setSchools([]);
             toast({
                 title: 'Error',
                 description: 'Failed to load admins and schools',
@@ -495,6 +509,14 @@ const AdminManagement = ({ currentUser }) => {
                         ))
                     )}
                 </div>
+
+                <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={(newPage) => setPage(newPage)}
+                    totalElements={totalElements}
+                    pageSize={pageSize}
+                />
             </motion.div>
 
             {/* Create Admin Modal */}

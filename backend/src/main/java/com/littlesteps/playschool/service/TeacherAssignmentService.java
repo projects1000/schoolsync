@@ -7,6 +7,8 @@ import com.littlesteps.playschool.repository.AssignmentRepository;
 import com.littlesteps.playschool.repository.TeacherRepository;
 import com.littlesteps.playschool.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -79,7 +81,7 @@ public class TeacherAssignmentService {
         return assignmentRepository.save(assignment);
     }
 
-    public List<Assignment> getAssignmentsByClass(String email, String classId) {
+    public Page<Assignment> getPaginatedAssignmentsByClass(String email, String classId, Pageable pageable) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         Teacher teacher = teacherRepository.findByUser(user)
@@ -92,6 +94,6 @@ public class TeacherAssignmentService {
             throw new RuntimeException("Unauthorized access to class assignments.");
         }
 
-        return assignmentRepository.findByClassId(classId);
+        return assignmentRepository.findByClassId(classId, pageable);
     }
 }

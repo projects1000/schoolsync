@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,6 +35,32 @@ public class CourseHandoutService {
 
         @Autowired
         private com.littlesteps.playschool.repository.ClassesRepository classesRepository;
+
+        public Page<CourseHandoutDTO> getPaginatedHandoutsByTeacher(String email, String classId, String subject,
+                        Pageable pageable) {
+                User user = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+                Teacher teacher = teacherRepository.findByUser(user)
+                                .orElseThrow(() -> new RuntimeException("Teacher not found"));
+
+                Page<CourseHandout> handoutPage;
+
+                if (classId != null && subject != null) {
+                        handoutPage = courseHandoutRepository.findByTeacherIdAndSchoolIdAndClassIdAndSubject(
+                                        teacher.getId(), teacher.getSchoolId(), classId, subject, pageable);
+                } else if (classId != null) {
+                        handoutPage = courseHandoutRepository.findByTeacherIdAndSchoolIdAndClassId(
+                                        teacher.getId(), teacher.getSchoolId(), classId, pageable);
+                } else if (subject != null) {
+                        handoutPage = courseHandoutRepository.findByTeacherIdAndSchoolIdAndSubject(
+                                        teacher.getId(), teacher.getSchoolId(), subject, pageable);
+                } else {
+                        handoutPage = courseHandoutRepository.findByTeacherIdAndSchoolId(
+                                        teacher.getId(), teacher.getSchoolId(), pageable);
+                }
+
+                return handoutPage.map(this::convertToDTO);
+        }
 
         public List<CourseHandoutDTO> getHandoutsByTeacher(String email, String classId, String subject) {
                 User user = userRepository.findByEmail(email)

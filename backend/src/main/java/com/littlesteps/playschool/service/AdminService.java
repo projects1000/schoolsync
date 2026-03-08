@@ -65,7 +65,7 @@ public class AdminService {
             throw new RuntimeException("Access denied. Only Super Admin can create new admins.");
         }
 
-        if (!EmailValidationUtil.isValidEmail(request.getEmail())) {
+        if (!EmailValidationUtil.isValidEmail(request.getEmail() != null ? request.getEmail() : "")) {
             throw new RuntimeException("Invalid email address. Please use a real email with valid routing (MX) records.");
         }
 
@@ -93,7 +93,7 @@ public class AdminService {
             admin.setName(request.getName());
             admin.setEmail(request.getEmail());
             admin.setPhone(request.getPhone());
-            admin.setPassword(passwordEncoder.encode(request.getPassword()));
+            admin.setPassword(passwordEncoder.encode(request.getPassword() != null ? request.getPassword() : ""));
             admin.setRole(User.Role.ADMIN);
             admin.setActive(true);
             admin.setSchoolId(request.getSchoolId());

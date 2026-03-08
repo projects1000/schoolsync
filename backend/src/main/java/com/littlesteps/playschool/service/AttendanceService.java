@@ -5,7 +5,11 @@ import com.littlesteps.playschool.entity.Attendance;
 import com.littlesteps.playschool.entity.Student;
 import com.littlesteps.playschool.repository.AttendanceRepository;
 import com.littlesteps.playschool.repository.StudentRepository;
+import com.littlesteps.playschool.security.SchoolContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -24,10 +28,21 @@ public class AttendanceService {
         private StudentRepository studentRepository;
 
         public List<AttendanceDTO> getAttendanceByDate(LocalDate date) {
-                List<Attendance> attendances = attendanceRepository.findByAttendanceDate(date);
+                String schoolId = SchoolContext.getSchoolId();
+                List<Attendance> attendances = (schoolId != null) 
+                        ? attendanceRepository.findBySchoolIdAndAttendanceDate(schoolId, date)
+                        : attendanceRepository.findByAttendanceDate(date);
                 return attendances.stream()
                                 .map(this::convertToDTO)
                                 .collect(Collectors.toList());
+        }
+
+        public Page<AttendanceDTO> getAttendanceByDate(LocalDate date, Pageable pageable) {
+                String schoolId = SchoolContext.getSchoolId();
+                Page<Attendance> attendances = (schoolId != null)
+                        ? attendanceRepository.findBySchoolIdAndAttendanceDate(schoolId, date, pageable)
+                        : attendanceRepository.findByAttendanceDate(date, pageable);
+                return attendances.map(this::convertToDTO);
         }
 
         public List<AttendanceDTO> getAttendanceByDateAndClass(LocalDate date, String className) {
@@ -39,6 +54,21 @@ public class AttendanceService {
                                                 className.equalsIgnoreCase(a.getStudent().getClassName()))
                                 .map(this::convertToDTO)
                                 .collect(Collectors.toList());
+        }
+
+        public Page<AttendanceDTO> getAttendanceByDateAndClass(LocalDate date, String className, Pageable pageable) {
+                try {
+                        Page<Attendance> attendances = attendanceRepository.findByClassAndDate(className, date, pageable);
+                        return attendances.map(this::convertToDTO);
+                } catch (Exception e) {
+                        List<AttendanceDTO> filtered = getAttendanceByDateAndClass(date, className);
+                        int start = (int) pageable.getOffset();
+                        if (start >= filtered.size()) {
+                                return new PageImpl<>(List.of(), pageable, filtered.size());
+                        }
+                        int end = Math.min((start + pageable.getPageSize()), filtered.size());
+                        return new PageImpl<>(filtered.subList(start, end), pageable, filtered.size());
+                }
         }
 
         public List<AttendanceDTO> getStudentAttendance(String studentId) {
@@ -105,6 +135,40 @@ public class AttendanceService {
                 attendanceRepository.deleteById(id);
         }
 
+        public List<Map<String, Object>> getDailyStatsInRange(String schoolId, LocalDate startDate, LocalDate endDate, String className) {
+                List<Attendance> attendances = attendanceRepository.findBySchoolIdAndAttendanceDateBetween(schoolId, startDate, endDate);
+                
+                if (className != null && !className.isEmpty()) {
+                    attendances = attendances.stream()
+                        .filter(a -> a.getStudent() != null && className.equalsIgnoreCase(a.getStudent().getClassName()))
+                        .collect(Collectors.toList());
+                }
+
+                Map<LocalDate, List<Attendance>> groupedByDate = attendances.stream()
+                        .collect(Collectors.groupingBy(Attendance::getAttendanceDate));
+
+                return groupedByDate.entrySet().stream()
+                        .map(entry -> {
+                            LocalDate date = entry.getKey();
+                            List<Attendance> dayAttendance = entry.getValue();
+                            int total = dayAttendance.size();
+                            long present = dayAttendance.stream()
+                                    .filter(a -> a.getStatus() == Attendance.Status.PRESENT || 
+                                                 a.getStatus() == Attendance.Status.LATE)
+                                    .count();
+                            
+                            Map<String, Object> dayStats = new HashMap<>();
+                            dayStats.put("date", date.toString());
+                            dayStats.put("total", total);
+                            dayStats.put("present", present);
+                            dayStats.put("absent", total - present);
+                            dayStats.put("percentage", total > 0 ? Math.round(present * 100.0 / total) : 0);
+                            return dayStats;
+                        })
+                        .sorted((a, b) -> ((String) a.get("date")).compareTo((String) b.get("date")))
+                        .collect(Collectors.toList());
+        }
+
         public Map<String, Object> getAttendanceSummaryByDate(LocalDate date) {
                 List<Attendance> allAttendance = attendanceRepository.findByAttendanceDate(date);
 
@@ -134,11 +198,16 @@ public class AttendanceService {
                         default -> endDate.minusMonths(1);
                 };
 
-                // Get all attendance records for the period
-                List<Attendance> attendances = attendanceRepository.findAll().stream()
+                String schoolId = SchoolContext.getSchoolId();
+                List<Attendance> attendances;
+                if (schoolId != null) {
+                    attendances = attendanceRepository.findBySchoolIdAndAttendanceDateBetween(schoolId, startDate, endDate);
+                } else {
+                    attendances = attendanceRepository.findAll().stream()
                                 .filter(a -> !a.getAttendanceDate().isBefore(startDate) &&
                                                 !a.getAttendanceDate().isAfter(endDate))
                                 .collect(Collectors.toList());
+                }
 
                 long totalRecords = attendances.size();
                 long presentCount = attendances.stream()

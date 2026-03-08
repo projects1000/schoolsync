@@ -8,7 +8,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import java.util.Map;
 
 @RestController
@@ -19,13 +22,26 @@ public class NotificationController {
     private NotificationService notificationService;
 
     @GetMapping
-    public ResponseEntity<List<Notification>> getUserNotifications() {
+    public ResponseEntity<Page<Notification>> getUserNotifications(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null) {
             return ResponseEntity.status(401).build();
         }
         String userId = authentication.getName();
-        return ResponseEntity.ok(notificationService.getUserNotifications(userId));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return ResponseEntity.ok(notificationService.getPaginatedNotifications(userId, pageable));
+    }
+
+    @GetMapping("/unread-count")
+    public ResponseEntity<Long> getUnreadCount() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return ResponseEntity.status(401).build();
+        }
+        String userId = authentication.getName();
+        return ResponseEntity.ok(notificationService.getUnreadCount(userId));
     }
 
     @PostMapping

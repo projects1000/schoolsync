@@ -1,7 +1,6 @@
 package com.littlesteps.playschool.service;
 
 import com.littlesteps.playschool.dto.ParentDTO;
-import com.littlesteps.playschool.dto.ParentAssignmentDTO;
 import com.littlesteps.playschool.dto.StudentDTO;
 import com.littlesteps.playschool.entity.Parent;
 import com.littlesteps.playschool.entity.ParentStudentMap;
@@ -11,7 +10,6 @@ import com.littlesteps.playschool.repository.ParentRepository;
 import com.littlesteps.playschool.repository.ParentStudentMapRepository;
 import com.littlesteps.playschool.repository.StudentRepository;
 import com.littlesteps.playschool.repository.UserRepository;
-import com.littlesteps.playschool.service.AttendanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,17 +17,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @CacheConfig(cacheNames = "parents")
@@ -93,6 +92,14 @@ public class ParentService {
                 .collect(Collectors.toList());
     }
 
+    public Page<ParentDTO> getAllParents(String schoolId, Pageable pageable) {
+        Page<Parent> parentPage = parentRepository.findBySchoolIdAndStatusNot(schoolId, Parent.Status.DELETED, pageable);
+        List<ParentDTO> dtos = parentPage.getContent().stream()
+                .map(parent -> convertToDTO(parent, schoolId))
+                .collect(Collectors.toList());
+        return new PageImpl<>(dtos, pageable, parentPage.getTotalElements());
+    }
+
     /**
      * Get all deleted parents for a school
      */
@@ -102,6 +109,14 @@ public class ParentService {
                 .stream()
                 .map(parent -> convertToDTO(parent, schoolId))
                 .collect(Collectors.toList());
+    }
+
+    public Page<ParentDTO> getDeletedParents(String schoolId, Pageable pageable) {
+        Page<Parent> parentPage = parentRepository.findBySchoolIdAndStatus(schoolId, Parent.Status.DELETED, pageable);
+        List<ParentDTO> dtos = parentPage.getContent().stream()
+                .map(parent -> convertToDTO(parent, schoolId))
+                .collect(Collectors.toList());
+        return new PageImpl<>(dtos, pageable, parentPage.getTotalElements());
     }
 
     /**
@@ -262,7 +277,7 @@ public class ParentService {
         // Note: Not removing parentStudentMap here. Admin can restore later.
         // The mappings will just contain a deleted parent.
 
-        auditService.logSchoolAction(deletedBy, "DELETE_PARENT", "PARENT", id, schoolId,
+        auditService.logSchoolAction(deletedBy != null ? deletedBy : "SYSTEM", "DELETE_PARENT", "PARENT", id != null ? id : "", schoolId != null ? schoolId : "",
                 null, "Soft deleted parent: " + parent.getName());
     }
 

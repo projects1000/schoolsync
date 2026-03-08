@@ -118,6 +118,19 @@ public class AuditService {
     }
 
     /**
+     * Get audit logs as DTOs with pagination and school filtering
+     */
+    public Page<com.littlesteps.playschool.dto.AuditLogDTO> getPaginatedAuditLogs(String schoolId, Pageable pageable) {
+        Page<AuditLog> page;
+        if (schoolId == null || schoolId.isEmpty() || "SCH-001".equals(schoolId)) {
+            page = auditLogRepository.findAllByOrderByCreatedAtDesc(pageable);
+        } else {
+            page = auditLogRepository.findBySchoolIdOrderByCreatedAtDesc(schoolId, pageable);
+        }
+        return page.map(this::mapToDTO);
+    }
+
+    /**
      * Get audit logs by action
      */
     public Page<AuditLog> getAuditLogsByAction(String action, Pageable pageable) {
@@ -302,13 +315,17 @@ public class AuditService {
         auditLogRepository.save(auditLog);
     }
 
-    public List<AuditLog> getAuditLogs(String schoolId, String targetId, String action) {
+    public Page<AuditLog> getAuditLogs(String schoolId, String targetId, String action, Pageable pageable) {
         if (targetId != null && action != null) {
-            return auditLogRepository.findBySchoolIdAndTargetIdAndAction(schoolId, targetId, action);
+            return auditLogRepository.findBySchoolIdAndTargetIdAndAction(schoolId, targetId, action, pageable);
+        } else if (targetId != null) {
+            return auditLogRepository.findBySchoolIdAndTargetId(schoolId, targetId, pageable);
+        } else if (action != null) {
+            return auditLogRepository.findBySchoolIdAndAction(schoolId, action, pageable);
         } else if (schoolId != null) {
-            return auditLogRepository.findBySchoolId(schoolId);
+            return auditLogRepository.findBySchoolId(schoolId, pageable);
         }
-        return java.util.Collections.emptyList();
+        return Page.empty();
     }
 
     public com.littlesteps.playschool.dto.SecurityLogsResponse getSecurityLogsDashboard(String schoolId) {
@@ -373,7 +390,7 @@ public class AuditService {
                 stats);
     }
 
-    private com.littlesteps.playschool.dto.AuditLogDTO mapToDTO(AuditLog log) {
+    public com.littlesteps.playschool.dto.AuditLogDTO mapToDTO(AuditLog log) {
         com.littlesteps.playschool.dto.AuditLogDTO dto = new com.littlesteps.playschool.dto.AuditLogDTO();
         dto.setId(log.getId());
         dto.setTimestamp(log.getCreatedAt());

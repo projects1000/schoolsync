@@ -15,6 +15,8 @@ import java.security.SecureRandom;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -45,24 +47,22 @@ public class TeacherService {
     /**
      * Get all teachers with optional filtering
      */
-    @Cacheable(key = "{#schoolId, #name, #department, #status}")
-    public List<TeacherDTO> getAllTeachers(String schoolId, String name, String department, String status) {
-        List<Teacher> teachers;
+    @Cacheable(key = "{#schoolId, #name, #department, #status, #pageable.pageNumber, #pageable.pageSize}")
+    public Page<TeacherDTO> getAllTeachers(String schoolId, String name, String department, String status, Pageable pageable) {
+        Page<Teacher> teachers;
 
         if (name != null && !name.trim().isEmpty()) {
-            teachers = teacherRepository.searchTeachers(schoolId, name.trim());
+            teachers = teacherRepository.searchTeachers(schoolId, name.trim(), pageable);
         } else if (department != null && !department.trim().isEmpty()) {
-            teachers = teacherRepository.findBySchoolIdAndDepartment(schoolId, department);
+            teachers = teacherRepository.findBySchoolIdAndDepartment(schoolId, department, pageable);
         } else if (status != null && !status.trim().isEmpty()) {
             teachers = teacherRepository.findBySchoolIdAndStatus(schoolId,
-                    Teacher.Status.valueOf(status.toUpperCase()));
+                    Teacher.Status.valueOf(status.toUpperCase()), pageable);
         } else {
-            teachers = teacherRepository.findBySchoolIdAndStatusNot(schoolId, Teacher.Status.DELETED);
+            teachers = teacherRepository.findBySchoolIdAndStatusNot(schoolId, Teacher.Status.DELETED, pageable);
         }
 
-        return teachers.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+        return teachers.map(this::convertToDTO);
     }
 
     /**
@@ -74,6 +74,12 @@ public class TeacherService {
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Cacheable(key = "#schoolId + '_deleted_' + #pageable.pageNumber + '_' + #pageable.pageSize")
+    public Page<TeacherDTO> getDeletedTeachers(String schoolId, Pageable pageable) {
+        return teacherRepository.findBySchoolIdAndStatus(schoolId, Teacher.Status.DELETED, pageable)
+                .map(this::convertToDTO);
     }
 
     /**
@@ -128,7 +134,11 @@ public class TeacherService {
         user.setStatus(User.Status.ACTIVE);
         user.setActive(true);
         user.setJoiningDate(teacherDTO.getJoiningDate());
-        user.setAssignedClassIds(assignedClassIds);
+        if (assignedClassIds != null) {
+            user.setAssignedClassIds(assignedClassIds);
+        } else {
+            user.setAssignedClassIds(new ArrayList<>());
+        }
         user.setPassword(passwordEncoder.encode(rawPassword));
 
         user = userRepository.save(user);
@@ -153,8 +163,8 @@ public class TeacherService {
 
         teacher.setJoiningDate(teacherDTO.getJoiningDate());
         teacher.setAddress(teacherDTO.getAddress());
-        teacher.setSubjects(teacherDTO.getSubjects());
-        teacher.setAssignedClasses(teacherDTO.getAssignedClasses());
+        teacher.setSubjects(teacherDTO.getSubjects() != null ? teacherDTO.getSubjects() : new ArrayList<>());
+        teacher.setAssignedClasses(teacherDTO.getAssignedClasses() != null ? teacherDTO.getAssignedClasses() : new ArrayList<>());
         teacher.setUser(user);
         teacher.setSchoolId(schoolId);
 
@@ -200,7 +210,7 @@ public class TeacherService {
         teacher.setDepartment(teacherDTO.getDepartment());
         teacher.setJoiningDate(teacherDTO.getJoiningDate());
         teacher.setAddress(teacherDTO.getAddress());
-        teacher.setSubjects(teacherDTO.getSubjects());
+        teacher.setSubjects(teacherDTO.getSubjects() != null ? teacherDTO.getSubjects() : new ArrayList<>());
 
         // Update user details if email changed
         if (!teacher.getEmail().equals(teacherDTO.getEmail()) || !teacher.getPhone().equals(teacherDTO.getPhone())) {
@@ -221,7 +231,7 @@ public class TeacherService {
         Map<String, Object> changes = new HashMap<>();
         changes.put("teacherId", id);
         changes.put("updates", teacherDTO);
-        auditService.logTeacherUpdated(updatedBy, id, changes);
+        auditService.logTeacherUpdated(updatedBy != null ? updatedBy : "SYSTEM", id, changes);
 
         return convertToDTO(updatedTeacher);
     }
@@ -286,7 +296,7 @@ public class TeacherService {
             classSubjectRepository.save(cs);
         }
 
-        auditService.logAction(deletedBy, "DELETE", "TEACHER", id, null, "Soft deleted teacher: " + teacher.getName());
+        auditService.logAction(deletedBy != null ? deletedBy : "SYSTEM", "DELETE", "TEACHER", id, null, "Soft deleted teacher: " + teacher.getName());
     }
 
     @Transactional
@@ -309,7 +319,7 @@ public class TeacherService {
             userRepository.save(user);
         }
 
-        auditService.logAction(restoredBy, "RESTORE", "TEACHER", id, null, "Restored teacher: " + teacher.getName());
+        auditService.logAction(restoredBy != null ? restoredBy : "SYSTEM", "RESTORE", "TEACHER", id, null, "Restored teacher: " + teacher.getName());
     }
 
     @Autowired
@@ -343,31 +353,20 @@ public class TeacherService {
         // typically we store IDs.
         // Let's check if we can validate them.
 
-        for (String classId : classNames) {
-            if (!classesRepository.existsById(classId)) {
-                // Fallback: Check if it's a name? Or just throw.
-                // If the list is mixed or names, this might fail if we strictly expect IDs.
-                // But for a robust system, we should use IDs.
-                // If the logic previously expected names, we might be breaking it.
-                // BUT, the original code just set the list directly without validation.
-                // The safe bet is to assume IDs for a new implementation or strict validation.
-
-                // If doesn't exist by ID, maybe it's a name?
-                // For now, let's strictly validate if it looks like an ID or just warn?
-                // Actually, better to just save what is sent if we aren't 100% sure of the data
-                // model,
-                // but the task was "Add Class Validation".
-                // So I MUST validate.
-                throw new RuntimeException("Class not found with ID" + classId);
+        if (classNames != null) {
+            for (String classId : classNames) {
+                if (!classesRepository.existsById(classId)) {
+                    throw new RuntimeException("Class not found with ID: " + classId);
+                }
             }
         }
 
-        teacher.setAssignedClasses(classNames);
+        teacher.setAssignedClasses(classNames != null ? classNames : new ArrayList<>());
         teacherRepository.save(teacher);
 
         Map<String, Object> changes = new HashMap<>();
         changes.put("assignedClasses", classNames);
-        auditService.logAction(assignedBy, "ASSIGN_CLASSES", "TEACHER", teacherId, changes,
+        auditService.logAction(assignedBy != null ? assignedBy : "SYSTEM", "ASSIGN_CLASSES", "TEACHER", teacherId, changes,
                 "Assigned classes to teacher");
     }
 
@@ -386,7 +385,7 @@ public class TeacherService {
 
         // In a real app, send email/SMS here
 
-        auditService.logAction(resetBy, "RESET_PASSWORD", "TEACHER", teacherId, null, "Reset teacher password");
+        auditService.logAction(resetBy != null ? resetBy : "SYSTEM", "RESET_PASSWORD", "TEACHER", teacherId, null, "Reset teacher password");
 
         return newPassword;
     }

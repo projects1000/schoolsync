@@ -12,6 +12,8 @@ import com.littlesteps.playschool.repository.StudentRepository;
 import com.littlesteps.playschool.entity.ParentStudentMap;
 import com.littlesteps.playschool.entity.Student;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -64,13 +66,13 @@ public class AdminCommunicationService {
         comm.setRecipientType(recipientType);
 
         if (recipientType == Communication.RecipientType.TEACHER) {
-            Teacher teacher = teacherRepository.findById(recipientId)
+            Teacher teacher = teacherRepository.findById(recipientId != null ? recipientId : "")
                     .orElseThrow(() -> new RuntimeException("Teacher not found"));
-            comm.addRecipient(teacher.getId(), teacher.getName());
+            comm.addRecipient(teacher.getId() != null ? teacher.getId() : "", teacher.getName() != null ? teacher.getName() : "Unknown Teacher");
         } else if (recipientType == Communication.RecipientType.PARENT) {
-            User parent = userRepository.findById(recipientId)
+            User parent = userRepository.findById(recipientId != null ? recipientId : "")
                     .orElseThrow(() -> new RuntimeException("Parent not found"));
-            comm.addRecipient(parent.getId(), parent.getName());
+            comm.addRecipient(parent.getId() != null ? parent.getId() : "", parent.getName() != null ? parent.getName() : "Unknown Parent");
 
             // Optional: tag to a specific class if passed
             String targetClassId = payload.get("targetClassId");
@@ -144,12 +146,14 @@ public class AdminCommunicationService {
 
             for (String parentId : uniqueParentIds) {
                 // Find parent user to get name
-                parentRepository.findById(parentId).ifPresent(parent -> {
-                    if (parent.getUserId() != null) {
-                        userRepository.findById(parent.getUserId())
-                                .ifPresent(p -> comm.addRecipient(p.getId(), p.getName()));
-                    }
-                });
+                if (parentId != null) {
+                    parentRepository.findById(parentId).ifPresent(parent -> {
+                        if (parent.getUserId() != null) {
+                            userRepository.findById(parent.getUserId())
+                                    .ifPresent(p -> comm.addRecipient(p.getId() != null ? p.getId() : "", p.getName() != null ? p.getName() : "Unknown Parent"));
+                        }
+                    });
+                }
             }
         } else {
             throw new RuntimeException("Invalid recipient type for broadcast message.");
@@ -157,6 +161,18 @@ public class AdminCommunicationService {
 
         comm.markAsReadBy(admin.getId());
         return communicationRepository.save(comm);
+    }
+
+    public Page<Communication> getPaginatedHistory(String email, Pageable pageable) {
+        User admin = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+
+        if (!admin.getRole().equals(User.Role.ADMIN) && !admin.getRole().equals(User.Role.SUPERADMIN)) {
+            throw new RuntimeException("Unauthorized: Only Admins can view communications");
+        }
+
+        return communicationRepository.findBySchoolIdAndSenderRole(admin.getSchoolId(), Communication.SenderRole.ADMIN,
+                pageable);
     }
 
     public List<Communication> getHistory(String email) {
@@ -168,6 +184,17 @@ public class AdminCommunicationService {
         }
 
         return communicationRepository.findBySchoolIdAndSenderRole(admin.getSchoolId(), Communication.SenderRole.ADMIN);
+    }
+
+    public Page<Communication> getPaginatedInbox(String email, Pageable pageable) {
+        User admin = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+
+        if (!admin.getRole().equals(User.Role.ADMIN) && !admin.getRole().equals(User.Role.SUPERADMIN)) {
+            throw new RuntimeException("Unauthorized: Only Admins can view inbox");
+        }
+
+        return communicationRepository.findByRecipientIdsContaining(admin.getId(), pageable);
     }
 
     public List<Communication> getInbox(String email) {

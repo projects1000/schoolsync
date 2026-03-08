@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Search, Edit2, CheckCircle, XCircle, Clock, BarChart2, CalendarDays, ArrowLeft, Download, User } from 'lucide-react';
 import adminService from '@/services/adminService';
+import Pagination from '../common/Pagination';
 import api from '@/services/api';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -43,6 +44,12 @@ const AttendanceManagement = ({ currentUser }) => {
   const [loading, setLoading] = useState(false);
   const [attendance, setAttendance] = useState([]);
   const [classes, setClasses] = useState([]);
+
+  // Pagination states
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
   // Daily View Filters
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -92,7 +99,7 @@ const AttendanceManagement = ({ currentUser }) => {
       fetchDailyAttendance();
     }
     // Class report now uses Search button, no auto-fetch needed
-  }, [selectedDate, selectedClassId, view]);
+  }, [selectedDate, selectedClassId, view, page, pageSize]);
 
   const fetchClasses = async () => {
     try {
@@ -107,7 +114,7 @@ const AttendanceManagement = ({ currentUser }) => {
       } else {
         data = await adminService.getClasses();
       }
-      setClasses(data);
+      setClasses(data.content || data || []);
     } catch (error) {
       console.error("Failed to fetch classes", error);
     }
@@ -121,7 +128,7 @@ const AttendanceManagement = ({ currentUser }) => {
       } else {
         response = await api.get('/admin/students');
       }
-      setAllStudents(response.data || []);
+      setAllStudents(response.data.content || response.data || []);
     } catch (error) {
       console.error("Failed to fetch students", error);
     }
@@ -134,16 +141,26 @@ const AttendanceManagement = ({ currentUser }) => {
       const clsObj = classes.find(c => c.id === selectedClassId);
       const className = clsObj ? clsObj.name : null;
 
-      let data;
+      let response;
       if (isTeacher) {
-        const params = { date: selectedDate };
+        const params = { date: selectedDate, page, size: pageSize };
         if (className) params.className = className;
-        const response = await api.get('/teacher/attendance', { params });
-        data = response.data;
+        response = await api.get('/teacher/attendance', { params });
       } else {
-        data = await adminService.getAttendance(selectedDate, className);
+        const params = { date: selectedDate, page, size: pageSize };
+        if (className && className !== 'all') params.className = className;
+        response = await adminService.getAttendance(params);
       }
-      setAttendance(data);
+      
+      if (response && response.content) {
+        setAttendance(response.content);
+        setTotalPages(response.totalPages);
+        setTotalElements(response.totalElements);
+      } else {
+        setAttendance(Array.isArray(response) ? response : []);
+        setTotalPages(1);
+        setTotalElements(Array.isArray(response) ? response.length : 0);
+      }
     } catch (error) {
       console.error("Failed to fetch attendance", error);
     } finally {
@@ -202,17 +219,25 @@ const AttendanceManagement = ({ currentUser }) => {
           dailyStats.push({ date, total, present, absent, percentage });
         }
       } else {
-        // Admin API - fetch attendance for each date
-        for (const date of dates) {
-          const className = classes.find(c => c.id === selectedClassId)?.name;
-          const res = await api.get('/admin/attendance', {
-            params: { date, className }
-          });
+        // Admin API - Use the new /history endpoint instead of looping
+        const clsObj = classes.find(c => c.id === selectedClassId);
+        const className = clsObj ? clsObj.name : null;
+        
+        const historyData = await adminService.getAttendanceHistory({
+            startDate: classStartDate,
+            endDate: classEndDate,
+            className: className !== 'all' ? className : undefined
+        });
+        
+        setClassDailyStats(historyData || []);
 
-          const dayData = res.data || [];
-
-          // If single day, prepare detailed student list
-          if (isSingleDay) {
+        // If single day, we still need the detailed student list
+        if (isSingleDay) {
+            const params = { date: classStartDate, page: 0, size: 1000 }; // Fetch all students for the single day detailed view
+            if (className && className !== 'all') params.className = className;
+            const resDetail = await adminService.getAttendance(params);
+            
+            const dayData = resDetail.content || resDetail.data || [];
             const detailedList = dayData.map(record => ({
               id: record.id,
               name: record.studentName,
@@ -220,18 +245,8 @@ const AttendanceManagement = ({ currentUser }) => {
               status: record.status
             }));
             setSingleDayStudents(detailedList);
-          }
-
-          const total = dayData.length;
-          const present = dayData.filter(r => r.status === 'PRESENT').length;
-          const absent = total - present;
-          const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
-
-          dailyStats.push({ date, total, present, absent, percentage });
         }
       }
-
-      setClassDailyStats(dailyStats);
       setReportData([]); // Clear old data
     } catch (err) {
       console.error(err);
@@ -795,6 +810,13 @@ const AttendanceManagement = ({ currentUser }) => {
               )}
             </TableBody>
           </Table>
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={(newPage) => setPage(newPage)}
+            totalElements={totalElements}
+            pageSize={pageSize}
+          />
         </div>
       )}
 

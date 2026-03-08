@@ -11,6 +11,8 @@ import com.littlesteps.playschool.repository.ParentStudentMapRepository;
 import com.littlesteps.playschool.repository.StudentRepository;
 import com.littlesteps.playschool.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -37,10 +39,22 @@ public class ParentCourseHandoutService {
     /**
      * Get course handouts for a student (for parent view)
      */
+    public Page<CourseHandoutDTO> getPaginatedHandoutsForStudent(String email, String studentId, Pageable pageable) {
+        validateParentStudentRelationship(email, studentId);
+
+        Student student = studentRepository.findById(studentId != null ? studentId : "")
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        Page<CourseHandout> handoutPage = courseHandoutRepository.findByClassIdAndSchoolId(
+                student.getClassId(), student.getSchoolId(), pageable);
+
+        return handoutPage.map(this::convertToDTO);
+    }
+
     public List<CourseHandoutDTO> getHandoutsForStudent(String email, String studentId) {
         validateParentStudentRelationship(email, studentId);
 
-        Student student = studentRepository.findById(studentId)
+        Student student = studentRepository.findById(studentId != null ? studentId : "")
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
         List<CourseHandout> handouts = courseHandoutRepository.findByClassIdAndSchoolId(
@@ -57,7 +71,7 @@ public class ParentCourseHandoutService {
     public List<CourseProgressDTO> getCourseProgress(String email, String studentId) {
         validateParentStudentRelationship(email, studentId);
 
-        Student student = studentRepository.findById(studentId)
+        Student student = studentRepository.findById(studentId != null ? studentId : "")
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
         List<CourseHandout> handouts = courseHandoutRepository.findByClassIdAndSchoolId(
@@ -79,10 +93,10 @@ public class ParentCourseHandoutService {
     public CourseHandoutDTO getHandoutDetails(String email, String handoutId, String studentId) {
         validateParentStudentRelationship(email, studentId);
 
-        Student student = studentRepository.findById(studentId)
+        Student student = studentRepository.findById(studentId != null ? studentId : "")
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
-        CourseHandout handout = courseHandoutRepository.findById(handoutId)
+        CourseHandout handout = courseHandoutRepository.findById(handoutId != null ? handoutId : "")
                 .orElseThrow(() -> new RuntimeException("Handout not found"));
 
         // Validate handout belongs to student's class and school

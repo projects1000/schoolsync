@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import Pagination from '../common/Pagination';
 import {
     passwordRules as initialPasswordRules
 } from './mockSecurityData';
@@ -42,6 +43,12 @@ const SecurityAuditLogs = ({ currentUser }) => {
     const [statusFilter, setStatusFilter] = useState('all');
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
+
+    // Pagination states
+    const [page, setPage] = useState(0);
+    const [pageSize, setPageSize] = useState(10);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
 
     const [loginHistory, setLoginHistory] = useState([]);
     const [activityLogs, setActivityLogs] = useState([]);
@@ -60,18 +67,33 @@ const SecurityAuditLogs = ({ currentUser }) => {
 
     React.useEffect(() => {
         fetchSecurityLogs();
-    }, []);
+    }, [page, pageSize]);
 
     const fetchSecurityLogs = async () => {
         setIsLoading(true);
         try {
-            const data = await adminService.getSecurityLogs();
-            setLoginHistory(data.loginHistory || []);
-            setActivityLogs(data.activityLogs || []);
-            setDataChangeLogs(data.dataChangeLogs || []);
-            setSecurityStats(data.securityStats || {
+            // 1. Fetch Stats/Dashboard Data (once or every refresh)
+            const dashboardData = await adminService.getSecurityLogs();
+            setSecurityStats(dashboardData.securityStats || {
                 totalLogins24h: 0, failedLogins24h: 0, activeSessions: 0, blockedIPs: 0, lastSecurityAudit: '-'
             });
+
+            // 2. Fetch Paginated Logs for the currently active view
+            // Note: Currently backend returns ALL logs, we might need to filter by tab later
+            const params = { page, size: pageSize };
+            const paginatedData = await adminService.getPaginatedAuditLogs(params);
+            
+            // For now, we show all logs in the active tab if they match criteria
+            // In a real production app, we would pass 'activeTab' type to the backend
+            setLoginHistory(paginatedData.content || []);
+            setTotalPages(paginatedData.totalPages || 0);
+            setTotalElements(paginatedData.totalElements || 0);
+            
+            // We set these to empty or data if we want to show multiple lists, 
+            // but the UI is tabbed, so we can just use loginHistory for the current view
+            setActivityLogs(paginatedData.content || []);
+            setDataChangeLogs(paginatedData.content || []);
+
         } catch (error) {
             console.error("Failed to fetch security logs", error);
             toast({
@@ -456,6 +478,14 @@ const SecurityAuditLogs = ({ currentUser }) => {
                             </tbody>
                         </table>
                     </div>
+                    {/* Pagination */}
+                    <Pagination
+                        currentPage={page}
+                        totalPages={totalPages}
+                        onPageChange={(newPage) => setPage(newPage)}
+                        totalElements={totalElements}
+                        pageSize={pageSize}
+                    />
                 </motion.div>
             )}
 
@@ -513,6 +543,14 @@ const SecurityAuditLogs = ({ currentUser }) => {
                             </tbody>
                         </table>
                     </div>
+                    {/* Pagination */}
+                    <Pagination
+                        currentPage={page}
+                        totalPages={totalPages}
+                        onPageChange={(newPage) => setPage(newPage)}
+                        totalElements={totalElements}
+                        pageSize={pageSize}
+                    />
                 </motion.div>
             )}
 
@@ -564,6 +602,14 @@ const SecurityAuditLogs = ({ currentUser }) => {
                             </tbody>
                         </table>
                     </div>
+                    {/* Pagination */}
+                    <Pagination
+                        currentPage={page}
+                        totalPages={totalPages}
+                        onPageChange={(newPage) => setPage(newPage)}
+                        totalElements={totalElements}
+                        pageSize={pageSize}
+                    />
                 </motion.div>
             )}
 

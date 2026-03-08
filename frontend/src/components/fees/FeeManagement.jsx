@@ -35,6 +35,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import Pagination from '../common/Pagination';
 
 const FeeManagement = () => {
     const { toast } = useToast();
@@ -44,6 +45,14 @@ const FeeManagement = () => {
     const [report, setReport] = useState({});
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
+
+    // Pagination state
+    const [pagination, setPagination] = useState({
+        currentPage: 0,
+        totalPages: 0,
+        totalElements: 0,
+        pageSize: 10
+    });
 
     // Create Invoice Modal
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -64,16 +73,34 @@ const FeeManagement = () => {
         fetchData();
     }, []);
 
-    const fetchData = async () => {
+    const fetchData = async (page = 0) => {
         try {
             setLoading(true);
-            const [invoicesData, studentsData, reportData] = await Promise.all([
-                adminService.getFees(),
-                adminService.getStudents(),
+            const [invoicesResponse, studentsData, reportData] = await Promise.all([
+                adminService.getFees({ page, size: pagination.pageSize, sort: 'createdAt,desc' }),
+                adminService.getStudents({ size: 1000 }), // For create invoice selection
                 adminService.getFeeReport()
             ]);
-            setInvoices(invoicesData);
-            setStudents(studentsData);
+            
+            // Handle invoices pagination
+            if (invoicesResponse && invoicesResponse.content) {
+                setInvoices(invoicesResponse.content);
+                setPagination(prev => ({
+                    ...prev,
+                    currentPage: invoicesResponse.number,
+                    totalPages: invoicesResponse.totalPages,
+                    totalElements: invoicesResponse.totalElements
+                }));
+            } else {
+                setInvoices(invoicesResponse || []);
+                setPagination(prev => ({
+                    ...prev,
+                    totalPages: 1,
+                    totalElements: (invoicesResponse || []).length
+                }));
+            }
+
+            setStudents(studentsData.content || studentsData || []);
             setReport(reportData);
         } catch (error) {
             console.error("Failed to fetch data", error);
@@ -81,6 +108,10 @@ const FeeManagement = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handlePageChange = (newPage) => {
+        fetchData(newPage);
     };
 
     const handleCreateSubmit = async (e) => {
@@ -321,6 +352,14 @@ const FeeManagement = () => {
                         )}
                     </TableBody>
                 </Table>
+                
+                <Pagination
+                    currentPage={pagination.currentPage}
+                    totalPages={pagination.totalPages}
+                    totalElements={pagination.totalElements}
+                    pageSize={pagination.pageSize}
+                    onPageChange={handlePageChange}
+                />
             </div>
 
             {/* Pay Modal */}

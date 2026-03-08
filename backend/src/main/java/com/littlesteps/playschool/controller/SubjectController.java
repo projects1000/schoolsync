@@ -11,6 +11,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import java.util.Map;
 
 @RestController
@@ -37,10 +41,19 @@ public class SubjectController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllSubjects(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> getAllSubjects(
+            @RequestHeader("Authorization") String token,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id,desc") String sort) {
         try {
             User user = getAuthenticatedUser(token);
-            List<Subject> subjects = subjectService.getAllSubjects(user.getSchoolId());
+            String[] sortParts = sort.split(",");
+            Sort sortObj = Sort.by(sortParts[1].equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+                    sortParts[0]);
+            Pageable pageable = PageRequest.of(page, size, sortObj);
+
+            Page<Subject> subjects = subjectService.getSubjects(user.getSchoolId(), pageable);
             return ResponseEntity.ok(subjects);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

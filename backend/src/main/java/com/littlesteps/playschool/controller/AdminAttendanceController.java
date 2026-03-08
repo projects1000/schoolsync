@@ -9,6 +9,10 @@ import com.littlesteps.playschool.repository.AuditLogRepository;
 import com.littlesteps.playschool.repository.UserRepository;
 import com.littlesteps.playschool.security.SchoolContext;
 import com.littlesteps.playschool.service.AttendanceService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,17 +41,24 @@ public class AdminAttendanceController {
     private UserRepository userRepository;
 
     @GetMapping
-    public ResponseEntity<List<AttendanceDTO>> getAttendance(
+    public ResponseEntity<?> getAttendance(
             @RequestParam String date,
-            @RequestParam(required = false) String className) {
+            @RequestParam(required = false) String className,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id,desc") String sort) {
         try {
             LocalDate attendanceDate = LocalDate.parse(date);
-            List<AttendanceDTO> attendance;
+            String[] sortParts = sort.split(",");
+            Sort sortObj = Sort.by(sortParts[1].equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+                    sortParts[0]);
+            Pageable pageable = PageRequest.of(page, size, sortObj);
 
+            Page<AttendanceDTO> attendance;
             if (className != null && !className.isEmpty()) {
-                attendance = attendanceService.getAttendanceByDateAndClass(attendanceDate, className);
+                attendance = attendanceService.getAttendanceByDateAndClass(attendanceDate, className, pageable);
             } else {
-                attendance = attendanceService.getAttendanceByDate(attendanceDate);
+                attendance = attendanceService.getAttendanceByDate(attendanceDate, pageable);
             }
 
             return ResponseEntity.ok(attendance);
@@ -106,6 +117,22 @@ public class AdminAttendanceController {
             return ResponseEntity.ok(Map.of("message", "Attendance updated successfully"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<?> getAttendanceHistory(
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            @RequestParam(required = false) String className) {
+        try {
+            LocalDate start = LocalDate.parse(startDate);
+            LocalDate end = LocalDate.parse(endDate);
+            String schoolId = SchoolContext.getSchoolId();
+            List<Map<String, Object>> stats = attendanceService.getDailyStatsInRange(schoolId, start, end, className);
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 

@@ -75,7 +75,11 @@ public class AuthService {
             }
 
             // Check School Status
-            com.littlesteps.playschool.entity.School school = schoolRepository.findById(user.getSchoolId())
+            String schoolId = user.getSchoolId();
+            if (schoolId == null) {
+                throw new RuntimeException("No school assigned to this admin account.");
+            }
+            com.littlesteps.playschool.entity.School school = schoolRepository.findById(schoolId)
                     .orElseThrow(() -> new RuntimeException("Associated school not found"));
 
             if (school.getStatus() != com.littlesteps.playschool.entity.School.Status.ACTIVE &&
@@ -108,7 +112,11 @@ public class AuthService {
             }
 
             // Check School Status
-            com.littlesteps.playschool.entity.School school = schoolRepository.findById(user.getSchoolId())
+            String schoolId = user.getSchoolId();
+            if (schoolId == null) {
+                throw new RuntimeException("No school assigned to this teacher account.");
+            }
+            com.littlesteps.playschool.entity.School school = schoolRepository.findById(schoolId)
                     .orElseThrow(() -> new RuntimeException("Associated school not found"));
 
             if (school.getStatus() != com.littlesteps.playschool.entity.School.Status.ACTIVE) {
@@ -129,7 +137,11 @@ public class AuthService {
             }
 
             // Check School Status
-            com.littlesteps.playschool.entity.School school = schoolRepository.findById(user.getSchoolId())
+            String schoolId = user.getSchoolId();
+            if (schoolId == null) {
+                throw new RuntimeException("No school assigned to this parent account.");
+            }
+            com.littlesteps.playschool.entity.School school = schoolRepository.findById(schoolId)
                     .orElseThrow(() -> new RuntimeException("Associated school not found"));
 
             if (school.getStatus() != com.littlesteps.playschool.entity.School.Status.ACTIVE) {

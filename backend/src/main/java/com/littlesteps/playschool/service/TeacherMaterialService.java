@@ -7,6 +7,8 @@ import com.littlesteps.playschool.repository.StudyMaterialRepository;
 import com.littlesteps.playschool.repository.TeacherRepository;
 import com.littlesteps.playschool.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -78,7 +80,7 @@ public class TeacherMaterialService {
         return studyMaterialRepository.save(material);
     }
 
-    public List<StudyMaterial> getMaterialsByClass(String email, String classId) {
+    public Page<StudyMaterial> getPaginatedMaterialsByClass(String email, String classId, Pageable pageable) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         Teacher teacher = teacherRepository.findByUser(user)
@@ -91,6 +93,6 @@ public class TeacherMaterialService {
             throw new RuntimeException("Unauthorized access to class materials.");
         }
 
-        return studyMaterialRepository.findByClassId(classId);
+        return studyMaterialRepository.findByClassId(classId, pageable);
     }
 }

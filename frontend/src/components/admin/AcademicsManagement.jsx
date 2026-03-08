@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { BookOpen, Users, ChevronRight, Save, UserCheck, GraduationCap, Plus, Trash2, Search } from 'lucide-react';
 import adminService from '@/services/adminService';
+import Pagination from '@/components/common/Pagination';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -36,6 +37,7 @@ const AcademicsManagement = () => {
     const [classes, setClasses] = useState([]);
     const [teachers, setTeachers] = useState([]);
     const [subjects, setSubjects] = useState([]);
+    const [allSubjects, setAllSubjects] = useState([]);
 
     // Subject Management state
     const [newSubjectName, setNewSubjectName] = useState('');
@@ -43,6 +45,10 @@ const AcademicsManagement = () => {
     const [newSubjectType, setNewSubjectType] = useState('UNIVERSAL');
     const [newSubjectTargetGrade, setNewSubjectTargetGrade] = useState('');
     const [newSubjectExcludedGrades, setNewSubjectExcludedGrades] = useState([]);
+    const [subjectPage, setSubjectPage] = useState(0);
+    const [subjectPageSize, setSubjectPageSize] = useState(10);
+    const [subjectTotalPages, setSubjectTotalPages] = useState(0);
+    const [subjectTotalElements, setSubjectTotalElements] = useState(0);
 
     // Selected Class
     const [selectedGrade, setSelectedGrade] = useState('');
@@ -69,17 +75,23 @@ const AcademicsManagement = () => {
         fetchInitialData();
     }, []);
 
+    useEffect(() => {
+        fetchSubjects(subjectPage);
+    }, [subjectPage]);
+
     const fetchInitialData = async () => {
         try {
             setLoading(true);
+            // Fetch classes, teachers, and a base list of subjects for dropdowns/mapping
             const [classesData, teachersData, subjectsData] = await Promise.all([
-                adminService.getClasses(),
-                adminService.getTeachers(),
-                adminService.getSubjects()
+                adminService.getClasses({ size: 1000 }),
+                adminService.getTeachers({ size: 1000 }),
+                adminService.getSubjects({ size: 1000 })
             ]);
-            setClasses(classesData || []);
-            setTeachers(teachersData || []);
-            setSubjects(subjectsData || []);
+            setClasses(classesData.content || []);
+            setTeachers(teachersData.content || []);
+            setAllSubjects(subjectsData.content || []);
+            await fetchSubjects(0);
         } catch (error) {
             console.error('Failed to load data:', error);
             toast({
@@ -89,6 +101,17 @@ const AcademicsManagement = () => {
             });
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchSubjects = async (page) => {
+        try {
+            const data = await adminService.getSubjects({ page, size: subjectPageSize });
+            setSubjects(data.content || []);
+            setSubjectTotalPages(data.totalPages || 0);
+            setSubjectTotalElements(data.totalElements || 0);
+        } catch (error) {
+            console.error('Failed to fetch subjects:', error);
         }
     };
 
@@ -149,14 +172,14 @@ const AcademicsManagement = () => {
             const mapped = (classSubjectsData || []).map(cs => ({
                 id: cs.id,
                 subjectId: cs.subjectId,
-                subjectName: subjects.find(s => s.id === cs.subjectId)?.name || 'Unknown',
+                subjectName: cs.subjectName || 'Unknown',
                 teacherId: cs.teacherId || '',
-                teacherName: teachers.find(t => t.id === cs.teacherId)?.name || 'Unassigned'
+                teacherName: cs.teacherName || 'Unassigned'
             }));
             setClassSubjects(mapped);
 
             const assignedSubjectIds = mapped.map(cs => cs.subjectId);
-            const available = subjects.filter(s => {
+            const available = allSubjects.filter(s => {
                 if (assignedSubjectIds.includes(s.id)) return false;
                 const clsGrade = cls.grade || cls.name;
                 if (s.type === 'CLASS_SPECIFIC') return s.targetGrade === clsGrade;
@@ -167,7 +190,7 @@ const AcademicsManagement = () => {
         } catch (error) {
             console.error('Failed to fetch class subjects:', error);
             setClassSubjects([]);
-            setAvailableSubjects(subjects.filter(s => {
+            setAvailableSubjects(allSubjects.filter(s => {
                 const clsGrade = cls.grade || cls.name;
                 if (s.type === 'CLASS_SPECIFIC') return s.targetGrade === clsGrade;
                 if (s.type === 'UNIVERSAL') return !(s.excludedGrades || []).includes(clsGrade);
@@ -218,7 +241,7 @@ const AcademicsManagement = () => {
             setHasChanges(false);
 
             const updatedClasses = await adminService.getClasses();
-            setClasses(updatedClasses);
+            setClasses(updatedClasses.content || updatedClasses || []);
 
         } catch (error) {
             console.error('Failed to save:', error);
@@ -293,8 +316,9 @@ const AcademicsManagement = () => {
             setNewSubjectType('UNIVERSAL');
             setNewSubjectTargetGrade('');
             setNewSubjectExcludedGrades([]);
-            const subjectsData = await adminService.getSubjects();
-            setSubjects(subjectsData || []);
+            const allSubs = await adminService.getSubjects({ size: 1000 });
+            setAllSubjects(allSubs.content || []);
+            await fetchSubjects(subjectPage);
         } catch (error) {
             console.error('Failed to create subject:', error);
             toast({
@@ -318,8 +342,9 @@ const AcademicsManagement = () => {
                 title: "Success",
                 description: "Subject deleted successfully"
             });
-            const subjectsData = await adminService.getSubjects();
-            setSubjects(subjectsData || []);
+            const allSubs = await adminService.getSubjects({ size: 1000 });
+            setAllSubjects(allSubs.content || []);
+            await fetchSubjects(subjectPage);
             if (selectedClassId) {
                 handleClassSelect(selectedClassId);
             }
@@ -809,7 +834,7 @@ const AcademicsManagement = () => {
                                     <CardDescription className="text-base">All globally defined subjects for this academy</CardDescription>
                                 </div>
                                 <div className="p-2 bg-gray-50 rounded-full text-xs font-bold text-gray-400 px-4">
-                                    {subjects.length} TOTAL ENTRIES
+                                    {subjectTotalElements} TOTAL ENTRIES
                                 </div>
                             </CardHeader>
                             <CardContent className="p-8">
@@ -859,6 +884,15 @@ const AcademicsManagement = () => {
                                         ))
                                     )}
                                 </div>
+                                {subjectTotalPages > 1 && (
+                                    <div className="mt-8 pt-6 border-t border-gray-50">
+                                        <Pagination
+                                            currentPage={subjectPage}
+                                            totalPages={subjectTotalPages}
+                                            onPageChange={setSubjectPage}
+                                        />
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </div>

@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Switch } from "@/components/ui/switch";
 import ClassProfileModal from './ClassProfileModal';
+import Pagination from '../common/Pagination';
 
 const ClassManagement = () => {
     const { toast } = useToast();
@@ -44,6 +45,14 @@ const ClassManagement = () => {
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [profileClass, setProfileClass] = useState(null);
     const [classToDelete, setClassToDelete] = useState(null);
+
+    // Pagination state
+    const [pagination, setPagination] = useState({
+        currentPage: 0,
+        totalPages: 0,
+        totalElements: 0,
+        pageSize: 10
+    });
 
     // Wizard State
     const [wizardStep, setWizardStep] = useState(1);
@@ -64,11 +73,32 @@ const ClassManagement = () => {
         locked: false
     });
 
-    const fetchClasses = async () => {
+    const fetchClasses = async (page = 0) => {
         try {
             setLoading(true);
-            const data = await adminService.getClasses();
-            setClasses(data || []);
+            const response = await adminService.getClasses({ 
+                page, 
+                size: pagination.pageSize,
+                sort: 'createdAt,desc'
+            });
+            
+            // Handle both array (legacy) and Page object (new)
+            if (response && response.content) {
+                setClasses(response.content);
+                setPagination(prev => ({
+                    ...prev,
+                    currentPage: response.number,
+                    totalPages: response.totalPages,
+                    totalElements: response.totalElements
+                }));
+            } else {
+                setClasses(response || []);
+                setPagination(prev => ({
+                    ...prev,
+                    totalPages: 1,
+                    totalElements: (response || []).length
+                }));
+            }
             // Initial state: grades are collapsed by default
             setExpandedGrades({});
         } catch (error) {
@@ -83,6 +113,10 @@ const ClassManagement = () => {
         }
     };
 
+    const handlePageChange = (newPage) => {
+        fetchClasses(newPage);
+    };
+
     useEffect(() => {
         fetchClasses();
         fetchTeachersAndSubjects();
@@ -91,11 +125,11 @@ const ClassManagement = () => {
     const fetchTeachersAndSubjects = async () => {
         try {
             const [teacherData, subjectData] = await Promise.all([
-                adminService.getTeachers(),
-                adminService.getSubjects()
+                adminService.getTeachers({ size: 1000 }),
+                adminService.getSubjects({ size: 1000 })
             ]);
-            setTeachers(teacherData || []);
-            setGlobalSubjects(subjectData || []);
+            setTeachers(teacherData.content || []);
+            setGlobalSubjects(subjectData.content || []);
         } catch (error) {
             console.error("Failed to fetch wizard data", error);
         }
@@ -571,7 +605,7 @@ const ClassManagement = () => {
                     </div>
                     <div>
                         <p className="text-sm font-medium text-gray-500">Total Sections</p>
-                        <h3 className="text-2xl font-bold text-gray-900">{classes.length}</h3>
+                        <h3 className="text-2xl font-bold text-gray-900">{pagination.totalElements}</h3>
                     </div>
                 </div>
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-start space-x-4">
@@ -749,6 +783,14 @@ const ClassManagement = () => {
                         </div>
                     </div>
                 )}
+                
+                <Pagination
+                    currentPage={pagination.currentPage}
+                    totalPages={pagination.totalPages}
+                    totalElements={pagination.totalElements}
+                    pageSize={pagination.pageSize}
+                    onPageChange={handlePageChange}
+                />
             </div>
 
             {/* Modals are kept with modern styling applied above */}

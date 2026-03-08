@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import adminService from '../../services/adminService';
+import Pagination from '../common/Pagination';
 
 const AdminTrashManagement = () => {
     const { toast } = useToast();
@@ -26,22 +27,61 @@ const AdminTrashManagement = () => {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
 
-    const fetchDeletedItems = async () => {
+    // Pagination state
+    const [pagination, setPagination] = useState({
+        currentPage: 0,
+        totalPages: 0,
+        totalElements: 0,
+        pageSize: 10
+    });
+
+    const fetchDeletedItems = async (page = 0, tab = activeTab) => {
         setIsLoading(true);
         try {
-            const [studentsRes, teachersRes, parentsRes, classesRes] = await Promise.all([
-                adminService.getDeletedStudents(),
-                adminService.getDeletedTeachers(),
-                adminService.getDeletedParents(),
-                adminService.getDeletedClasses()
-            ]);
+            let response;
+            const params = { page, size: pagination.pageSize, sort: 'deletedAt,desc' };
 
-            setDeletedItems({
-                students: studentsRes.students || [],
-                teachers: teachersRes.teachers || [],
-                parents: parentsRes.parents || [],
-                classes: classesRes || []
-            });
+            switch (tab) {
+                case 'students':
+                    response = await adminService.getDeletedStudents(params);
+                    setDeletedItems(prev => ({ ...prev, students: response.content || [] }));
+                    break;
+                case 'teachers':
+                    response = await adminService.getDeletedTeachers(params);
+                    setDeletedItems(prev => ({ ...prev, teachers: response.content || [] }));
+                    break;
+                case 'parents':
+                    response = await adminService.getDeletedParents(params);
+                    setDeletedItems(prev => ({ ...prev, parents: response.content || [] }));
+                    break;
+                case 'classes':
+                    response = await adminService.getDeletedClasses(params);
+                    // For classes, handle if it's a Page object or legacy array
+                    if (response && response.content) {
+                        setDeletedItems(prev => ({ ...prev, classes: response.content }));
+                    } else {
+                        setDeletedItems(prev => ({ ...prev, classes: response || [] }));
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            if (response && typeof response.number === 'number') {
+                setPagination({
+                    currentPage: response.number,
+                    totalPages: response.totalPages,
+                    totalElements: response.totalElements,
+                    pageSize: response.size
+                });
+            } else {
+                setPagination(prev => ({
+                    ...prev,
+                    currentPage: 0,
+                    totalPages: 1,
+                    totalElements: (Array.isArray(response) ? response : (response?.content || [])).length
+                }));
+            }
         } catch (error) {
             console.error(error);
             toast({ title: 'Error', description: 'Failed to fetch trash items', variant: 'destructive' });
@@ -51,8 +91,12 @@ const AdminTrashManagement = () => {
     };
 
     useEffect(() => {
-        fetchDeletedItems();
-    }, []);
+        fetchDeletedItems(0, activeTab);
+    }, [activeTab]);
+
+    const handlePageChange = (newPage) => {
+        fetchDeletedItems(newPage);
+    };
 
     const handleRestoreClick = (item, type) => {
         setSelectedItem({ ...item, type });
@@ -134,6 +178,13 @@ const AdminTrashManagement = () => {
                         </tbody>
                     </table>
                 </div>
+                <Pagination
+                    currentPage={pagination.currentPage}
+                    totalPages={pagination.totalPages}
+                    totalElements={pagination.totalElements}
+                    pageSize={pagination.pageSize}
+                    onPageChange={handlePageChange}
+                />
             </div>
         );
     };
@@ -173,9 +224,6 @@ const AdminTrashManagement = () => {
                         >
                             <tab.icon className="w-4 h-4" />
                             <span>{tab.label}</span>
-                            <span className="ml-2 bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs">
-                                {deletedItems[tab.id]?.length || 0}
-                            </span>
                         </button>
                     ))}
                 </div>

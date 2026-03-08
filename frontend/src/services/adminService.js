@@ -26,9 +26,9 @@ const adminService = {
         }
     },
     // Class Management APIs
-    getClasses: async () => {
+    getClasses: async (params) => {
         try {
-            const response = await api.get('/admin/classes');
+            const response = await api.get('/admin/classes', { params });
             return response.data;
         } catch (error) {
             throw error;
@@ -57,9 +57,9 @@ const adminService = {
             throw error;
         }
     },
-    getDeletedClasses: async () => {
+    getDeletedClasses: async (params) => {
         try {
-            const response = await api.get('/admin/classes/deleted');
+            const response = await api.get('/admin/classes/deleted', { params });
             return response.data;
         } catch (error) {
             throw error;
@@ -73,9 +73,9 @@ const adminService = {
             throw error;
         }
     },
-    getClassStudents: async (classId) => {
+    getClassStudents: async (classId, params) => {
         try {
-            const response = await api.get(`/admin/classes/${classId}/students`);
+            const response = await api.get(`/admin/classes/${classId}/students`, { params });
             return response.data;
         } catch (error) {
             throw error;
@@ -233,9 +233,9 @@ const adminService = {
         }
     },
     // Parent APIs
-    getParents: async () => {
+    getParents: async (params) => {
         try {
-            const response = await api.get('/admin/parents');
+            const response = await api.get('/admin/parents', { params });
             return response.data;
         } catch (error) {
             throw error;
@@ -298,10 +298,8 @@ const adminService = {
         }
     },
     // Attendance APIs
-    getAttendance: async (date, className) => {
+    getAttendance: async (params) => {
         try {
-            const params = { date };
-            if (className) params.className = className;
             const response = await api.get('/admin/attendance', { params });
             return response.data;
         } catch (error) {
@@ -316,10 +314,18 @@ const adminService = {
             throw error;
         }
     },
-    // Fee APIs
-    getFees: async () => {
+    getAttendanceHistory: async (params) => {
         try {
-            const response = await api.get('/admin/fees');
+            const response = await api.get('/admin/attendance/history', { params });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    // Fee APIs
+    getFees: async (params) => {
+        try {
+            const response = await api.get('/admin/fees', { params });
             return response.data;
         } catch (error) {
             throw error;
@@ -375,9 +381,9 @@ const adminService = {
     },
 
     // Subject APIs
-    getSubjects: async () => {
+    getSubjects: async (params) => {
         try {
-            const response = await api.get('/admin/subjects');
+            const response = await api.get('/admin/subjects', { params });
             return response.data;
         } catch (error) {
             throw error;
@@ -445,25 +451,25 @@ const adminService = {
     },
 
     // --- Trash Endpoints ---
-    getDeletedStudents: async () => {
+    getDeletedStudents: async (params) => {
         try {
-            const response = await api.get('/admin/trash/students');
+            const response = await api.get('/admin/trash/students', { params });
             return response.data;
         } catch (error) {
             throw error;
         }
     },
-    getDeletedTeachers: async () => {
+    getDeletedTeachers: async (params) => {
         try {
-            const response = await api.get('/admin/trash/teachers');
+            const response = await api.get('/admin/trash/teachers', { params });
             return response.data;
         } catch (error) {
             throw error;
         }
     },
-    getDeletedParents: async () => {
+    getDeletedParents: async (params) => {
         try {
-            const response = await api.get('/admin/trash/parents');
+            const response = await api.get('/admin/trash/parents', { params });
             return response.data;
         } catch (error) {
             throw error;
@@ -498,6 +504,14 @@ const adminService = {
     getSecurityLogs: async () => {
         try {
             const response = await api.get('/admin/audit-logs/dashboard');
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    getPaginatedAuditLogs: async (params) => {
+        try {
+            const response = await api.get('/admin/audit-logs', { params });
             return response.data;
         } catch (error) {
             throw error;

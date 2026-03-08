@@ -2,7 +2,7 @@ import api from './api';
 
 const SuperAdminService = {
     // School Management
-    getAllSchools: () => api.get('/superadmin/schools'),
+    getAllSchools: (params) => api.get('/superadmin/schools', { params }),
     createSchool: (data) => api.post('/superadmin/schools', data),
     updateSchool: (id, data) => api.put(`/superadmin/schools/${id}`, data),
     deleteSchool: (id) => api.delete(`/superadmin/schools/${id}`),
@@ -11,7 +11,7 @@ const SuperAdminService = {
     getSchoolDetails: (id) => api.get(`/superadmin/schools/${id}/details`),
 
     // Admin Management
-    getAllAdmins: () => api.get('/superadmin/admins'),
+    getAllAdmins: (params) => api.get('/superadmin/admins', { params }),
     createAdmin: (data) => api.post('/superadmin/admins', data), // Ideally remove schoolId from here if generic
     createAdminForSchool: (schoolId, data) => api.post(`/superadmin/schools/${schoolId}/admin`, data),
     assignAdminToSchool: (schoolId, adminId) => api.put(`/superadmin/schools/${schoolId}/assign-admin/${adminId}`),

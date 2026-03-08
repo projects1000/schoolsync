@@ -1,6 +1,8 @@
 package com.littlesteps.playschool.repository;
 
 import com.littlesteps.playschool.entity.Communication;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -39,6 +41,7 @@ public interface CommunicationRepository extends MongoRepository<Communication, 
     List<Communication> findBySchoolIdOrderByCreatedAtDesc(String schoolId);
 
     List<Communication> findBySchoolIdAndSenderRole(String schoolId, Communication.SenderRole role);
+    Page<Communication> findBySchoolIdAndSenderRole(String schoolId, Communication.SenderRole role, Pageable pageable);
 
     List<Communication> findBySchoolIdAndRecipientType(String schoolId, Communication.RecipientType recipientType);
 
@@ -48,8 +51,10 @@ public interface CommunicationRepository extends MongoRepository<Communication, 
             Communication.RecipientType recipientType);
 
     List<Communication> findByRecipientIdsContaining(String recipientId);
+    Page<Communication> findByRecipientIdsContaining(String recipientId, Pageable pageable);
 
     List<Communication> findByRecipientType(Communication.RecipientType recipientType);
 
     List<Communication> findBySenderIdOrderByCreatedAtDesc(String senderId);
+    Page<Communication> findBySenderId(String senderId, Pageable pageable);
 }

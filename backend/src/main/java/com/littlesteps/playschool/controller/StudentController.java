@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/admin/students")
@@ -38,9 +41,13 @@ public class StudentController {
     }
 
     @GetMapping
-    public ResponseEntity<List<StudentDTO>> getAllStudents(Authentication authentication) {
+    public ResponseEntity<Page<StudentDTO>> getAllStudents(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         String schoolId = getSchoolId(authentication.getName());
-        List<StudentDTO> students = studentService.getAllStudents(schoolId);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<StudentDTO> students = studentService.getAllStudents(schoolId, pageable);
         return ResponseEntity.ok(students);
     }
 
@@ -96,7 +103,10 @@ public class StudentController {
     }
 
     @GetMapping("/class/{className}")
-    public ResponseEntity<?> getStudentsByClass(@PathVariable String className,
+    public ResponseEntity<Page<StudentDTO>> getStudentsByClass(
+            @PathVariable String className,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
         String email = authentication.getName();
         User user = userRepository.findByEmail(email)
@@ -104,38 +114,33 @@ public class StudentController {
 
         // If Teacher, strict check: Must be Class Teacher of this class
         if (user.getRole() == User.Role.TEACHER) {
-            // Find class by name (or we should use ID ideally, but existing API uses name)
-            // We need to fetch all classes and filter by name? Or assumes name is unique.
-            // StudentService uses schoolId and className.
-            // Let's verify permission first.
             com.littlesteps.playschool.entity.Teacher teacher = teacherRepository.findByUser(user)
                     .orElseThrow(() -> new RuntimeException("Teacher not found"));
 
-            // We need the Class ID to check simple assignedClasses or classTeacherId?
-            // Requirement says "Class Teacher". That means linked in Classes entity as
-            // classTeacherId.
-            // But here we only have className.
-            // We'll trust the service returns students for that class, but we must verify
-            // the teacher owns that "className".
-            // Fetch class by name and schoolId.
             com.littlesteps.playschool.entity.Classes targetClass = classesRepository
                     .findBySchoolIdAndName(user.getSchoolId(), className)
                     .orElseThrow(() -> new RuntimeException("Class not found"));
 
             if (targetClass.getClassTeacherId() == null || !targetClass.getClassTeacherId().equals(teacher.getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body("Access Denied: You are not the Class Teacher.");
+                        .body(null);
             }
         }
 
-        List<StudentDTO> students = studentService.getStudentsByClass(user.getSchoolId(), className);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<StudentDTO> students = studentService.getStudentsByClass(user.getSchoolId(), className, pageable);
         return ResponseEntity.ok(students);
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<StudentDTO>> searchStudents(@RequestParam String term, Authentication authentication) {
+    public ResponseEntity<Page<StudentDTO>> searchStudents(
+            @RequestParam String term,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Authentication authentication) {
         String schoolId = getSchoolId(authentication.getName());
-        List<StudentDTO> students = studentService.searchStudents(schoolId, term);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<StudentDTO> students = studentService.searchStudents(schoolId, term, pageable);
         return ResponseEntity.ok(students);
     }
 
