@@ -45,6 +45,7 @@ const Sidebar = ({ activeModule, currentUser, onClose, sidebarOpen, onLogout }) 
     { id: 'security-logs', label: 'Security & Logs', icon: Shield, roles: ['superadmin'] },
     { id: 'system-health', label: 'System Health', icon: Activity, roles: ['superadmin'] },
     { id: 'superadmin-trash', label: 'Trash', icon: Trash2, roles: ['superadmin'] },
+    { id: 'superadmin-communications', label: 'Communication', icon: MessageSquare, roles: ['superadmin'] },
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin'] },
     { id: 'teacher-dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['teacher'] },
     { id: 'teacher-classes', label: 'My Classes', icon: GraduationCap, roles: ['teacher'] },
@@ -57,7 +58,7 @@ const Sidebar = ({ activeModule, currentUser, onClose, sidebarOpen, onLogout }) 
     { id: 'teacher-promotions', label: 'Promotions', icon: ArrowUpCircle, roles: ['teacher'] },
     { id: 'teachers', label: 'Teachers', icon: UserCheck, roles: ['admin'] },
     { id: 'students', label: 'Students', icon: GraduationCap, roles: ['admin'] },
-    { id: 'communications', label: 'Communication', icon: MessageSquare, roles: ['superadmin', 'admin'] },
+    { id: 'communications', label: 'Communication', icon: MessageSquare, roles: ['admin'] },
     { id: 'parents', label: 'Parents', icon: Heart, roles: ['admin'] },
 
     { id: 'school-profile', label: 'School Profile', icon: Building, roles: ['admin'] },

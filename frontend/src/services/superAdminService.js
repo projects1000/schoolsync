@@ -21,6 +21,13 @@ const SuperAdminService = {
     updateAdminStatus: (id, status) => api.patch(`/superadmin/admins/${id}/status`, { status }),
     resetAdminPassword: (id) => api.post(`/superadmin/admins/${id}/reset-password`),
     getDashboardData: () => api.get('/superadmin/dashboard'),
+
+    // Communications
+    getAdminsForComms: () => api.get('/superadmin/communications/admins'),
+    sendDirectMessage: (data) => api.post('/superadmin/communications/direct', data),
+    sendBroadcast: (data) => api.post('/superadmin/communications/broadcast', data),
+    getCommHistory: () => api.get('/superadmin/communications/history'),
 };
 
 export default SuperAdminService;
+

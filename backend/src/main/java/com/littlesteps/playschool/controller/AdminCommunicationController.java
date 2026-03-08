@@ -73,6 +73,12 @@ public class AdminCommunicationController {
         return ResponseEntity.ok(adminCommunicationService.getHistory(email));
     }
 
+    @GetMapping("/inbox")
+    public ResponseEntity<List<Communication>> getInbox(Authentication authentication) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(adminCommunicationService.getInbox(email));
+    }
+
     // Helper endpoints for the frontend dropdowns
 
     @GetMapping("/teachers")

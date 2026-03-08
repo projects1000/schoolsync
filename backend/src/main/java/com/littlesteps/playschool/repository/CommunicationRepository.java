@@ -50,4 +50,6 @@ public interface CommunicationRepository extends MongoRepository<Communication, 
     List<Communication> findByRecipientIdsContaining(String recipientId);
 
     List<Communication> findByRecipientType(Communication.RecipientType recipientType);
+
+    List<Communication> findBySenderIdOrderByCreatedAtDesc(String senderId);
 }
