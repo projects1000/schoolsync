@@ -11,7 +11,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+
 @Service
+@CacheConfig(cacheNames = "students")
 public class StudentService {
 
     @Autowired
@@ -32,6 +37,7 @@ public class StudentService {
     @Autowired
     private com.littlesteps.playschool.repository.UserRepository userRepository;
 
+    @Cacheable(key = "#schoolId")
     public List<StudentDTO> getAllStudents(String schoolId) {
         return studentRepository.findBySchoolIdAndStatusNot(schoolId, Student.Status.DELETED)
                 .stream()
@@ -39,6 +45,7 @@ public class StudentService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(key = "{#schoolId, #classId}")
     public List<StudentDTO> getStudentsByClassId(String schoolId, String classId) {
         return studentRepository.findBySchoolIdAndClassIdAndStatusNot(schoolId, classId, Student.Status.DELETED)
                 .stream()
@@ -46,6 +53,7 @@ public class StudentService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(key = "{#schoolId, 'deleted'}")
     public List<StudentDTO> getDeletedStudents(String schoolId) {
         return studentRepository.findBySchoolIdAndStatus(schoolId, Student.Status.DELETED)
                 .stream()
@@ -53,6 +61,7 @@ public class StudentService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(key = "#id")
     public StudentDTO getStudentById(String id) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -60,6 +69,7 @@ public class StudentService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public StudentDTO createStudent(StudentDTO studentDTO, String schoolId) {
         // Auto-generate Admission No
         String admissionNo = generateAdmissionNo();
@@ -101,6 +111,7 @@ public class StudentService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public StudentDTO updateStudent(String id, StudentDTO studentDTO) {
         Student existingStudent = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -192,6 +203,7 @@ public class StudentService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public void promoteStudent(String id, String newClassId, String newSectionId) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -221,6 +233,7 @@ public class StudentService {
         studentRepository.save(student);
     }
 
+    @CacheEvict(allEntries = true)
     public void updateStudentStatus(String id, String status) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -228,6 +241,7 @@ public class StudentService {
         studentRepository.save(student);
     }
 
+    @CacheEvict(allEntries = true)
     public void deleteStudent(String id) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -290,6 +304,7 @@ public class StudentService {
         auditService.logAction(username, "DELETE", "STUDENT", id, null, "Soft deleted student: " + student.getName());
     }
 
+    @CacheEvict(allEntries = true)
     public void restoreStudent(String id) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -337,6 +352,7 @@ public class StudentService {
                 "Restored soft deleted student: " + student.getName());
     }
 
+    @Cacheable(key = "{#schoolId, #classId, 'byClass'}")
     public List<StudentDTO> getStudentsByClass(String schoolId, String classId) {
         return studentRepository.findBySchoolIdAndClassName(schoolId, classId)
                 .stream()
@@ -344,6 +360,7 @@ public class StudentService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(key = "{#schoolId, #searchTerm}")
     public List<StudentDTO> searchStudents(String schoolId, String searchTerm) {
         return studentRepository.searchStudents(schoolId, searchTerm)
                 .stream()
@@ -411,6 +428,7 @@ public class StudentService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public void unassignStudentsFromClass(String classId) {
         List<Student> students = studentRepository.findByClassId(classId);
         for (Student student : students) {

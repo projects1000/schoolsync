@@ -49,5 +49,9 @@ public interface AuditLogRepository extends MongoRepository<AuditLog, String> {
 
     List<AuditLog> findBySchoolId(String schoolId);
 
+    List<AuditLog> findTop1000ByCreatedAtAfterOrderByCreatedAtDesc(LocalDateTime createdAt);
+
+    List<AuditLog> findTop1000BySchoolIdAndCreatedAtAfterOrderByCreatedAtDesc(String schoolId, LocalDateTime createdAt);
+
     List<AuditLog> findBySchoolIdAndTargetIdAndAction(String schoolId, String targetId, String action);
 }

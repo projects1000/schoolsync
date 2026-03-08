@@ -13,6 +13,8 @@ import com.littlesteps.playschool.repository.TeacherRepository;
 import com.littlesteps.playschool.repository.UserRepository;
 import com.littlesteps.playschool.repository.AttendanceRepository;
 import com.littlesteps.playschool.repository.AuditLogRepository;
+import com.littlesteps.playschool.repository.FeeInvoiceRepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,12 +34,33 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.PageRequest;
 import com.littlesteps.playschool.entity.Attendance;
 import com.littlesteps.playschool.entity.AuditLog;
+import com.littlesteps.playschool.entity.Teacher;
+import com.littlesteps.playschool.entity.Student;
+import com.littlesteps.playschool.entity.FeeInvoice;
+import com.littlesteps.playschool.dto.SchoolDetailsDto;
+import com.littlesteps.playschool.dto.TeacherDTO;
+import com.littlesteps.playschool.dto.StudentDTO;
+import java.math.BigDecimal;
+import com.littlesteps.playschool.entity.EmailVerificationToken;
+import com.littlesteps.playschool.repository.EmailVerificationTokenRepository;
+import com.littlesteps.playschool.util.EmailValidationUtil;
+import java.util.UUID;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 
 @Service
+@CacheConfig(cacheNames = "superadmin")
 public class SuperAdminService {
 
     @Autowired
     private SchoolRepository schoolRepository;
+
+    @Autowired
+    private EmailVerificationTokenRepository tokenRepository;
+
+    @Autowired
+    private EmailService emailService;
 
     @Autowired
     private UserRepository userRepository;
@@ -55,12 +78,19 @@ public class SuperAdminService {
     private AuditLogRepository auditLogRepository;
 
     @Autowired
+    private FeeInvoiceRepository feeInvoiceRepository;
+
+    @Autowired
+    private ModelMapper modelMapper;
+
+    @Autowired
     private AuditService auditService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "schools", key = "'all'")
     public List<SchoolResponse> getAllSchools() {
         List<School> schools = schoolRepository.findByStatusNot(School.Status.DELETED);
         return schools.stream().map(this::mapToSchoolResponse).collect(Collectors.toList());
@@ -82,6 +112,7 @@ public class SuperAdminService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "admins", key = "'all'")
     public List<AdminResponse> getAllAdmins() {
         List<User> admins = userRepository.findByRole(User.Role.ADMIN);
 
@@ -104,6 +135,7 @@ public class SuperAdminService {
     }
 
     @Transactional
+    @CacheEvict(value = {"schools", "superadmin"}, allEntries = true)
     public School createSchool(CreateSchoolRequest request) {
         if (schoolRepository.findByCode(request.getCode()).isPresent()) {
             throw new RuntimeException("School with this code already exists");
@@ -129,6 +161,7 @@ public class SuperAdminService {
     }
 
     @Transactional
+    @CacheEvict(value = {"schools", "superadmin"}, allEntries = true)
     public School updateSchool(String schoolId, School updateData) {
         School school = schoolRepository.findById(schoolId)
                 .orElseThrow(() -> new RuntimeException("School not found"));
@@ -156,6 +189,7 @@ public class SuperAdminService {
     }
 
     @Transactional
+    @CacheEvict(value = {"schools", "superadmin"}, allEntries = true)
     public void deleteSchool(String schoolId) {
         School school = schoolRepository.findById(schoolId)
                 .orElseThrow(() -> new RuntimeException("School not found"));
@@ -183,12 +217,14 @@ public class SuperAdminService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "schools", key = "'deleted'")
     public List<SchoolResponse> getDeletedSchools() {
         List<School> schools = schoolRepository.findByStatus(School.Status.DELETED);
         return schools.stream().map(this::mapToSchoolResponse).collect(Collectors.toList());
     }
 
     @Transactional
+    @CacheEvict(value = {"schools", "superadmin"}, allEntries = true)
     public void restoreSchool(String schoolId) {
         School school = schoolRepository.findById(schoolId)
                 .orElseThrow(() -> new RuntimeException("School not found"));
@@ -203,6 +239,7 @@ public class SuperAdminService {
     }
 
     @Transactional
+    @CacheEvict(value = {"schools", "admins", "superadmin"}, allEntries = true)
     public User createAdminForSchool(String schoolId, CreateAdminRequest request, String createdByUserId) {
         School school = schoolRepository.findById(schoolId)
                 .orElseThrow(() -> new RuntimeException("School not found"));
@@ -213,6 +250,10 @@ public class SuperAdminService {
 
         if (school.getStatus() != School.Status.ACTIVE) {
             throw new RuntimeException("Cannot assign admin to an INACTIVE school");
+        }
+
+        if (!EmailValidationUtil.isValidEmail(request.getEmail())) {
+            throw new RuntimeException("Invalid email address. Please literally use a real email with valid routing (MX) records.");
         }
 
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -231,6 +272,14 @@ public class SuperAdminService {
         admin.setStatus(User.Status.ACTIVE);
 
         User savedAdmin = userRepository.save(admin);
+
+        // Generate Verification Token for the new Admin
+        String tokenString = UUID.randomUUID().toString();
+        EmailVerificationToken evalToken = new EmailVerificationToken(tokenString, savedAdmin, java.time.LocalDateTime.now().plusHours(24));
+        tokenRepository.save(evalToken);
+
+        // Dispatch Verification Email
+        emailService.sendVerificationEmail(savedAdmin.getEmail(), savedAdmin.getName(), tokenString);
 
         // Link admin to school
         school.setAdminId(savedAdmin.getId());
@@ -252,6 +301,7 @@ public class SuperAdminService {
     }
 
     @Transactional
+    @CacheEvict(value = {"schools", "admins", "superadmin"}, allEntries = true)
     public User createAdmin(CreateAdminRequest request, String createdBy) {
         if (request.getSchoolId() == null || request.getSchoolId().isEmpty()) {
             throw new RuntimeException("School ID is required");
@@ -260,6 +310,7 @@ public class SuperAdminService {
     }
 
     @Transactional
+    @CacheEvict(value = {"schools", "admins", "superadmin"}, allEntries = true)
     public void assignAdminToSchool(String schoolId, String adminId) {
         School school = schoolRepository.findById(schoolId)
                 .orElseThrow(() -> new RuntimeException("School not found"));
@@ -300,6 +351,7 @@ public class SuperAdminService {
     }
 
     @Transactional
+    @CacheEvict(value = {"schools", "admins", "superadmin"}, allEntries = true)
     public void reassignAdmin(String oldAdminId, String newAdminId, String performedBy) {
         User oldAdmin = userRepository.findById(oldAdminId)
                 .orElseThrow(() -> new RuntimeException("Old Admin not found"));
@@ -362,6 +414,7 @@ public class SuperAdminService {
     }
 
     @Transactional
+    @CacheEvict(value = {"schools", "admins", "superadmin"}, allEntries = true)
     public void updateAdminStatus(String adminId, String statusStr, String performedBy) {
         User admin = userRepository.findById(adminId)
                 .orElseThrow(() -> new RuntimeException("Admin not found"));
@@ -404,6 +457,7 @@ public class SuperAdminService {
     }
 
     @Transactional
+    @CacheEvict(value = {"schools", "admins", "superadmin"}, allEntries = true)
     public void resetAdminPassword(String adminId, String performedBy) {
         User admin = userRepository.findById(adminId)
                 .orElseThrow(() -> new RuntimeException("Admin not found"));
@@ -427,6 +481,57 @@ public class SuperAdminService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(key = "'details_' + #schoolId")
+    public SchoolDetailsDto getSchoolDetails(String schoolId) {
+        School school = schoolRepository.findById(schoolId)
+                .orElseThrow(() -> new RuntimeException("School not found"));
+
+        SchoolDetailsDto dto = new SchoolDetailsDto();
+        dto.setSchool(mapToSchoolResponse(school));
+
+        // Fetch Teachers
+        List<Teacher> teachers = teacherRepository.findBySchoolIdAndStatusNot(schoolId, Teacher.Status.DELETED);
+        List<TeacherDTO> teacherDTOs = teachers.stream()
+                .map(t -> {
+                    TeacherDTO td = modelMapper.map(t, TeacherDTO.class);
+                    td.setStatus(t.getStatus().name());
+                    if (t.getEmploymentType() != null) {
+                        td.setEmploymentType(t.getEmploymentType().name());
+                    }
+                    return td;
+                })
+                .collect(Collectors.toList());
+        dto.setTeachers(teacherDTOs);
+        dto.setTotalTeachers(teacherDTOs.size());
+
+        // Fetch Students
+        List<Student> students = studentRepository.findBySchoolIdAndStatusNot(schoolId, Student.Status.DELETED);
+        List<StudentDTO> studentDTOs = students.stream()
+                .map(s -> modelMapper.map(s, StudentDTO.class))
+                .collect(Collectors.toList());
+        dto.setStudents(studentDTOs);
+        dto.setTotalStudents(studentDTOs.size());
+
+        // Calculate Revenue
+        List<FeeInvoice> paidInvoices = feeInvoiceRepository.findBySchoolIdAndStatus(schoolId, FeeInvoice.Status.PAID);
+        BigDecimal totalRev = BigDecimal.ZERO;
+        for (FeeInvoice invoice : paidInvoices) {
+            if (invoice.getAmount() != null) {
+                totalRev = totalRev.add(invoice.getAmount());
+            }
+        }
+        dto.setTotalRevenue(totalRev);
+
+        // Subscription Due (Mock logic: $10 per student minimum $50)
+        long studentCount = dto.getTotalStudents();
+        BigDecimal subDue = new BigDecimal(Math.max(50, studentCount * 10));
+        dto.setSubscriptionDue(subDue);
+
+        return dto;
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(key = "'dashboardStats'")
     public com.littlesteps.playschool.dto.DashboardStats getDashboardData() {
         long totalSchools = schoolRepository.count();
         long activeSchools = schoolRepository.countByStatus(School.Status.ACTIVE);

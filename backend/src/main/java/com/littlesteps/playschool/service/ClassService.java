@@ -11,7 +11,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+
 @Service
+@CacheConfig(cacheNames = "classes")
 public class ClassService {
 
     @Autowired
@@ -26,15 +31,18 @@ public class ClassService {
     @Autowired
     private StudentService studentService;
 
+    @Cacheable(key = "#schoolId")
     public List<Classes> getClassesBySchoolId(String schoolId) {
         return classesRepository.findBySchoolIdAndStatusNot(schoolId, Classes.Status.DELETED);
     }
 
+    @Cacheable(key = "#id")
     public Optional<Classes> getClassById(String id) {
         return classesRepository.findById(id);
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public Classes createClass(ClassDTO classDTO, String schoolId, String createdBy) {
         if (classDTO.getCapacity() != null && classDTO.getCapacity() <= 0) {
             throw new IllegalArgumentException("Capacity must be greater than zero");
@@ -71,6 +79,7 @@ public class ClassService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public Classes updateClass(String id, ClassDTO classDTO, String updatedBy) {
         Classes existingClass = classesRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Class not found"));
@@ -145,6 +154,7 @@ public class ClassService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public Classes assignClassTeacherToClass(String classId, String teacherId, String schoolId, String updatedBy) {
         Classes classesEntity = classesRepository.findById(classId)
                 .orElseThrow(() -> new IllegalArgumentException("Class not found"));
@@ -173,6 +183,7 @@ public class ClassService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public void deleteClass(String id, String deletedBy) {
         Classes existingClass = classesRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Class not found"));
@@ -195,11 +206,13 @@ public class ClassService {
                 "Deleted class: " + existingClass.getName());
     }
 
+    @Cacheable(key = "{#schoolId, 'deleted'}")
     public List<Classes> getDeletedClassesBySchoolId(String schoolId) {
         return classesRepository.findBySchoolIdAndStatus(schoolId, Classes.Status.DELETED);
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public Classes restoreClass(String id, String restoredBy) {
         Classes existingClass = classesRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Class not found"));

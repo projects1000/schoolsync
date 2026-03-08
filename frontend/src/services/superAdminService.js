@@ -8,6 +8,7 @@ const SuperAdminService = {
     deleteSchool: (id) => api.delete(`/superadmin/schools/${id}`),
     getDeletedSchools: () => api.get('/superadmin/schools/trash'),
     restoreSchool: (id) => api.put(`/superadmin/schools/${id}/restore`),
+    getSchoolDetails: (id) => api.get(`/superadmin/schools/${id}/details`),
 
     // Admin Management
     getAllAdmins: () => api.get('/superadmin/admins'),

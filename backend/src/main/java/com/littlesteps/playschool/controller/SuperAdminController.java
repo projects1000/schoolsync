@@ -55,6 +55,18 @@ public class SuperAdminController {
         }
     }
 
+    @GetMapping("/schools/{schoolId}/details")
+    public ResponseEntity<com.littlesteps.playschool.dto.SchoolDetailsDto> getSchoolDetails(@PathVariable String schoolId) {
+        try {
+            logger.info("Fetching expansive details for school: {}", schoolId);
+            com.littlesteps.playschool.dto.SchoolDetailsDto details = superAdminService.getSchoolDetails(schoolId);
+            return ResponseEntity.ok(details);
+        } catch (Exception e) {
+            logger.error("Error fetching school details: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
     @GetMapping("/admins")
     public ResponseEntity<List<AdminResponse>> getAllAdmins() {
         try {

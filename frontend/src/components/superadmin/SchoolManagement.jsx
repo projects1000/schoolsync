@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Plus,
@@ -35,6 +36,7 @@ import SuperAdminService from '../../services/superAdminService';
 
 const SchoolManagement = ({ currentUser }) => {
     const { toast } = useToast();
+    const navigate = useNavigate();
     const [schools, setSchools] = useState([]);
     const [viewMode, setViewMode] = useState('table'); // 'table' or 'card'
     const [searchQuery, setSearchQuery] = useState('');
@@ -94,8 +96,7 @@ const SchoolManagement = ({ currentUser }) => {
     };
 
     const handleViewDetails = (school) => {
-        setSelectedSchool(school);
-        setShowDetailsModal(true);
+        navigate(`/superadmin/schools/${school.id}`);
     };
 
     const handleAssignAdmin = async (school) => {

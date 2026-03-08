@@ -317,18 +317,11 @@ public class AuditService {
         List<AuditLog> recentLogs;
 
         if (schoolId == null || schoolId.isEmpty() || "SCH-001".equals(schoolId)) {
-            // Fetch all logs or specifically filter for schoolId null OR schoolId =
-            // "SCH-001"
-            // For Super Admin, we'll fetch everything for now as a simplification
-            recentLogs = auditLogRepository.findAll().stream()
-                    .filter(log -> log.getCreatedAt().isAfter(thirtyDaysAgo))
-                    .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
-                    .toList();
+            // For Super Admin, fetch logs from the last 30 days
+            recentLogs = auditLogRepository.findTop1000ByCreatedAtAfterOrderByCreatedAtDesc(thirtyDaysAgo);
         } else {
-            recentLogs = auditLogRepository.findBySchoolId(schoolId).stream()
-                    .filter(log -> log.getCreatedAt().isAfter(thirtyDaysAgo))
-                    .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
-                    .toList();
+            // For School Admin, fetch logs specific to their school from the last 30 days
+            recentLogs = auditLogRepository.findTop1000BySchoolIdAndCreatedAtAfterOrderByCreatedAtDesc(schoolId, thirtyDaysAgo);
         }
 
         // 2. Map to DTOs

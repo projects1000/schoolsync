@@ -40,6 +40,21 @@ public class AuthController {
         }
     }
 
+    @GetMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
+        try {
+            authService.verifyEmailToken(token);
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Email verified successfully! You can now log in.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Email verification failed: {}", e.getMessage(), e);
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<String> logout() {
         return ResponseEntity.ok("Logged out successfully");

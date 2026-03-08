@@ -16,7 +16,12 @@ import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+
 @Service
+@CacheConfig(cacheNames = "teachers")
 public class TeacherService {
 
     @Autowired
@@ -40,6 +45,7 @@ public class TeacherService {
     /**
      * Get all teachers with optional filtering
      */
+    @Cacheable(key = "{#schoolId, #name, #department, #status}")
     public List<TeacherDTO> getAllTeachers(String schoolId, String name, String department, String status) {
         List<Teacher> teachers;
 
@@ -62,6 +68,7 @@ public class TeacherService {
     /**
      * Get all deleted teachers
      */
+    @Cacheable(key = "{#schoolId, 'deleted'}")
     public List<TeacherDTO> getDeletedTeachers(String schoolId) {
         return teacherRepository.findBySchoolIdAndStatus(schoolId, Teacher.Status.DELETED)
                 .stream()
@@ -73,6 +80,7 @@ public class TeacherService {
      * Create a new teacher with associated user account
      */
     @Transactional
+    @CacheEvict(allEntries = true)
     public Map<String, Object> createTeacherWithUser(TeacherDTO teacherDTO, String createdBy, String schoolId) {
         // Validate schoolId is present
         if (schoolId == null || schoolId.trim().isEmpty()) {
@@ -165,12 +173,14 @@ public class TeacherService {
     /**
      * Get teacher by ID
      */
+    @Cacheable(key = "#id")
     public TeacherDTO getTeacherById(String id) {
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Teacher not found with ID: " + id));
         return convertToDTO(teacher);
     }
 
+    @CacheEvict(allEntries = true)
     public TeacherDTO updateTeacher(String id, TeacherDTO teacherDTO, String updatedBy) {
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Teacher not found with ID: " + id));
@@ -216,6 +226,7 @@ public class TeacherService {
         return convertToDTO(updatedTeacher);
     }
 
+    @CacheEvict(allEntries = true)
     public void deactivateTeacher(String id, String deactivatedBy) {
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Teacher not found with ID: " + id));
@@ -233,6 +244,7 @@ public class TeacherService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public void deleteTeacher(String id, String deletedBy) {
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Teacher not found with ID: " + id));
@@ -278,6 +290,7 @@ public class TeacherService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public void restoreTeacher(String id, String restoredBy) {
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Teacher not found with ID: " + id));
@@ -305,6 +318,7 @@ public class TeacherService {
     @Autowired
     private com.littlesteps.playschool.repository.ClassSubjectRepository classSubjectRepository;
 
+    @CacheEvict(allEntries = true)
     public void assignClasses(String teacherId, List<String> classNames, String assignedBy) {
         Teacher teacher = teacherRepository.findById(teacherId)
                 .orElseThrow(() -> new RuntimeException("Teacher not found with ID: " + teacherId));
@@ -440,6 +454,7 @@ public class TeacherService {
      * Validates teacher and classes belong to admin's school
      */
     @Transactional
+    @CacheEvict(allEntries = true)
     public Map<String, Object> updateTeacherClassAssignments(String teacherId, java.util.List<String> assignedClassIds,
             String adminEmail, String schoolId) {
         // Validate schoolId is present
@@ -513,6 +528,7 @@ public class TeacherService {
      * ACTIVE → Teacher regains access
      */
     @Transactional
+    @CacheEvict(allEntries = true)
     public Map<String, Object> updateTeacherStatus(String teacherId, String newStatus, String adminEmail,
             String schoolId) {
         // Validate schoolId is present

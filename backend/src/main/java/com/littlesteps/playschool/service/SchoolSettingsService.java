@@ -6,8 +6,12 @@ import com.littlesteps.playschool.repository.SchoolSettingsRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 
 @Service
+@CacheConfig(cacheNames = "schoolSettings")
 public class SchoolSettingsService {
 
     @Autowired
@@ -16,6 +20,7 @@ public class SchoolSettingsService {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Cacheable(key = "'default'")
     public SchoolSettingsDTO getSchoolSettings() {
         SchoolSettings settings = schoolSettingsRepository.findFirstByOrderByIdAsc()
                 .orElse(getDefaultSettings());
@@ -23,6 +28,7 @@ public class SchoolSettingsService {
         return modelMapper.map(settings, SchoolSettingsDTO.class);
     }
 
+    @CacheEvict(allEntries = true)
     public SchoolSettingsDTO saveSchoolSettings(SchoolSettingsDTO settingsDTO) {
         SchoolSettings existingSettings = schoolSettingsRepository.findFirstByOrderByIdAsc()
                 .orElse(new SchoolSettings());
@@ -36,6 +42,7 @@ public class SchoolSettingsService {
         return modelMapper.map(savedSettings, SchoolSettingsDTO.class);
     }
 
+    @CacheEvict(allEntries = true)
     public SchoolSettingsDTO updateSchoolInfo(SchoolSettingsDTO schoolInfoDTO) {
         SchoolSettings existingSettings = schoolSettingsRepository.findFirstByOrderByIdAsc()
                 .orElse(new SchoolSettings());
@@ -51,6 +58,7 @@ public class SchoolSettingsService {
         return modelMapper.map(savedSettings, SchoolSettingsDTO.class);
     }
 
+    @CacheEvict(allEntries = true)
     public SchoolSettingsDTO updateNotificationSettings(SchoolSettingsDTO notificationDTO) {
         SchoolSettings existingSettings = schoolSettingsRepository.findFirstByOrderByIdAsc()
                 .orElse(new SchoolSettings());
@@ -64,6 +72,7 @@ public class SchoolSettingsService {
         return modelMapper.map(savedSettings, SchoolSettingsDTO.class);
     }
 
+    @CacheEvict(allEntries = true)
     public SchoolSettingsDTO updateAppearanceSettings(SchoolSettingsDTO appearanceDTO) {
         SchoolSettings existingSettings = schoolSettingsRepository.findFirstByOrderByIdAsc()
                 .orElse(new SchoolSettings());
@@ -75,6 +84,7 @@ public class SchoolSettingsService {
         return modelMapper.map(savedSettings, SchoolSettingsDTO.class);
     }
 
+    @CacheEvict(allEntries = true)
     public SchoolSettingsDTO updateGeneralSettings(SchoolSettingsDTO generalDTO) {
         SchoolSettings existingSettings = schoolSettingsRepository.findFirstByOrderByIdAsc()
                 .orElse(new SchoolSettings());

@@ -8,12 +8,17 @@ import com.littlesteps.playschool.entity.User;
 import com.littlesteps.playschool.repository.SchoolRepository;
 import com.littlesteps.playschool.repository.UserRepository;
 import com.littlesteps.playschool.util.JwtUtil;
+import com.littlesteps.playschool.util.EmailValidationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.littlesteps.playschool.entity.EmailVerificationToken;
+import com.littlesteps.playschool.repository.EmailVerificationTokenRepository;
+
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -36,6 +41,12 @@ public class AuthService {
     @Autowired
     private ParentRegistrationService parentRegistrationService;
 
+    @Autowired
+    private EmailVerificationTokenRepository tokenRepository;
+
+    @Autowired
+    private EmailService emailService;
+
     public LoginResponse login(com.littlesteps.playschool.dto.LoginRequest request,
             jakarta.servlet.http.HttpServletRequest httpServletRequest) {
         User user = userRepository.findByEmailAndActive(request.getEmail(), true)
@@ -45,6 +56,10 @@ public class AuthService {
             auditService.logActionWithContext(request.getEmail(), "FAILED_LOGIN", "USER", null, null,
                     "Invalid credentials", httpServletRequest);
             throw new RuntimeException("Invalid credentials");
+        }
+
+        if (!user.isEmailVerified() && user.getRole() != User.Role.SUPERADMIN) {
+             throw new RuntimeException("Please verify your email address to log in.");
         }
 
         // Additional checks for ADMIN role
@@ -184,6 +199,9 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(role);
         user.setActive(true);
+        if (role == User.Role.SUPERADMIN) {
+            user.setEmailVerified(true);
+        }
         user.setCreatedAt(LocalDateTime.now());
 
         // Assign default school if not specified (for now)
@@ -194,12 +212,29 @@ public class AuthService {
         // Save user to database
         User savedUser = userRepository.save(user);
 
+        if (role == User.Role.SUPERADMIN) {
+            return new RegisterResponse(
+                    savedUser.getId(),
+                    savedUser.getName(),
+                    savedUser.getEmail(),
+                    savedUser.getRole().name().toLowerCase(),
+                    "Super Admin registration successful! You can now log in.");
+        }
+
+        // Generate Verification Token
+        String tokenString = UUID.randomUUID().toString();
+        EmailVerificationToken evalToken = new EmailVerificationToken(tokenString, savedUser, LocalDateTime.now().plusHours(24));
+        tokenRepository.save(evalToken);
+
+        // Dispatch Email
+        emailService.sendVerificationEmail(savedUser.getEmail(), savedUser.getName(), tokenString);
+
         return new RegisterResponse(
                 savedUser.getId(),
                 savedUser.getName(),
                 savedUser.getEmail(),
                 savedUser.getRole().name().toLowerCase(),
-                "Registration successful! You can now log in.");
+                "Registration successful! Please check your email to verify your account.");
     }
 
     public RegisterResponse registerParentWithCode(RegisterRequest request) {
@@ -216,6 +251,11 @@ public class AuthService {
         // Validate registration code using ParentRegistrationService
         if (!parentRegistrationService.validateRegistrationCode(request.getRegistrationCode())) {
             throw new RuntimeException("Invalid or expired registration code");
+        }
+
+        // Validate Email
+        if (!EmailValidationUtil.isValidEmail(request.getEmail())) {
+            throw new RuntimeException("Invalid email address. Please use a real email with valid routing (MX) records.");
         }
 
         // Get parent registration details
@@ -249,11 +289,35 @@ public class AuthService {
         // Mark registration code as used
         parentRegistrationService.markCodeAsUsed(request.getRegistrationCode());
 
+        // Generate Verification Token
+        String tokenString = UUID.randomUUID().toString();
+        EmailVerificationToken evalToken = new EmailVerificationToken(tokenString, savedUser, LocalDateTime.now().plusHours(24));
+        tokenRepository.save(evalToken);
+
+        // Dispatch Email
+        emailService.sendVerificationEmail(savedUser.getEmail(), savedUser.getName(), tokenString);
+
         return new RegisterResponse(
                 savedUser.getId(),
                 savedUser.getName(),
                 savedUser.getEmail(),
                 savedUser.getRole().name().toLowerCase(),
-                "Parent registration successful! Welcome to Little Steps Playschool. You can now log in to access your child's information.");
+                "Parent registration successful! Please check your email to verify your account.");
+    }
+
+    public void verifyEmailToken(String token) {
+        EmailVerificationToken verificationToken = tokenRepository.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid verification token"));
+
+        if (verificationToken.isExpired()) {
+            tokenRepository.delete(verificationToken);
+            throw new RuntimeException("Verification token has expired. Please request a new one.");
+        }
+
+        User user = verificationToken.getUser();
+        user.setEmailVerified(true);
+        userRepository.save(user);
+
+        tokenRepository.delete(verificationToken);
     }
 }

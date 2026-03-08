@@ -13,6 +13,10 @@ import com.littlesteps.playschool.repository.SchoolRepository;
 import java.util.List;
 
 import java.util.stream.Collectors;
+import com.littlesteps.playschool.entity.EmailVerificationToken;
+import com.littlesteps.playschool.repository.EmailVerificationTokenRepository;
+import com.littlesteps.playschool.util.EmailValidationUtil;
+import java.util.UUID;
 
 @Service
 public class AdminManagementService {
@@ -26,8 +30,17 @@ public class AdminManagementService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private EmailVerificationTokenRepository tokenRepository;
+
+    @Autowired
+    private EmailService emailService;
+
     @Transactional
     public User createAdmin(User user) {
+        if (!EmailValidationUtil.isValidEmail(user.getEmail())) {
+            throw new IllegalArgumentException("Invalid email address. Please use a real email with valid routing (MX) records.");
+        }
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Email already in use.");
         }
@@ -49,7 +62,18 @@ public class AdminManagementService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRole(User.Role.ADMIN);
         user.setStatus(User.Status.ACTIVE);
-        return userRepository.save(user);
+        
+        User savedAdmin = userRepository.save(user);
+
+        // Generate Verification Token for the new Admin
+        String tokenString = UUID.randomUUID().toString();
+        EmailVerificationToken evalToken = new EmailVerificationToken(tokenString, savedAdmin, java.time.LocalDateTime.now().plusHours(24));
+        tokenRepository.save(evalToken);
+
+        // Dispatch Verification Email
+        emailService.sendVerificationEmail(savedAdmin.getEmail(), savedAdmin.getName(), tokenString);
+
+        return savedAdmin;
     }
 
     @Transactional
