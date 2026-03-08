@@ -21,4 +21,19 @@ api.interceptors.request.use(
     }
 );
 
+// Response interceptor — redirect to login when token is expired (401)
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            if (!window.location.pathname.includes('/login')) {
+                window.location.href = '/login';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
 export default api;
