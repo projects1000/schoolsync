@@ -66,36 +66,46 @@ const SecurityAuditLogs = ({ currentUser }) => {
     const [passwordRules, setPasswordRules] = useState(initialPasswordRules);
 
     React.useEffect(() => {
-        fetchSecurityLogs();
-    }, [page, pageSize]);
+        // Only fetch dashboard stats once on mount
+        if (securityStats.totalLogins24h === 0 && securityStats.lastSecurityAudit === '-') {
+            fetchDashboardStats();
+        }
+    }, []);
 
-    const fetchSecurityLogs = async () => {
-        setIsLoading(true);
+    React.useEffect(() => {
+        // Fetch logs when page, pageSize, or activeTab changes
+        fetchSecurityLogs();
+    }, [page, pageSize, activeTab]);
+
+    const fetchDashboardStats = async () => {
         try {
-            // 1. Fetch Stats/Dashboard Data (once or every refresh)
             const dashboardData = await adminService.getSecurityLogs();
             setSecurityStats(dashboardData.securityStats || {
                 totalLogins24h: 0, failedLogins24h: 0, activeSessions: 0, blockedIPs: 0, lastSecurityAudit: '-'
             });
+        } catch (error) {
+            console.error("Failed to fetch security dashboard stats", error);
+        }
+    };
 
-            // 2. Fetch Paginated Logs for the currently active view
-            // Note: Currently backend returns ALL logs, we might need to filter by tab later
-            const params = { page, size: pageSize };
+    const fetchSecurityLogs = async () => {
+        setIsLoading(true);
+        try {
+            // Fetch Paginated Logs for the currently active view
+            const params = { page, size: pageSize, tab: activeTab };
             const paginatedData = await adminService.getPaginatedAuditLogs(params);
             
-            // For now, we show all logs in the active tab if they match criteria
-            // In a real production app, we would pass 'activeTab' type to the backend
-            setLoginHistory(paginatedData.content || []);
+            // Map data correctly based on active tab
+            const content = paginatedData.content || [];
             setTotalPages(paginatedData.totalPages || 0);
             setTotalElements(paginatedData.totalElements || 0);
-            
-            // We set these to empty or data if we want to show multiple lists, 
-            // but the UI is tabbed, so we can just use loginHistory for the current view
-            setActivityLogs(paginatedData.content || []);
-            setDataChangeLogs(paginatedData.content || []);
+
+            if (activeTab === 'logins') setLoginHistory(content);
+            else if (activeTab === 'activity') setActivityLogs(content);
+            else if (activeTab === 'changes') setDataChangeLogs(content);
 
         } catch (error) {
-            console.error("Failed to fetch security logs", error);
+            console.error("Failed to fetch search logs", error);
             toast({
                 title: "Error",
                 description: "Failed to load security logs from the server.",

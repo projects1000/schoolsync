@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,6 +32,7 @@ public class AuditService {
     /**
      * Log an audit event with minimal information
      */
+    @Async
     public void logAction(String username, String action, String targetType, String targetId) {
         logAction(username, action, targetType, targetId, null, null);
     }
@@ -74,6 +76,7 @@ public class AuditService {
     /**
      * Log an audit event with HTTP request context
      */
+    @Async
     public void logActionWithContext(String username, String action, String targetType, String targetId,
             Object payload, String description, HttpServletRequest request) {
         try {
@@ -215,6 +218,26 @@ public class AuditService {
         logActionWithContext(username, "LOGIN", "USER", null, null, "User logged in", request);
     }
 
+    @Async
+    public void logUserLogin(User user, HttpServletRequest request) {
+        try {
+            AuditLog auditLog = new AuditLog(user, "LOGIN", "USER", null, null, "User logged in",
+                    user.getSchoolId());
+
+            if (request != null) {
+                // Get IP and UserAgent immediately while context might still be valid
+                // Note: In some async setups, request attributes might be lost, 
+                // but usually Spring hands off the object.
+                auditLog.setIpAddress(getClientIpAddress(request));
+                auditLog.setUserAgent(request.getHeader("User-Agent"));
+            }
+
+            auditLogRepository.save(auditLog);
+        } catch (Exception e) {
+            System.err.println("Failed to log user login: " + e.getMessage());
+        }
+    }
+
     public void logUserLogout(String username) {
         logAction(username, "LOGOUT", "USER", null, null, "User logged out");
     }
@@ -276,6 +299,7 @@ public class AuditService {
     /**
      * Log an action with explicit School ID (useful for Super Admin actions)
      */
+    @Async
     public void logSchoolAction(String username, String action, String targetType, String targetId, String schoolId,
             Object payload, String description) {
         try {
@@ -297,6 +321,7 @@ public class AuditService {
         }
     }
 
+    @Async
     public void logRollNumberRecalculation(String username, String classId, String sectionId,
             List<String> affectedStudentIds, String schoolId) {
         User actorUser = userRepository.findByEmail(username).orElse(null);
@@ -315,7 +340,22 @@ public class AuditService {
         auditLogRepository.save(auditLog);
     }
 
-    public Page<AuditLog> getAuditLogs(String schoolId, String targetId, String action, Pageable pageable) {
+    public Page<AuditLog> getAuditLogs(String schoolId, String targetId, String action, String tab, Pageable pageable) {
+        boolean isSuperAdmin = (schoolId == null || schoolId.isEmpty() || "SCH-001".equals(schoolId));
+        
+        // If tab is specified, use tab-specific optimized queries
+        if (tab != null && !tab.isEmpty()) {
+            switch (tab.toLowerCase()) {
+                case "logins":
+                    return isSuperAdmin ? auditLogRepository.findLoginLogsAll(pageable) : auditLogRepository.findLoginLogs(schoolId, pageable);
+                case "changes":
+                    return isSuperAdmin ? auditLogRepository.findDataChangeLogsAll(pageable) : auditLogRepository.findDataChangeLogs(schoolId, pageable);
+                case "activity":
+                    return isSuperAdmin ? auditLogRepository.findActivityLogsAll(pageable) : auditLogRepository.findActivityLogs(schoolId, pageable);
+            }
+        }
+
+        // Fallback to existing logic if no tab
         if (targetId != null && action != null) {
             return auditLogRepository.findBySchoolIdAndTargetIdAndAction(schoolId, targetId, action, pageable);
         } else if (targetId != null) {
@@ -329,65 +369,36 @@ public class AuditService {
     }
 
     public com.littlesteps.playschool.dto.SecurityLogsResponse getSecurityLogsDashboard(String schoolId) {
-        // 1. Fetch recent logs
-        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
-        List<AuditLog> recentLogs;
-
-        if (schoolId == null || schoolId.isEmpty() || "SCH-001".equals(schoolId)) {
-            // For Super Admin, fetch logs from the last 30 days
-            recentLogs = auditLogRepository.findTop1000ByCreatedAtAfterOrderByCreatedAtDesc(thirtyDaysAgo);
+        boolean isSuperAdmin = (schoolId == null || schoolId.isEmpty() || "SCH-001".equals(schoolId));
+        LocalDateTime twentyFourHoursAgo = LocalDateTime.now().minusHours(24);
+        
+        // 1. Fetch Stats using efficient counts instead of full records
+        long totalLogins24h;
+        long failedLogins24h;
+        
+        if (isSuperAdmin) {
+            totalLogins24h = auditLogRepository.countByActionSince("LOGIN", twentyFourHoursAgo);
+            failedLogins24h = auditLogRepository.countByActionSince("FAILED_LOGIN", twentyFourHoursAgo);
         } else {
-            // For School Admin, fetch logs specific to their school from the last 30 days
-            recentLogs = auditLogRepository.findTop1000BySchoolIdAndCreatedAtAfterOrderByCreatedAtDesc(schoolId, thirtyDaysAgo);
+            totalLogins24h = auditLogRepository.countBySchoolIdAndActionSince(schoolId, "LOGIN", twentyFourHoursAgo);
+            failedLogins24h = auditLogRepository.countBySchoolIdAndActionSince(schoolId, "FAILED_LOGIN", twentyFourHoursAgo);
         }
 
-        // 2. Map to DTOs
+        // 2. Fetch only a small preview of logs if needed, but for now we return empty lists 
+        // because the frontend will fetch the actual tab data via paginated endpoint
         List<com.littlesteps.playschool.dto.AuditLogDTO> loginHistory = new java.util.ArrayList<>();
         List<com.littlesteps.playschool.dto.AuditLogDTO> activityLogs = new java.util.ArrayList<>();
         List<com.littlesteps.playschool.dto.AuditLogDTO> dataChangeLogs = new java.util.ArrayList<>();
-
-        long totalLogins24h = 0;
-        long failedLogins24h = 0;
-        LocalDateTime twentyFourHoursAgo = LocalDateTime.now().minusHours(24);
-
-        for (AuditLog log : recentLogs) {
-            com.littlesteps.playschool.dto.AuditLogDTO dto = mapToDTO(log);
-
-            String action = log.getAction() != null ? log.getAction().toUpperCase() : "";
-
-            // Categorize Logins
-            if (action.equals("LOGIN") || action.equals("LOGOUT") || action.equals("FAILED_LOGIN")) {
-                loginHistory.add(dto);
-
-                // Calculate 24h Login Stats
-                if (log.getCreatedAt().isAfter(twentyFourHoursAgo)) {
-                    if (action.equals("LOGIN"))
-                        totalLogins24h++;
-                    if (action.equals("FAILED_LOGIN"))
-                        failedLogins24h++;
-                }
-            }
-            // Categorize Data Changes
-            else if (action.startsWith("CREATE_") || action.startsWith("UPDATE_") || action.startsWith("DELETE_") ||
-                    action.equals("MAP_PARENT_STUDENT") || action.equals("UNMAP_PARENT_STUDENT")) {
-                dataChangeLogs.add(dto);
-            }
-            // Everything else goes to Activity Logs
-            else {
-                activityLogs.add(dto);
-            }
-        }
 
         // 3. Construct Stats
         com.littlesteps.playschool.dto.SecurityLogsResponse.SecurityStats stats = new com.littlesteps.playschool.dto.SecurityLogsResponse.SecurityStats();
         stats.setTotalLogins24h(totalLogins24h);
         stats.setFailedLogins24h(failedLogins24h);
-        stats.setActiveSessions(0); // This typically requires active session tracking in Redis/Spring Security
-        stats.setBlockedIPs(0); // Requires explicit IP blocking table
+        stats.setActiveSessions(0); 
+        stats.setBlockedIPs(0); 
         stats.setLastSecurityAudit(LocalDateTime.now().toLocalDate().toString());
 
-        return new com.littlesteps.playschool.dto.SecurityLogsResponse(loginHistory, activityLogs, dataChangeLogs,
-                stats);
+        return new com.littlesteps.playschool.dto.SecurityLogsResponse(loginHistory, activityLogs, dataChangeLogs, stats);
     }
 
     public com.littlesteps.playschool.dto.AuditLogDTO mapToDTO(AuditLog log) {

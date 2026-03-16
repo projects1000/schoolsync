@@ -56,4 +56,31 @@ public interface AuditLogRepository extends MongoRepository<AuditLog, String> {
     Page<AuditLog> findBySchoolIdAndTargetId(String schoolId, String targetId, Pageable pageable);
 
     Page<AuditLog> findBySchoolIdAndAction(String schoolId, String action, Pageable pageable);
+
+    @Query(value = "{ 'schoolId': ?0, 'action': { '$in': ['LOGIN', 'LOGOUT', 'FAILED_LOGIN'] } }")
+    Page<AuditLog> findLoginLogs(String schoolId, Pageable pageable);
+
+    @Query(value = "{ 'action': { '$in': ['LOGIN', 'LOGOUT', 'FAILED_LOGIN'] } }")
+    Page<AuditLog> findLoginLogsAll(Pageable pageable);
+
+    @Query(value = "{ 'schoolId': ?0, 'action': { '$regex': '^(CREATE_|UPDATE_|DELETE_|MAP_PARENT_STUDENT|UNMAP_PARENT_STUDENT)', '$options': 'i' } }")
+    Page<AuditLog> findDataChangeLogs(String schoolId, Pageable pageable);
+
+    @Query(value = "{ 'action': { '$regex': '^(CREATE_|UPDATE_|DELETE_|MAP_PARENT_STUDENT|UNMAP_PARENT_STUDENT)', '$options': 'i' } }")
+    Page<AuditLog> findDataChangeLogsAll(Pageable pageable);
+
+    @Query(value = "{ 'schoolId': ?0, 'action': { '$nin': ['LOGIN', 'LOGOUT', 'FAILED_LOGIN'], '$not': { '$regex': '^(CREATE_|UPDATE_|DELETE_|MAP_PARENT_STUDENT|UNMAP_PARENT_STUDENT)', '$options': 'i' } } }")
+    Page<AuditLog> findActivityLogs(String schoolId, Pageable pageable);
+
+    @Query(value = "{ 'action': { '$nin': ['LOGIN', 'LOGOUT', 'FAILED_LOGIN'], '$not': { '$regex': '^(CREATE_|UPDATE_|DELETE_|MAP_PARENT_STUDENT|UNMAP_PARENT_STUDENT)', '$options': 'i' } } }")
+    Page<AuditLog> findActivityLogsAll(Pageable pageable);
+
+    @Query(value = "{ 'schoolId': ?0, 'createdAt': { '$gte': ?1 } }", count = true)
+    long countSinceBySchoolId(String schoolId, LocalDateTime since);
+
+    @Query(value = "{ 'schoolId': ?0, 'action': ?1, 'createdAt': { '$gte': ?2 } }", count = true)
+    long countBySchoolIdAndActionSince(String schoolId, String action, LocalDateTime since);
+
+    @Query(value = "{ 'action': ?0, 'createdAt': { '$gte': ?1 } }", count = true)
+    long countByActionSince(String action, LocalDateTime since);
 }

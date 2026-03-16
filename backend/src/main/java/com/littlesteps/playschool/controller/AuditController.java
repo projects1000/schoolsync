@@ -46,6 +46,7 @@ public class AuditController {
             @AuthenticationPrincipal String email,
             @org.springframework.web.bind.annotation.RequestParam(required = false) String targetId,
             @org.springframework.web.bind.annotation.RequestParam(required = false) String action,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String tab,
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size) {
 
@@ -60,7 +61,7 @@ public class AuditController {
         }
 
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by("createdAt").descending());
-        org.springframework.data.domain.Page<com.littlesteps.playschool.entity.AuditLog> logs = auditService.getAuditLogs(targetSchoolId, targetId, action, pageable);
+        org.springframework.data.domain.Page<com.littlesteps.playschool.entity.AuditLog> logs = auditService.getAuditLogs(targetSchoolId, targetId, action, tab, pageable);
         return ResponseEntity.ok(logs.map(auditService::mapToDTO));
     }
 }

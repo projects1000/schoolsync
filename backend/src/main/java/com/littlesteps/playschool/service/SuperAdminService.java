@@ -15,6 +15,8 @@ import com.littlesteps.playschool.repository.AttendanceRepository;
 import com.littlesteps.playschool.repository.AuditLogRepository;
 import com.littlesteps.playschool.repository.FeeInvoiceRepository;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,14 +30,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Locale;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
-import com.littlesteps.playschool.entity.Attendance;
-import com.littlesteps.playschool.entity.AuditLog;
 import com.littlesteps.playschool.entity.Teacher;
 import com.littlesteps.playschool.entity.Student;
 import com.littlesteps.playschool.entity.FeeInvoice;
@@ -54,6 +53,8 @@ import org.springframework.cache.annotation.Cacheable;
 @Service
 @CacheConfig(cacheNames = "superadmin")
 public class SuperAdminService {
+
+    private static final Logger logger = LoggerFactory.getLogger(SuperAdminService.class);
 
     @Autowired
     private SchoolRepository schoolRepository;
@@ -270,6 +271,7 @@ public class SuperAdminService {
         admin.setRole(User.Role.ADMIN);
         admin.setSchoolId(school.getId());
         admin.setActive(true);
+        admin.setEmailVerified(true);
         admin.setCreatedBy(createdByUserId);
         admin.setStatus(User.Status.ACTIVE);
 
@@ -535,7 +537,7 @@ public class SuperAdminService {
     @Transactional(readOnly = true)
     @Cacheable(key = "'dashboardStats'")
     public com.littlesteps.playschool.dto.DashboardStats getDashboardData() {
-        long totalSchools = schoolRepository.count();
+        long totalSchools = schoolRepository.countByStatusNot(School.Status.DELETED);
         long activeSchools = schoolRepository.countByStatus(School.Status.ACTIVE);
         long inactiveSchools = totalSchools - activeSchools;
         long totalStudents = studentRepository.count();
@@ -544,60 +546,93 @@ public class SuperAdminService {
         com.littlesteps.playschool.dto.DashboardStats stats = new com.littlesteps.playschool.dto.DashboardStats(
                 totalSchools, activeSchools, inactiveSchools, totalStudents, totalTeachers);
 
-        // 1. Student Distribution by City
-        Map<String, Integer> distribution = schoolRepository.findAll().stream()
-                .filter(s -> s.getCity() != null)
-                .collect(Collectors.groupingBy(School::getCity,
-                        Collectors.collectingAndThen(Collectors.counting(), Long::intValue)));
+        // 1. Student Distribution by City (Using Aggregation)
+        Map<String, Integer> distribution = new HashMap<>();
+        try {
+            schoolRepository.getCountByCity().forEach(doc -> {
+                Object cityId = doc.get("_id");
+                Object countObj = doc.get("count");
+                if (cityId != null && countObj instanceof Number) {
+                    distribution.put(cityId.toString(), ((Number) countObj).intValue());
+                }
+            });
+        } catch (Exception e) {
+            logger.error("Error calculating city distribution: {}", e.getMessage());
+        }
         stats.setStudentDistribution(distribution);
 
-        // 2. Recent Schools (Top 5)
-        List<Map<String, Object>> recentSchools = schoolRepository.findAll().stream()
-                .sorted(Comparator.comparing(School::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
-                .limit(5)
-                .map(s -> Map.<String, Object>of(
-                        "name", s.getName() != null ? s.getName() : "Unknown",
-                        "date", s.getCreatedAt() != null ? s.getCreatedAt().toString() : LocalDateTime.now().toString(),
-                        "status", s.getStatus() != null ? s.getStatus().toString() : "UNKNOWN",
-                        "students", studentRepository.countBySchoolId(s.getId())))
+        // 2. Recent Schools (Using Top 5 query)
+        List<Map<String, Object>> recentSchools = new ArrayList<>();
+        try {
+            recentSchools = schoolRepository.findTop5ByOrderByCreatedAtDesc().stream()
+                .map(s -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("name", s.getName() != null ? s.getName() : "Unknown");
+                    map.put("date", s.getCreatedAt() != null ? s.getCreatedAt().toString() : LocalDateTime.now().toString());
+                    map.put("status", s.getStatus() != null ? s.getStatus().toString() : "UNKNOWN");
+                    map.put("students", studentRepository.countBySchoolId(s.getId()));
+                    return map;
+                })
                 .collect(Collectors.toList());
+        } catch (Exception e) {
+            logger.error("Error fetching recent schools: {}", e.getMessage());
+        }
         stats.setRecentSchools(recentSchools);
 
-        // 3. Active Admins (Top 5)
-        List<Map<String, Object>> activeAdmins = userRepository.findByRole(User.Role.ADMIN).stream()
-                .filter(u -> u.getStatus() == User.Status.ACTIVE)
-                .limit(5)
-                .map(u -> Map.<String, Object>of(
-                        "name", u.getName() != null ? u.getName() : "Unknown",
-                        "email", u.getEmail() != null ? u.getEmail() : "Unknown",
-                        "school", u.getSchoolId() != null ? "Assigned" : "Unassigned"))
+        // 3. Active Admins (Using optimized query)
+        List<Map<String, Object>> activeAdmins = new ArrayList<>();
+        try {
+            activeAdmins = userRepository.findTop5ByRoleAndStatusOrderByCreatedAtDesc(User.Role.ADMIN, User.Status.ACTIVE).stream()
+                .map(u -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("name", u.getName() != null ? u.getName() : "Unknown");
+                    map.put("email", u.getEmail() != null ? u.getEmail() : "Unknown");
+                    map.put("school", u.getSchoolId() != null ? "Assigned" : "Unassigned");
+                    return map;
+                })
                 .collect(Collectors.toList());
+        } catch (Exception e) {
+            logger.error("Error fetching active admins: {}", e.getMessage());
+        }
         stats.setActiveAdmins(activeAdmins);
 
-        // 4. School Growth (Last 6 Months)
-        Map<YearMonth, Long> growthMap = schoolRepository.findAll().stream()
+        // 4. School Growth
+        Map<YearMonth, Long> growthMap = new HashMap<>();
+        try {
+            growthMap = schoolRepository.findAll().stream()
                 .filter(s -> s.getCreatedAt() != null)
                 .collect(Collectors.groupingBy(s -> YearMonth.from(s.getCreatedAt()), Collectors.counting()));
+        } catch (Exception e) {
+            logger.error("Error calculating school growth: {}", e.getMessage());
+        }
 
         List<Map<String, Object>> schoolGrowth = new ArrayList<>();
         YearMonth currentYearMonth = YearMonth.now();
         for (int i = 5; i >= 0; i--) {
             YearMonth targetMonth = currentYearMonth.minusMonths(i);
-            schoolGrowth.add(Map.of(
-                    "month", targetMonth.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH),
-                    "schools", growthMap.getOrDefault(targetMonth, 0L).intValue()));
+            Map<String, Object> map = new HashMap<>();
+            map.put("month", targetMonth.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH));
+            map.put("schools", growthMap.getOrDefault(targetMonth, 0L).intValue());
+            schoolGrowth.add(map);
         }
         stats.setSchoolGrowth(schoolGrowth);
 
-        // 5. Student Growth (Historical years)
-        Map<Integer, Long> studentGrowthMap = studentRepository.findAll().stream()
-                .filter(s -> s.getCreatedAt() != null)
-                .collect(Collectors.groupingBy(s -> s.getCreatedAt().getYear(), Collectors.counting()));
-
-        List<Map<String, Object>> studentGrowth = studentGrowthMap.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .map(e -> Map.<String, Object>of("year", e.getKey(), "totalStudents", e.getValue().intValue()))
-                .collect(Collectors.toList());
+        // 5. Student Growth (Using Aggregation)
+        List<Map<String, Object>> studentGrowth = new ArrayList<>();
+        try {
+            studentRepository.countByYear().forEach(doc -> {
+                Object yearId = doc.get("_id");
+                Object countObj = doc.get("count");
+                if (yearId != null && countObj instanceof Number) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("year", yearId);
+                    map.put("totalStudents", ((Number) countObj).intValue());
+                    studentGrowth.add(map);
+                }
+            });
+        } catch (Exception e) {
+            logger.error("Error calculating student growth: {}", e.getMessage());
+        }
         if (studentGrowth.isEmpty()) {
             studentGrowth.add(Map.of("year", LocalDateTime.now().getYear(), "totalStudents", 0));
         }
@@ -634,12 +669,14 @@ public class SuperAdminService {
                 .collect(Collectors.toList());
         stats.setSystemAlerts(systemAlerts);
 
-        // 8. Pending Actions (Derived from state)
+        // 8. Pending Actions
         List<Map<String, Object>> pendingActions = new ArrayList<>();
         long inactiveCount = schoolRepository.countByStatus(School.Status.INACTIVE);
         if (inactiveCount > 0) {
             pendingActions.add(Map.of("action", "Activate Schools", "target", inactiveCount + " Schools"));
         }
+        // Count without fetching all
+        // schoolRepository.countByAdminIdIsNull() would be better
         long schoolsWithoutAdmin = schoolRepository.findAll().stream().filter(s -> s.getAdminId() == null).count();
         if (schoolsWithoutAdmin > 0) {
             pendingActions.add(Map.of("action", "Assign Admins", "target", schoolsWithoutAdmin + " Schools"));
