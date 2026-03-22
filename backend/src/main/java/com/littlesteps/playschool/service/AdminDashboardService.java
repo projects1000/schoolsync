@@ -20,6 +20,8 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AdminDashboardService {
@@ -39,6 +41,8 @@ public class AdminDashboardService {
         @Autowired
         private MongoTemplate mongoTemplate;
 
+        @Transactional(readOnly = true)
+        @Cacheable(value = "admin_dashboard", key = "T(com.littlesteps.playschool.security.SchoolContext).getSchoolId()")
         public AdminDashboardDTO getDashboardStats() {
                 String schoolId = SchoolContext.getSchoolId();
                 System.out.println("DEBUG: Dashboard fetching stats for schoolId: " + schoolId);

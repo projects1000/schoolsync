@@ -20,6 +20,7 @@ import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 @RestController
 @RequestMapping("/api/superadmin")
@@ -38,7 +39,7 @@ public class SuperAdminController {
             @RequestParam(defaultValue = "10") int size) {
         try {
             logger.info("Fetching schools (page: {}, size: {})...", page, size);
-            Pageable pageable = PageRequest.of(page, size);
+            Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
             Page<SchoolResponse> schools = superAdminService.getAllSchools(pageable);
             logger.info("Successfully fetched {} schools", schools.getNumberOfElements());
             return ResponseEntity.ok(schools);
@@ -79,7 +80,7 @@ public class SuperAdminController {
             @RequestParam(defaultValue = "10") int size) {
         try {
             logger.info("Fetching admins (page: {}, size: {})...", page, size);
-            Pageable pageable = PageRequest.of(page, size);
+            Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
             Page<AdminResponse> admins = superAdminService.getAllAdmins(pageable);
             logger.info("Successfully fetched {} admins", admins.getNumberOfElements());
             return ResponseEntity.ok(admins);

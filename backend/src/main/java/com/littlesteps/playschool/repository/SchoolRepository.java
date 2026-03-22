@@ -24,4 +24,14 @@ public interface SchoolRepository extends MongoRepository<School, String> {
     boolean existsByCode(String code);
 
     Optional<School> findByPrincipalEmail(String principalEmail);
+
+    @org.springframework.data.mongodb.repository.Aggregation(pipeline = {
+        "{ '$match': { 'city': { '$ne': null }, 'status': { '$ne': 'DELETED' } } }",
+        "{ '$group': { '_id': '$city', 'count': { '$sum': 1 } } }"
+    })
+    java.util.List<org.bson.Document> getCountByCity();
+
+    java.util.List<School> findTop5ByOrderByCreatedAtDesc();
+
+    long countByStatusNot(School.Status status);
 }

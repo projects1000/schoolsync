@@ -299,7 +299,7 @@ const ParentManagement = () => {
           Add Parent
         </Button>
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
             <DialogHeader>
               <DialogTitle>{editingParentId ? 'Edit Parent' : 'New Parent'}</DialogTitle>
             </DialogHeader>
@@ -452,7 +452,7 @@ const ParentManagement = () => {
 
       {/* Map Student Modal */}
       <Dialog open={isMapModalOpen} onOpenChange={setIsMapModalOpen}>
-        <DialogContent>
+        <DialogContent onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Map Student to {currentParent?.name}</DialogTitle>
           </DialogHeader>
@@ -494,7 +494,7 @@ const ParentManagement = () => {
 
       {/* Success Credentials Modal */}
       <Dialog open={isSuccessModalOpen} onOpenChange={setIsSuccessModalOpen}>
-        <DialogContent>
+        <DialogContent onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle className="text-green-600">Parent Account Created</DialogTitle>
             <DialogDescription>
@@ -525,7 +525,7 @@ const ParentManagement = () => {
 
       {/* View Children Modal */}
       <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-        <DialogContent>
+        <DialogContent onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Students Linked to {viewingParent?.name}</DialogTitle>
           </DialogHeader>
@@ -553,7 +553,7 @@ const ParentManagement = () => {
 
       {/* Confirm Action Modal */}
       <Dialog open={isConfirmModalOpen} onOpenChange={setIsConfirmModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>
               {confirmAction?.type === 'delete' ? 'Delete Parent?' : 'Confirm'}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Save, AlertCircle, CheckCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { X, Save, AlertCircle, CheckCircle, Eye, EyeOff, Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +16,8 @@ const CreateAdminModal = ({ isOpen, onClose, onSave, schools }) => {
     const [showPassword, setShowPassword] = useState(false);
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [showSearchResults, setShowSearchResults] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -28,6 +30,8 @@ const CreateAdminModal = ({ isOpen, onClose, onSave, schools }) => {
             });
             setErrors({});
             setIsSubmitting(false);
+            setSearchTerm('');
+            setShowSearchResults(false);
         }
     }, [isOpen]);
 
@@ -72,18 +76,44 @@ const CreateAdminModal = ({ isOpen, onClose, onSave, schools }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        let newValue = value;
+
+        // Auto-prefix phone with +91
+        if (name === 'phone') {
+            if (newValue && !newValue.startsWith('+91')) {
+                // If they just started typing a digit, prepend +91
+                if (/^\d/.test(newValue)) {
+                    newValue = '+91 ' + newValue;
+                }
+            }
+        }
+
+        setFormData(prev => ({ ...prev, [name]: newValue }));
         // Clear error when user types
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: null }));
         }
     };
 
+    const handleSchoolSelect = (school) => {
+        setFormData(prev => ({ ...prev, schoolId: school.id }));
+        setSearchTerm(school.name);
+        setShowSearchResults(false);
+        if (errors.schoolId) {
+            setErrors(prev => ({ ...prev, schoolId: null }));
+        }
+    };
+
+    const filteredSchools = schools.filter(school =>
+        school.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        (!school.admin || (formData.schoolId === school.id))
+    );
+
     if (!isOpen) return null;
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                 <motion.div
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -100,27 +130,57 @@ const CreateAdminModal = ({ isOpen, onClose, onSave, schools }) => {
 
                     <form onSubmit={handleSubmit} className="p-6 space-y-4">
                         {/* School Selection */}
-                        <div className="space-y-2">
-                            <Label htmlFor="schoolId" className="text-gray-700 font-medium">Assign to School <span className="text-red-500">*</span></Label>
-                            <select
-                                id="schoolId"
-                                name="schoolId"
-                                value={formData.schoolId}
-                                onChange={handleChange}
-                                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all ${errors.schoolId ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
-                            >
-                                <option value="">Select a School</option>
-                                {schools.map(school => (
-                                    <option
-                                        key={school.id}
-                                        value={school.id}
-                                        disabled={!!school.admin}
-                                        className={school.admin ? 'text-gray-400 bg-gray-50' : ''}
+                        <div className="space-y-2 relative">
+                            <Label htmlFor="schoolSearch" className="text-gray-700 font-medium">Assign to School <span className="text-red-500">*</span></Label>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <Input
+                                    id="schoolSearch"
+                                    type="text"
+                                    placeholder="Search and select a school..."
+                                    value={searchTerm}
+                                    onChange={(e) => {
+                                        setSearchTerm(e.target.value);
+                                        setShowSearchResults(true);
+                                        if (formData.schoolId) setFormData(prev => ({ ...prev, schoolId: '' }));
+                                    }}
+                                    onFocus={() => setShowSearchResults(true)}
+                                    className={`pl-10 ${errors.schoolId ? 'border-red-500 bg-red-50' : ''}`}
+                                    autoComplete="off"
+                                />
+                            </div>
+
+                            <AnimatePresence>
+                                {showSearchResults && searchTerm.length > 0 && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto"
                                     >
-                                        {school.name} {school.admin ? '(Has Admin)' : ''}
-                                    </option>
-                                ))}
-                            </select>
+                                        {filteredSchools.length > 0 ? (
+                                            filteredSchools.map(school => (
+                                                <button
+                                                    key={school.id}
+                                                    type="button"
+                                                    onClick={() => handleSchoolSelect(school)}
+                                                    className="w-full px-4 py-2 text-left hover:bg-indigo-50 flex items-center justify-between text-sm"
+                                                >
+                                                    <div>
+                                                        <p className="font-medium text-gray-800">{school.name}</p>
+                                                        <p className="text-xs text-gray-500">{school.city}, {school.state}</p>
+                                                    </div>
+                                                    {formData.schoolId === school.id && <CheckCircle className="w-4 h-4 text-indigo-600" />}
+                                                </button>
+                                            ))
+                                        ) : (
+                                            <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                                                No available schools found
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                             {errors.schoolId && <p className="text-xs text-red-500 mt-1 flex items-center"><AlertCircle className="w-3 h-3 mr-1" /> {errors.schoolId}</p>}
                         </div>
 

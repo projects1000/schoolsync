@@ -118,7 +118,8 @@ const LoginPage = ({ onLogin }) => {
         toast({ title: 'Welcome back!', description: `Signed in as ${userData.name}` });
         return;
       }
-      toast({ variant: 'destructive', title: 'Authentication Failed', description: 'Invalid credentials. Please check your email and password.' });
+      const errorData = await response.json();
+      toast({ variant: 'destructive', title: 'Authentication Failed', description: errorData.message || 'Invalid credentials. Please check your email and password.' });
     } catch {
       toast({ variant: 'destructive', title: 'Connection Error', description: 'Unable to reach the server. Please try again later.' });
     } finally {

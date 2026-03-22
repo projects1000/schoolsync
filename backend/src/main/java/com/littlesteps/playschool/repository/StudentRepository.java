@@ -41,6 +41,12 @@ public interface StudentRepository extends MongoRepository<Student, String> {
 
         long countBySchoolId(String schoolId);
 
+        long countBySchoolIdIsNotNull();
+
+        long countBySchoolIdIsNullAndStatusNot(Student.Status status);
+
+        long countByStatus(com.littlesteps.playschool.entity.Student.Status status);
+
         List<Student> findByClassIdIn(List<String> classIds);
 
         List<Student> findByClassId(String classId);
@@ -50,4 +56,7 @@ public interface StudentRepository extends MongoRepository<Student, String> {
 
         List<Student> findBySchoolIdAndClassIdAndSectionIdAndStatus(String schoolId, String classId, String sectionId,
                         Student.Status status);
+
+
+    long countBySchoolIdAndStatusNot(String schoolId, Student.Status status);
 }

@@ -43,4 +43,6 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     // Count teachers by school and role
     long countBySchoolIdAndRoleAndStatus(String schoolId, User.Role role, User.Status status);
+
+    List<User> findTop5ByRoleAndStatusOrderByCreatedAtDesc(User.Role role, User.Status status);
 }

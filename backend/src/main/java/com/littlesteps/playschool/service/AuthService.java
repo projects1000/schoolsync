@@ -12,6 +12,8 @@ import com.littlesteps.playschool.util.EmailValidationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.littlesteps.playschool.entity.EmailVerificationToken;
 import com.littlesteps.playschool.repository.EmailVerificationTokenRepository;
@@ -22,6 +24,8 @@ import java.util.UUID;
 
 @Service
 public class AuthService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -59,7 +63,14 @@ public class AuthService {
         }
 
         if (!user.isEmailVerified() && user.getRole() != User.Role.SUPERADMIN) {
-             throw new RuntimeException("Please verify your email address to log in.");
+             // If account was created BY someone (Super Admin usually), and not verified, auto-verify now for convenience
+             if (user.getCreatedBy() != null && !user.getCreatedBy().isEmpty()) {
+                 user.setEmailVerified(true);
+                 userRepository.save(user);
+                 logger.info("Auto-verified user {} during login as they were created by superadmin", user.getEmail());
+             } else {
+                 throw new RuntimeException("Please verify your email address to log in.");
+             }
         }
 
         // Additional checks for ADMIN role
@@ -152,7 +163,7 @@ public class AuthService {
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name(), user.getId(), user.getSchoolId());
 
         // Log successful login
-        auditService.logUserLogin(user.getEmail(), httpServletRequest);
+        auditService.logUserLogin(user, httpServletRequest);
 
         return new LoginResponse(
                 user.getId(),

@@ -530,13 +530,12 @@ const AdminManagement = ({ currentUser }) => {
             {/* Transfer School Modal - Keeping UI but functionality not fully hooked */}
             <AnimatePresence>
                 {showTransferModal && selectedAdmin && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-                        onClick={() => setShowTransferModal(false)}
-                    >
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                        >
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
@@ -568,13 +567,12 @@ const AdminManagement = ({ currentUser }) => {
             {/* Confirmation Modal */}
             <AnimatePresence>
                 {showConfirmModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-                        onClick={() => setShowConfirmModal(false)}
-                    >
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                        >
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
@@ -630,7 +628,6 @@ const AdminManagement = ({ currentUser }) => {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             className="fixed inset-0 bg-black/30 z-40"
-                            onClick={() => setShowActivityDrawer(false)}
                         />
                         <motion.div
                             initial={{ x: '100%' }}

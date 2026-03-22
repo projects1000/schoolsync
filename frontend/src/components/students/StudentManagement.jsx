@@ -323,7 +323,7 @@ const StudentManagement = () => {
               Admit Student
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
             <DialogHeader>
               <DialogTitle>New Admission</DialogTitle>
             </DialogHeader>
@@ -489,7 +489,7 @@ const StudentManagement = () => {
 
       {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Edit Student</DialogTitle>
           </DialogHeader>
@@ -528,7 +528,7 @@ const StudentManagement = () => {
 
       {/* Promote Modal */}
       <Dialog open={isPromoteModalOpen} onOpenChange={setIsPromoteModalOpen}>
-        <DialogContent>
+        <DialogContent onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Promote Student</DialogTitle>
           </DialogHeader>
@@ -562,7 +562,7 @@ const StudentManagement = () => {
 
       {/* Complete Profile Modal */}
       <Dialog open={isProfileModalOpen} onOpenChange={(open) => { if (!open) handleProfileSkip(); }}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-purple-600" />
