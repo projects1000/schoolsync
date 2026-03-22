@@ -180,15 +180,18 @@ const ParentRegistrationManagement = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Parent Phone *
                 </label>
-                <input
-                  type="tel"
-                  name="parentPhone"
-                  value={formData.parentPhone}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="1234567890"
-                  required
-                />
+                <div className="flex">
+                  <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-100 text-gray-600 text-sm font-medium select-none">+91</span>
+                  <input
+                    type="tel"
+                    name="parentPhone"
+                    value={formData.parentPhone.replace(/^\+91\s?/, '')}
+                    onChange={(e) => { const digits = e.target.value.replace(/\D/g, '').slice(0, 10); handleChange({ target: { name: 'parentPhone', value: '+91 ' + digits } }); }}
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-r-lg rounded-l-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="9876543210"
+                    required
+                  />
+                </div>
               </div>
 
               <div>

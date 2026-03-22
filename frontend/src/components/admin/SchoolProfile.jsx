@@ -139,15 +139,15 @@ const SchoolProfile = () => {
 
                         <div className="space-y-2">
                             <Label htmlFor="phone">Contact Number</Label>
-                            <div className="relative">
-                                <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                            <div className="flex">
+                                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-100 text-gray-600 text-sm font-medium select-none">+91</span>
                                 <Input
                                     id="phone"
                                     name="phone"
-                                    value={school.phone || ''}
-                                    onChange={handleChange}
-                                    className="pl-9"
-                                    placeholder="+91 9876543210"
+                                    value={(school.phone || '').replace(/^\+91\s?/, '')}
+                                    onChange={(e) => { const digits = e.target.value.replace(/\D/g, '').slice(0, 10); handleChange({ target: { name: 'phone', value: '+91 ' + digits } }); }}
+                                    className="rounded-l-none"
+                                    placeholder="9876543210"
                                 />
                             </div>
                         </div>
