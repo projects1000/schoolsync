@@ -312,7 +312,7 @@ const TeacherManagement = () => {
               Add Teacher
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
             <DialogHeader>
               <DialogTitle>Add New Teacher</DialogTitle>
             </DialogHeader>
@@ -507,7 +507,7 @@ const TeacherManagement = () => {
 
       {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Edit Teacher</DialogTitle>
           </DialogHeader>
@@ -540,7 +540,7 @@ const TeacherManagement = () => {
 
       {/* Confirm Action Modal */}
       <Dialog open={isConfirmModalOpen} onOpenChange={setIsConfirmModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>
               {confirmAction?.type === 'block' ? 'Block Teacher?' : confirmAction?.type === 'delete' ? 'Delete Teacher?' : 'Unblock Teacher?'}

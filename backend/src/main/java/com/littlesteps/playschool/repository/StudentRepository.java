@@ -41,6 +41,12 @@ public interface StudentRepository extends MongoRepository<Student, String> {
 
         long countBySchoolId(String schoolId);
 
+        long countBySchoolIdIsNotNull();
+
+        long countBySchoolIdIsNullAndStatusNot(Student.Status status);
+
+        long countByStatus(com.littlesteps.playschool.entity.Student.Status status);
+
         List<Student> findByClassIdIn(List<String> classIds);
 
         List<Student> findByClassId(String classId);
@@ -51,11 +57,6 @@ public interface StudentRepository extends MongoRepository<Student, String> {
         List<Student> findBySchoolIdAndClassIdAndSectionIdAndStatus(String schoolId, String classId, String sectionId,
                         Student.Status status);
 
-        @org.springframework.data.mongodb.repository.Aggregation(pipeline = {
-            "{ '$match': { 'createdAt': { '$ne': null } } }",
-            "{ '$project': { 'year': { '$year': '$createdAt' } } }",
-            "{ '$group': { '_id': '$year', 'count': { '$sum': 1 } } }",
-            "{ '$sort': { '_id': 1 } }"
-        })
-        java.util.List<org.bson.Document> countByYear();
+
+    long countBySchoolIdAndStatusNot(String schoolId, Student.Status status);
 }

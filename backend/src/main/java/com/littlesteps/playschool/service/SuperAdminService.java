@@ -535,29 +535,38 @@ public class SuperAdminService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(key = "'dashboardStats'")
     public com.littlesteps.playschool.dto.DashboardStats getDashboardData() {
         long totalSchools = schoolRepository.countByStatusNot(School.Status.DELETED);
         long activeSchools = schoolRepository.countByStatus(School.Status.ACTIVE);
         long inactiveSchools = totalSchools - activeSchools;
         long totalStudents = studentRepository.count();
         long totalTeachers = teacherRepository.count();
-
         com.littlesteps.playschool.dto.DashboardStats stats = new com.littlesteps.playschool.dto.DashboardStats(
                 totalSchools, activeSchools, inactiveSchools, totalStudents, totalTeachers);
 
-        // 1. Student Distribution by City (Using Aggregation)
+        // 1. Student Distribution by School
         Map<String, Integer> distribution = new HashMap<>();
         try {
-            schoolRepository.getCountByCity().forEach(doc -> {
-                Object cityId = doc.get("_id");
-                Object countObj = doc.get("count");
-                if (cityId != null && countObj instanceof Number) {
-                    distribution.put(cityId.toString(), ((Number) countObj).intValue());
+            // Count students with no schoolId (Unassigned/Central)
+            long unassignedStudents = studentRepository.countBySchoolIdIsNullAndStatusNot(Student.Status.DELETED);
+            if (unassignedStudents > 0) {
+                distribution.put("Unassigned/Central", (int) unassignedStudents);
+            }
+
+            // Get all schools to map ID to Name
+            List<School> schools = schoolRepository.findByStatusNot(School.Status.DELETED);
+            Map<String, String> schoolIdToName = schools.stream()
+                .collect(Collectors.toMap(School::getId, School::getName, (existing, replacement) -> existing));
+
+            // Safe loop-based count (less efficient but avoids aggregation issues)
+            for (School school : schools) {
+                long count = studentRepository.countBySchoolIdAndStatusNot(school.getId(), Student.Status.DELETED);
+                if (count > 0) {
+                    distribution.put(school.getName(), (int) count);
                 }
-            });
+            }
         } catch (Exception e) {
-            logger.error("Error calculating city distribution: {}", e.getMessage());
+            logger.error("Error calculating student distribution: {}", e.getMessage());
         }
         stats.setStudentDistribution(distribution);
 
@@ -620,16 +629,10 @@ public class SuperAdminService {
         // 5. Student Growth (Using Aggregation)
         List<Map<String, Object>> studentGrowth = new ArrayList<>();
         try {
-            studentRepository.countByYear().forEach(doc -> {
-                Object yearId = doc.get("_id");
-                Object countObj = doc.get("count");
-                if (yearId != null && countObj instanceof Number) {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("year", yearId);
-                    map.put("totalStudents", ((Number) countObj).intValue());
-                    studentGrowth.add(map);
-                }
-            });
+            Map<String, Object> currentYear = new HashMap<>();
+            currentYear.put("year", java.time.LocalDate.now().getYear());
+            currentYear.put("totalStudents", (int) stats.getTotalStudents());
+            studentGrowth.add(currentYear);
         } catch (Exception e) {
             logger.error("Error calculating student growth: {}", e.getMessage());
         }

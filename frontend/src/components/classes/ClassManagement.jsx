@@ -370,7 +370,7 @@ const ClassManagement = () => {
                             <span className="font-semibold text-lg">Create New Grade</span>
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-xl rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
+                    <DialogContent className="sm:max-w-xl rounded-3xl p-0 overflow-hidden border-none shadow-2xl" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
                         <div className="bg-gradient-to-br from-purple-600 to-indigo-700 p-8 text-white">
                             <h2 className="text-2xl font-black tracking-tight">Class Architect Wizard</h2>
                             <p className="text-purple-100/80 font-medium mt-1">
@@ -796,7 +796,7 @@ const ClassManagement = () => {
             {/* Modals are kept with modern styling applied above */}
             {/* Add Section Modal */}
             <Dialog open={isAddSectionModalOpen} onOpenChange={setIsAddSectionModalOpen}>
-                <DialogContent className="rounded-2xl">
+                <DialogContent className="rounded-2xl" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-bold">New Section for {selectedGradeForSection}</DialogTitle>
                     </DialogHeader>
@@ -825,7 +825,7 @@ const ClassManagement = () => {
 
             {/* Edit Section Modal */}
             <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-                <DialogContent className="rounded-2x max-w-lg">
+                <DialogContent className="rounded-2x max-w-lg" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-bold">Configure Section</DialogTitle>
                     </DialogHeader>
@@ -874,7 +874,7 @@ const ClassManagement = () => {
 
             {/* Custom Delete Confirmation Dialog */}
             <AlertDialog open={!!classToDelete} onOpenChange={(open) => !open && setClassToDelete(null)}>
-                <AlertDialogContent className="rounded-2xl border-0 shadow-2xl overflow-hidden p-0 max-w-md">
+                <AlertDialogContent className="rounded-2xl border-0 shadow-2xl overflow-hidden p-0 max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
                     <div className="bg-gradient-to-br from-rose-500 to-rose-600 p-6 flex flex-col items-center justify-center text-center">
                         <div className="bg-white/20 p-4 rounded-full mb-3 backdrop-blur-sm">
                             <Trash2 className="w-8 h-8 text-white" />

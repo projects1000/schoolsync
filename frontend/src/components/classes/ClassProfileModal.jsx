@@ -104,7 +104,7 @@ const ClassProfileModal = ({ isOpen, onClose, selectedClass, globalSubjects, tea
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[850px] p-0 overflow-hidden bg-[#fafafa] backdrop-blur-xl border-white/20 shadow-2xl rounded-[2.5rem]">
+            <DialogContent className="sm:max-w-[850px] p-0 overflow-hidden bg-[#fafafa] backdrop-blur-xl border-white/20 shadow-2xl rounded-[2.5rem]" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
                 <div className="flex justify-between items-center p-8 bg-white border-b border-gray-100/80">
                     <div className="flex items-center gap-6">
                         <motion.div
