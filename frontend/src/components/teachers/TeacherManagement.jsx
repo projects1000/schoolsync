@@ -331,7 +331,10 @@ const TeacherManagement = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" name="phone" value={formData.phone} onChange={handleInputChange} required />
+                <div className="flex">
+                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-100 text-gray-600 text-sm font-medium select-none">+91</span>
+                  <Input id="phone" name="phone" className="rounded-l-none" value={formData.phone.replace(/^\+91\s?/, '')} onChange={(e) => { const digits = e.target.value.replace(/\D/g, '').slice(0, 10); handleInputChange({ target: { name: 'phone', value: '+91 ' + digits } }); }} placeholder="9876543210" required />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="department">Department</Label>
@@ -523,7 +526,10 @@ const TeacherManagement = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-phone">Phone</Label>
-                <Input id="edit-phone" name="phone" value={formData.phone} onChange={handleInputChange} required />
+                <div className="flex">
+                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-100 text-gray-600 text-sm font-medium select-none">+91</span>
+                  <Input id="edit-phone" name="phone" className="rounded-l-none" value={formData.phone.replace(/^\+91\s?/, '')} onChange={(e) => { const digits = e.target.value.replace(/\D/g, '').slice(0, 10); handleInputChange({ target: { name: 'phone', value: '+91 ' + digits } }); }} placeholder="9876543210" required />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-dept">Department</Label>

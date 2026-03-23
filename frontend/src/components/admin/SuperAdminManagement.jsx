@@ -508,12 +508,16 @@ const SuperAdminManagement = ({ currentUser }) => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                <input
-                  type="tel"
-                  value={newAdminForm.phone}
-                  onChange={(e) => setNewAdminForm({...newAdminForm, phone: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
+                <div className="flex">
+                  <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-100 text-gray-600 text-sm font-medium select-none">+91</span>
+                  <input
+                    type="tel"
+                    value={newAdminForm.phone.replace(/^\+91\s?/, '')}
+                    onChange={(e) => { const digits = e.target.value.replace(/\D/g, '').slice(0, 10); setNewAdminForm({...newAdminForm, phone: '+91 ' + digits}); }}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-r-lg rounded-l-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="9876543210"
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>

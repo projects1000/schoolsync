@@ -76,19 +76,7 @@ const CreateAdminModal = ({ isOpen, onClose, onSave, schools }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        let newValue = value;
-
-        // Auto-prefix phone with +91
-        if (name === 'phone') {
-            if (newValue && !newValue.startsWith('+91')) {
-                // If they just started typing a digit, prepend +91
-                if (/^\d/.test(newValue)) {
-                    newValue = '+91 ' + newValue;
-                }
-            }
-        }
-
-        setFormData(prev => ({ ...prev, [name]: newValue }));
+        setFormData(prev => ({ ...prev, [name]: value }));
         // Clear error when user types
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: null }));
@@ -216,14 +204,17 @@ const CreateAdminModal = ({ isOpen, onClose, onSave, schools }) => {
                         {/* Phone */}
                         <div className="space-y-2">
                             <Label htmlFor="phone" className="text-gray-700 font-medium">Phone Number <span className="text-red-500">*</span></Label>
-                            <Input
-                                id="phone"
-                                name="phone"
-                                value={formData.phone}
-                                onChange={handleChange}
-                                placeholder="+1 234 567 8900"
-                                className={errors.phone ? 'border-red-500 bg-red-50' : ''}
-                            />
+                            <div className="flex">
+                                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-100 text-gray-600 text-sm font-medium select-none">+91</span>
+                                <Input
+                                    id="phone"
+                                    name="phone"
+                                    value={formData.phone.replace(/^\+91\s?/, '')}
+                                    onChange={(e) => { const digits = e.target.value.replace(/\D/g, '').slice(0, 10); handleChange({ target: { name: 'phone', value: '+91 ' + digits } }); }}
+                                    placeholder="9876543210"
+                                    className={`rounded-l-none ${errors.phone ? 'border-red-500 bg-red-50' : ''}`}
+                                />
+                            </div>
                             {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
                         </div>
 

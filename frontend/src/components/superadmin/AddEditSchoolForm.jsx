@@ -502,15 +502,14 @@ const AddEditSchoolForm = ({
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1.5">Contact Number</label>
-                                        <div className="relative">
-                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <div className="flex">
+                                            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-100 text-gray-600 text-sm font-medium select-none">+91</span>
                                             <input
                                                 type="tel"
-                                                value={formData.phone}
-                                                onChange={(e) => handleInputChange('phone', e.target.value)}
-                                                className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${errors.phone ? 'border-rose-500 bg-rose-50' : 'border-gray-200'
-                                                    }`}
-                                                placeholder="+91 12345 67890"
+                                                value={(formData.phone || '').replace(/^\+91\s?/, '')}
+                                                onChange={(e) => { const digits = e.target.value.replace(/\D/g, '').slice(0, 10); handleInputChange('phone', '+91 ' + digits); }}
+                                                className={`flex-1 pr-4 py-2.5 border rounded-r-lg rounded-l-none focus:ring-2 focus:ring-indigo-500 ${errors.phone ? 'border-rose-500 bg-rose-50' : 'border-gray-200'}`}
+                                                placeholder="9876543210"
                                             />
                                         </div>
                                         {errors.phone && (

@@ -189,15 +189,18 @@ const RegisterForm = ({ onRegisterSuccess, onSwitchToLogin }) => {
               <Phone className="w-4 h-4 inline mr-2" />
               Phone Number
             </label>
-            <input 
-              type="tel" 
-              name="phone" 
-              value={formData.phone} 
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all" 
-              placeholder="Enter your phone number" 
-              required 
-            />
+            <div className="flex">
+              <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-100 text-gray-600 text-sm font-medium select-none">+91</span>
+              <input 
+                type="tel" 
+                name="phone" 
+                value={formData.phone.replace(/^\+91\s?/, '')} 
+                onChange={(e) => { const digits = e.target.value.replace(/\D/g, '').slice(0, 10); handleChange({ target: { name: 'phone', value: '+91 ' + digits } }); }}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-r-lg rounded-l-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all" 
+                placeholder="9876543210" 
+                required 
+              />
+            </div>
           </div>
 
           {/* Password */}
