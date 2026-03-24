@@ -55,7 +55,7 @@ const TeacherCourseHandouts = ({ currentUser }) => {
             if (filterSubject) params.append('subject', filterSubject);
 
             const response = await api.get(`/teacher/course-handouts?${params.toString()}`);
-            setHandouts(response.data);
+            setHandouts(Array.isArray(response.data) ? response.data : (response.data?.content || []));
         } catch (error) {
             console.error('Error fetching handouts:', error);
             toast({ title: 'Failed to load course handouts', variant: 'destructive' });
@@ -199,7 +199,7 @@ const TeacherCourseHandouts = ({ currentUser }) => {
                     <BookOpen className="mx-auto w-12 h-12 text-gray-300" />
                     <h3 className="mt-4 text-lg font-medium text-gray-800">No Course Handouts</h3>
                     <p className="mt-1 text-sm text-gray-500">Create your first course handout to get started.</p>
-                    <Button onClick={onCreateNew} className="mt-4">
+                    <Button onClick={() => navigate(MODULE_TO_PATH['teacher-create-handout'])} className="mt-4">
                         <Plus className="w-4 h-4 mr-2" />
                         Create Handout
                     </Button>
