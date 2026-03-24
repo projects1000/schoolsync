@@ -134,7 +134,7 @@ const CreateCourseHandout = ({ currentUser }) => {
             {/* Header */}
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={onBack}>
+                    <Button variant="ghost" size="icon" onClick={goBack}>
                         <ArrowLeft className="w-5 h-5" />
                     </Button>
                     <div>
@@ -213,15 +213,9 @@ const CreateCourseHandout = ({ currentUser }) => {
 
                     {/* Topics */}
                     <div className="border-t pt-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <div>
-                                <h3 className="text-lg font-semibold text-gray-800">Topics</h3>
-                                <p className="text-sm text-gray-500">Add the topics you'll cover in this course</p>
-                            </div>
-                            <Button type="button" variant="outline" onClick={addTopic}>
-                                <Plus className="w-4 h-4 mr-2" />
-                                Add Topic
-                            </Button>
+                        <div className="mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800">Topics</h3>
+                            <p className="text-sm text-gray-500">Add the topics you'll cover in this course</p>
                         </div>
 
                         <div className="space-y-4">
@@ -265,6 +259,11 @@ const CreateCourseHandout = ({ currentUser }) => {
                                 </motion.div>
                             ))}
                         </div>
+
+                        <Button type="button" variant="outline" onClick={addTopic} className="mt-4 w-full border-dashed">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add Topic
+                        </Button>
                     </div>
 
                     {/* Submit */}
