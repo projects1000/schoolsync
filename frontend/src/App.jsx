@@ -202,7 +202,18 @@ function AppInner() {
         if (isExpired) {
           localStorage.removeItem('authToken');
           localStorage.removeItem('currentUser');
-          return; // Stay on login page
+          // Ensure we land on the login page instead of a stale/empty dashboard
+          setIsAuthenticated(false);
+          setCurrentUser(null);
+          toast({
+            variant: "destructive",
+            title: "Session expired",
+            description: "Please log in again to continue.",
+          });
+          if (!window.location.pathname.includes('/login')) {
+            navigate('/login');
+          }
+          return;
         }
         setIsAuthenticated(true);
         setCurrentUser(JSON.parse(user));
