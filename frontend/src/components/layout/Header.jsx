@@ -59,6 +59,12 @@ const Header = ({ currentUser, onLogout, onToggleSidebar, sidebarOpen }) => {
               <h1 className="text-lg sm:text-xl font-semibold text-gray-800 truncate max-w-[150px] sm:max-w-xs">
                 {currentUser?.name ? `Welcome, ${currentUser.name.split(' ')[0]}` : 'Welcome'}
               </h1>
+              {/* On mobile, show role under the welcome text */}
+              {currentUser?.role && (
+                <p className="text-xs text-gray-500 capitalize sm:hidden">
+                  {currentUser.role}
+                </p>
+              )}
               <p className="hidden sm:block text-sm text-gray-500">
                 {new Date().toLocaleDateString('en-US', {
                   weekday: 'long',
