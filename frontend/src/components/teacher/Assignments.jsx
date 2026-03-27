@@ -71,7 +71,9 @@ const Assignments = ({ currentUser }) => {
         setLoading(true);
         try {
             const res = await api.get(`/teacher/assignments/class/${selectedClassId}`);
-            setAssignments(res.data);
+            const data = res.data;
+            const items = Array.isArray(data) ? data : (Array.isArray(data?.content) ? data.content : []);
+            setAssignments(items);
         } catch (err) {
             console.error(err);
             toast({ title: "Error", description: "Failed to fetch assignments", variant: "destructive" });

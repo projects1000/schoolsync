@@ -37,6 +37,9 @@ public class TeacherAssignmentService {
     @Autowired
     private com.littlesteps.playschool.repository.ClassSubjectRepository classSubjectRepository;
 
+    @Autowired
+    private com.littlesteps.playschool.repository.ClassesRepository classesRepository;
+
     private final String uploadDir = "uploads/assignments/";
 
     @Transactional
@@ -45,12 +48,9 @@ public class TeacherAssignmentService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         Teacher teacher = teacherRepository.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("Teacher not found"));
+            .orElseThrow(() -> new RuntimeException("Teacher not found"));
 
-        boolean isClassTeacher = teacher.getAssignedClasses() != null && teacher.getAssignedClasses().contains(classId);
-        boolean isSubjectTeacher = classSubjectRepository.existsByClassIdAndTeacherId(classId, teacher.getId());
-
-        if (!isClassTeacher && !isSubjectTeacher) {
+        if (!isTeacherAssignedToClass(teacher, classId)) {
             throw new RuntimeException("Unauthorized: Teacher is not assigned to this class.");
         }
 
@@ -87,13 +87,29 @@ public class TeacherAssignmentService {
         Teacher teacher = teacherRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
 
-        boolean isClassTeacher = teacher.getAssignedClasses() != null && teacher.getAssignedClasses().contains(classId);
-        boolean isSubjectTeacher = classSubjectRepository.existsByClassIdAndTeacherId(classId, teacher.getId());
-
-        if (!isClassTeacher && !isSubjectTeacher) {
+        if (!isTeacherAssignedToClass(teacher, classId)) {
             throw new RuntimeException("Unauthorized access to class assignments.");
         }
 
         return assignmentRepository.findByClassId(classId, pageable);
+    }
+
+    /**
+     * Checks whether the given teacher is associated with the class either as a
+     * class teacher, subject teacher or via the legacy assignedClasses list.
+     * This mirrors the consolidated logic used in TeacherDashboardService so that
+     * any class visible in /teacher/classes is also valid for assignments.
+     */
+    private boolean isTeacherAssignedToClass(Teacher teacher, String classId) {
+        boolean isAssignedInList = teacher.getAssignedClasses() != null
+                && teacher.getAssignedClasses().contains(classId);
+
+        boolean isSubjectTeacher = classSubjectRepository.existsByClassIdAndTeacherId(classId, teacher.getId());
+
+        boolean isClassTeacher = classesRepository.findByClassTeacherId(teacher.getId())
+                .stream()
+                .anyMatch(cls -> classId != null && classId.equals(cls.getId()));
+
+        return isAssignedInList || isSubjectTeacher || isClassTeacher;
     }
 }
