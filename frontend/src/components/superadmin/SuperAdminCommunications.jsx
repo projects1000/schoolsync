@@ -52,7 +52,10 @@ const SuperAdminCommunications = ({ currentUser }) => {
     setLoading(true);
     try {
       const res = await SuperAdminService.getCommHistory();
-      setHistory(res.data);
+      const data = res.data;
+      // Backend returns a Spring Page object; extract content array safely
+      const items = Array.isArray(data) ? data : (Array.isArray(data?.content) ? data.content : []);
+      setHistory(items);
     } catch (error) {
       console.error('Failed to fetch history:', error);
     } finally {

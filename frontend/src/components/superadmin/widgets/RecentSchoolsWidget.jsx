@@ -41,7 +41,7 @@ const RecentSchoolsWidget = ({ schools }) => {
             <div className="divide-y divide-gray-50">
                 {recentSchools.map((school, index) => (
                     <motion.div
-                        key={school.id}
+                        key={school.id || school.schoolId || index}
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.05 }}
