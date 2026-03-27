@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class TeacherCommunicationService {
@@ -27,16 +28,16 @@ public class TeacherCommunicationService {
     @Autowired
     private com.littlesteps.playschool.repository.ClassSubjectRepository classSubjectRepository;
 
+        @Autowired
+        private com.littlesteps.playschool.repository.ClassesRepository classesRepository;
+
     public Message sendMessage(String email, String classId, String content, String recipientId) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         Teacher teacher = teacherRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
 
-        boolean isClassTeacher = teacher.getAssignedClasses() != null && teacher.getAssignedClasses().contains(classId);
-        boolean isSubjectTeacher = classSubjectRepository.existsByClassIdAndTeacherId(classId, teacher.getId());
-
-        if (!isClassTeacher && !isSubjectTeacher) {
+        if (!isTeacherAssignedToClass(teacher, classId)) {
             throw new RuntimeException("Unauthorized: You are not assigned to this class.");
         }
 
@@ -56,10 +57,7 @@ public class TeacherCommunicationService {
         Teacher teacher = teacherRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
 
-        boolean isClassTeacher = teacher.getAssignedClasses() != null && teacher.getAssignedClasses().contains(classId);
-        boolean isSubjectTeacher = classSubjectRepository.existsByClassIdAndTeacherId(classId, teacher.getId());
-
-        if (!isClassTeacher && !isSubjectTeacher) {
+        if (!isTeacherAssignedToClass(teacher, classId)) {
             throw new RuntimeException("Unauthorized access to class messages.");
         }
 
@@ -80,11 +78,39 @@ public class TeacherCommunicationService {
 
         // Get both direct messages to this teacher and broadcasts to all teachers
         return communicationRepository.findAllByOrderByCreatedAtDesc().stream()
-                .filter(c -> c.getSchoolId().equals(user.getSchoolId()))
-                .filter(c -> (c
-                        .getRecipientType() == com.littlesteps.playschool.entity.Communication.RecipientType.TEACHER
-                        && c.getRecipientIds().contains(teacher.getId())) ||
-                        (c.getRecipientType() == com.littlesteps.playschool.entity.Communication.RecipientType.ALL_TEACHERS))
+                                // Only keep communications where schoolId matches, guarding against nulls
+                                .filter(c -> Objects.equals(c.getSchoolId(), user.getSchoolId()))
+                                // Keep direct messages to this teacher or broadcasts to all teachers
+                                .filter(c -> {
+                                        com.littlesteps.playschool.entity.Communication.RecipientType type = c.getRecipientType();
+                                        if (type == com.littlesteps.playschool.entity.Communication.RecipientType.ALL_TEACHERS) {
+                                                return true;
+                                        }
+                                        if (type == com.littlesteps.playschool.entity.Communication.RecipientType.TEACHER) {
+                                                java.util.Set<String> recipientIds = c.getRecipientIds();
+                                                return recipientIds != null && recipientIds.contains(teacher.getId());
+                                        }
+                                        return false;
+                                })
                 .toList();
+    }
+
+    /**
+     * Checks whether the given teacher is associated with the class either as a
+     * class teacher, subject teacher or via the legacy assignedClasses list.
+     * This mirrors the consolidated logic used in TeacherAssignmentService so that
+     * any class visible in /teacher/classes is also valid for communications.
+     */
+    private boolean isTeacherAssignedToClass(Teacher teacher, String classId) {
+        boolean isAssignedInList = teacher.getAssignedClasses() != null
+                && teacher.getAssignedClasses().contains(classId);
+
+        boolean isSubjectTeacher = classSubjectRepository.existsByClassIdAndTeacherId(classId, teacher.getId());
+
+        boolean isClassTeacher = classesRepository.findByClassTeacherId(teacher.getId())
+                .stream()
+                .anyMatch(cls -> classId != null && classId.equals(cls.getId()));
+
+        return isAssignedInList || isSubjectTeacher || isClassTeacher;
     }
 }

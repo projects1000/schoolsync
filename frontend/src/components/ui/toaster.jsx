@@ -42,7 +42,7 @@ export function Toaster() {
 
 	return (
 		<ToastProvider>
-			{toasts.map(({ id, title, description, action, variant, ...props }) => {
+			{toasts.map(({ id, title, description, action, variant, dismiss, ...props }) => {
 				const icon = getToastIcon(variant, title);
 				return (
 					<Toast key={id} variant={variant} {...props}>
