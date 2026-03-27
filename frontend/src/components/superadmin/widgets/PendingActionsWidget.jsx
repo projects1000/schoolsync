@@ -57,7 +57,7 @@ const PendingActionsWidget = ({ actions }) => {
 
                     return (
                         <motion.div
-                            key={action.id}
+                            key={action.id || `${action.title}-${index}`}
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.05 }}

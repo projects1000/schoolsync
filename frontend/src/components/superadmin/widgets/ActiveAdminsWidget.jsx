@@ -22,7 +22,7 @@ const ActiveAdminsWidget = ({ admins }) => {
             <div className="divide-y divide-gray-50">
                 {admins.map((admin, index) => (
                     <motion.div
-                        key={admin.id}
+                        key={admin.id || admin.email || index}
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.05 }}

@@ -69,7 +69,7 @@ const SystemAlertsWidget = ({ alerts }) => {
 
                     return (
                         <motion.div
-                            key={alert.id}
+                            key={alert.id || `${alert.title}-${index}`}
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.05 }}
