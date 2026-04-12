@@ -63,7 +63,9 @@ public class StudentController {
 
     @PostMapping
     public ResponseEntity<StudentDTO> createStudent(@RequestBody StudentDTO studentDTO, Authentication authentication) {
-        try {
+        
+    	
+    	try {
             String schoolId = getSchoolId(authentication.getName());
             StudentDTO createdStudent = studentService.createStudent(studentDTO, schoolId);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdStudent);
