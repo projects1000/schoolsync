@@ -148,6 +148,13 @@ const adminService = {
             throw error;
         }
     },
+    deleteStudent: async (id) => {
+    try {
+        await api.delete(`/admin/students/${id}`);
+    } catch (error) {
+        throw error;
+    }
+    },
     deleteTeacher: async (id) => {
         try {
             const response = await api.delete(`/admin/teachers/${id}`);

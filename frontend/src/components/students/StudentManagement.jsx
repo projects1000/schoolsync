@@ -1,17 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import {
-  Plus, Search, Edit2, Trash2, Users, Mail, Phone,
-  BookOpen, Calendar, CheckCircle, ArrowRight, AlertCircle,
-  Heart, GraduationCap, Bus
-} from 'lucide-react';
-import adminService from '@/services/adminService';
-import { useToast } from '@/components/ui/use-toast';
-import Pagination from '../common/Pagination';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  Users,
+  Mail,
+  Phone,
+  BookOpen,
+  Calendar,
+  CheckCircle,
+  ArrowRight,
+  AlertCircle,
+  Heart,
+  GraduationCap,
+  Bus,
+} from "lucide-react";
+import adminService from "@/services/adminService";
+import { useToast } from "@/components/ui/use-toast";
+import Pagination from "../common/Pagination";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -43,9 +55,9 @@ const StudentManagement = () => {
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState([]);
   const [classes, setClasses] = useState([]);
-  const [sections, setSections] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  
+  const [searchTerm, setSearchTerm] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
   // Pagination states
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
@@ -53,7 +65,7 @@ const StudentManagement = () => {
   const [totalElements, setTotalElements] = useState(0);
 
   // Filters
-  const [filterClass, setFilterClass] = useState('all');
+  const [filterClass, setFilterClass] = useState("all");
 
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -65,35 +77,36 @@ const StudentManagement = () => {
   const [confirmAction, setConfirmAction] = useState(null);
   const [currentStudent, setCurrentStudent] = useState(null);
   const [profileStudentId, setProfileStudentId] = useState(null);
-  const [profileStudentName, setProfileStudentName] = useState('');
+  const [profileStudentName, setProfileStudentName] = useState("");
+  const [profileFullStudent, setProfileFullStudent] = useState(null);
+  
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
-    name: '',
-    age: '',
-    classId: '',
-    sectionId: '',
-    guardian: '',
-    guardianPhone: '',
-    guardianEmail: '',
-    address: ''
+    name: "",
+    classId: "",
+    guardian: "",
+    guardianPhone: "",
+    guardianEmail: "",
+    address: "",
   });
 
   // Profile Form State
   const [profileFormData, setProfileFormData] = useState({
-    dateOfBirth: '',
-    gender: '',
-    bloodGroup: '',
+    dateOfBirth: "",
+    gender: "",
+    bloodGroup: "",
     newToEducation: true,
-    previousSchool: '',
-    medicalConditions: '',
-    transportMode: ''
+    previousSchool: "",
+    medicalConditions: "",
+    transportMode: "",
   });
 
   // Promotion State
   const [promoteData, setPromoteData] = useState({
-    classId: '',
-    sectionId: ''
+    classId: "",
   });
 
   useEffect(() => {
@@ -111,9 +124,9 @@ const StudentManagement = () => {
       const params = { page, size: pageSize };
       const [studentsRes, classesData] = await Promise.all([
         adminService.getStudents(params),
-        adminService.getClasses()
+        adminService.getClasses(),
       ]);
-      
+
       // Handle Page object
       if (studentsRes && studentsRes.content) {
         setStudents(studentsRes.content);
@@ -124,114 +137,141 @@ const StudentManagement = () => {
         setTotalPages(1);
         setTotalElements(studentsRes?.length || 0);
       }
-      
+
       setClasses(classesData.content || classesData || []);
     } catch (error) {
       console.error("Failed to fetch data", error);
-      toast({ title: "Error", description: "Failed to load data", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to load data",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchSections = async (classId) => {
-    if (!classId) return;
-    try {
-      const data = await adminService.getSections(classId);
-      setSections(data);
-    } catch (error) {
-      console.error("Failed to fetch sections", error);
-    }
-  };
-
-  // When class changes in form, fetch sections
-  useEffect(() => {
-    if (formData.classId) {
-      fetchSections(formData.classId);
-    }
-  }, [formData.classId]);
-
-  // When promote class changes, fetch sections
-  useEffect(() => {
-    if (promoteData.classId) {
-      fetchSections(promoteData.classId);
-    }
-  }, [promoteData.classId]);
-
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleProfileInputChange = (e) => {
     const { name, value } = e.target;
-    setProfileFormData(prev => ({ ...prev, [name]: value }));
+    setProfileFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
+
+    // ✅ STRICT VALIDATION
+    if (!/^\+91 \d{10}$/.test(formData.guardianPhone)) {
+      toast({
+        title: "Invalid Phone",
+        description: "Phone number must be exactly 10 digits long (e.g., +91 9876543210)",
+        variant: "destructive",
+      });
+      return;
+    }
     try {
+      setIsCreating(true);
       const createdStudent = await adminService.createStudent(formData);
       toast({ title: "Success", description: "Student admitted successfully" });
       setIsAddModalOpen(false);
       fetchInitialData();
       setFormData({
-        name: '', age: '', classId: '', sectionId: '',
-        guardian: '', guardianPhone: '', guardianEmail: '', address: ''
+        name: "",
+        classId: "",
+        guardian: "",
+        guardianPhone: "",
+        guardianEmail: "",
+        address: "",
       });
 
       // Auto-open the Complete Profile popup
       setProfileStudentId(createdStudent.id);
       setProfileStudentName(createdStudent.name);
+      setProfileFullStudent(createdStudent);
       setProfileFormData({
-        dateOfBirth: '',
-        gender: '',
-        bloodGroup: '',
+        dateOfBirth: "",
+        gender: "",
+        bloodGroup: "",
         newToEducation: true,
-        previousSchool: '',
-        medicalConditions: '',
-        transportMode: ''
+        previousSchool: "",
+        medicalConditions: "",
+        transportMode: "",
       });
       setIsProfileModalOpen(true);
     } catch (error) {
-      toast({ title: "Error", description: error.response?.data?.message || "Failed to create student", variant: "destructive" });
+      toast({
+        title: "Error",
+        description:
+          error.response?.data?.message || "Failed to create student",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreating(false);
     }
   };
 
   const handleProfileSubmit = async () => {
     try {
-      await adminService.updateStudent(profileStudentId, {
+      setIsUpdatingProfile(true);
+
+      let calculatedAge = profileFullStudent?.age || null;
+      if (profileFormData.dateOfBirth) {
+        const today = new Date();
+        const birthDate = new Date(profileFormData.dateOfBirth);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        calculatedAge = age;
+      }
+
+      const payload = {
+        ...profileFullStudent,
         ...profileFormData,
-        profileCompleted: true
+        age: calculatedAge,
+        profileCompleted: true,
+      };
+      await adminService.updateStudent(profileStudentId, payload);
+      toast({
+        title: "Success",
+        description: "Student profile completed successfully",
       });
-      toast({ title: "Success", description: "Student profile completed successfully" });
       setIsProfileModalOpen(false);
       setProfileStudentId(null);
-      setProfileStudentName('');
+      setProfileStudentName("");
       fetchInitialData();
     } catch (error) {
-      toast({ title: "Error", description: "Failed to save profile", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to save profile",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingProfile(false);
     }
   };
 
   const handleProfileSkip = () => {
     setIsProfileModalOpen(false);
     setProfileStudentId(null);
-    setProfileStudentName('');
+    setProfileStudentName("");
+    setProfileFullStudent(null);
   };
 
   const handleEditClick = (student) => {
     setCurrentStudent(student);
     setFormData({
       name: student.name,
-      age: student.age,
       classId: student.classId,
-      sectionId: student.sectionId,
       guardian: student.guardian,
       guardianPhone: student.guardianPhone,
       guardianEmail: student.guardianEmail,
-      address: student.address
+      address: student.address,
     });
     setIsEditModalOpen(true);
   };
@@ -239,20 +279,28 @@ const StudentManagement = () => {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      await adminService.updateStudent(currentStudent.id, formData);
+      const payload = {
+        ...currentStudent,
+        ...formData
+      };
+      await adminService.updateStudent(currentStudent.id, payload);
       toast({ title: "Success", description: "Student updated successfully" });
       setIsEditModalOpen(false);
       fetchInitialData();
     } catch (error) {
-      toast({ title: "Error", description: "Failed to update student", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to update student",
+        variant: "destructive",
+      });
     }
   };
 
   const handlePromoteClick = (student) => {
     setCurrentStudent(student);
-    setPromoteData({ classId: '', sectionId: '' });
+    setPromoteData({ classId: "" });
     setIsPromoteModalOpen(true);
-  }
+  };
 
   const handlePromoteSubmit = async () => {
     try {
@@ -261,28 +309,49 @@ const StudentManagement = () => {
       setIsPromoteModalOpen(false);
       fetchInitialData();
     } catch (error) {
-      toast({ title: "Error", description: "Failed to promote student", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to promote student",
+        variant: "destructive",
+      });
     }
   };
 
   const handleDeleteClick = (student) => {
     setCurrentStudent(student);
-    setConfirmAction({ type: 'delete', student });
+    setConfirmAction({ type: "delete", student });
     setIsConfirmModalOpen(true);
   };
 
   const confirmActionSubmit = async () => {
     if (!confirmAction) return;
+
     try {
-      if (confirmAction.type === 'delete') {
+      setDeleting(true);
+
+      if (confirmAction.type === "delete") {
         await adminService.deleteStudent(confirmAction.student.id);
-        toast({ title: "Success", description: "Student deleted and moved to Trash" });
+
+        toast({
+          title: "Success",
+          description: "Student moved to Trash",
+        });
       }
+
       setIsConfirmModalOpen(false);
       setConfirmAction(null);
       fetchInitialData();
     } catch (error) {
-      toast({ title: "Error", description: `Failed to ${confirmAction.type} student`, variant: "destructive" });
+      console.error(error);
+
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.message || "Failed to delete student",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -290,30 +359,40 @@ const StudentManagement = () => {
   const handleCompleteProfileClick = (student) => {
     setProfileStudentId(student.id);
     setProfileStudentName(student.name);
+    setProfileFullStudent(student);
     setProfileFormData({
-      dateOfBirth: student.dateOfBirth || '',
-      gender: student.gender || '',
-      bloodGroup: student.bloodGroup || '',
+      dateOfBirth: student.dateOfBirth || "",
+      gender: student.gender || "",
+      bloodGroup: student.bloodGroup || "",
       newToEducation: student.newToEducation ?? true,
-      previousSchool: student.previousSchool || '',
-      medicalConditions: student.medicalConditions || '',
-      transportMode: student.transportMode || ''
+      previousSchool: student.previousSchool || "",
+      medicalConditions: student.medicalConditions || "",
+      transportMode: student.transportMode || "",
     });
     setIsProfileModalOpen(true);
   };
 
-  const filteredStudents = students.filter(student => {
-    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.admissionNo?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesClass = filterClass === 'all' || student.classId === filterClass;
-    return matchesSearch && matchesClass;
-  });
+const filteredStudents = students.filter((student) => {
+  const name = student.name?.toLowerCase() || "";
+  const admissionNo = student.admissionNo?.toLowerCase() || "";
+  const search = searchTerm?.toLowerCase() || "";
+
+  const matchesSearch =
+    name.includes(search) || admissionNo.includes(search);
+
+  const matchesClass =
+    filterClass === "all" || student.classId === filterClass;
+
+  return matchesSearch && matchesClass;
+});
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Student Management</h1>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Student Management
+          </h1>
           <p className="text-gray-500">Admissions, promotions, and records</p>
         </div>
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
@@ -323,38 +402,45 @@ const StudentManagement = () => {
               Admit Student
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
+          <DialogContent
+            className="max-w-2xl"
+            onPointerDownOutside={(e) => e.preventDefault()}
+            onInteractOutside={(e) => e.preventDefault()}
+          >
             <DialogHeader>
               <DialogTitle>New Admission</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleCreateSubmit} className="grid grid-cols-2 gap-4">
+            <form
+              onSubmit={handleCreateSubmit}
+              className="grid grid-cols-2 gap-4"
+            >
               <div className="space-y-2 col-span-2">
                 <Label htmlFor="name">Full Name</Label>
-                <Input id="name" name="name" value={formData.name} onChange={handleInputChange} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="age">Age</Label>
-                <Input id="age" name="age" type="number" value={formData.age} onChange={handleInputChange} required />
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="classId">Class</Label>
-                <Select value={formData.classId} onValueChange={(val) => setFormData(p => ({ ...p, classId: val }))}>
+                <Select
+                  value={formData.classId}
+                  onValueChange={(val) =>
+                    setFormData((p) => ({ ...p, classId: val }))
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select Class" />
                   </SelectTrigger>
                   <SelectContent>
-                    {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="sectionId">Section</Label>
-                <Select value={formData.sectionId} onValueChange={(val) => setFormData(p => ({ ...p, sectionId: val }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Section" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sections.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                    {classes.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -363,23 +449,76 @@ const StudentManagement = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="guardian">Guardian Name</Label>
-                <Input id="guardian" name="guardian" value={formData.guardian} onChange={handleInputChange} required />
+                <Input
+                  id="guardian"
+                  name="guardian"
+                  value={formData.guardian}
+                  onChange={handleInputChange}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone</Label>
                 <div className="flex">
-                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-100 text-gray-600 text-sm font-medium select-none">+91</span>
-                  <Input id="phone" name="guardianPhone" className="rounded-l-none" value={formData.guardianPhone.replace(/^\+91\s?/, '')} onChange={(e) => { const digits = e.target.value.replace(/\D/g, '').slice(0, 10); handleInputChange({ target: { name: 'guardianPhone', value: '+91 ' + digits } }); }} placeholder="9876543210" required />
+                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-100 text-gray-600 text-sm font-medium select-none">
+                    +91
+                  </span>
+                  <Input
+                    id="phone"
+                    name="guardianPhone"
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]{10}"
+                    maxLength={10}
+                    minLength={10}
+                    className="rounded-l-none"
+                    value={formData.guardianPhone.replace(/^\+91\s?/, "")}
+                    onChange={(e) => {
+                      const digits = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 10);
+
+                      handleInputChange({
+                        target: {
+                          name: "guardianPhone",
+                          value: "+91 " + digits,
+                        },
+                      });
+                    }}
+                    placeholder="9876543210"
+                    required
+                  />
                 </div>
               </div>
               <div className="space-y-2 col-span-2">
                 <Label htmlFor="address">Address</Label>
-                <Input id="address" name="address" value={formData.address} onChange={handleInputChange} />
+                <Input
+                  id="address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                />
               </div>
 
               <div className="col-span-2 pt-4 flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
-                <Button type="submit">Admit Student</Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsAddModalOpen(false)}
+                  disabled={isCreating}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isCreating}>
+                  {isCreating ? (
+                    <>
+                      <span className="animate-spin mr-2 border-2 border-white border-t-transparent rounded-full w-4 h-4 inline-block" />
+                      Admitting...
+                    </>
+                  ) : (
+                    "Admit Student"
+                  )}
+                </Button>
               </div>
             </form>
           </DialogContent>
@@ -404,7 +543,11 @@ const StudentManagement = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Classes</SelectItem>
-              {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              {classes.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -424,20 +567,29 @@ const StudentManagement = () => {
           <TableBody>
             {filteredStudents.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-gray-500 py-8">
+                <TableCell
+                  colSpan={7}
+                  className="text-center text-gray-500 py-8"
+                >
                   No students found
                 </TableCell>
               </TableRow>
             ) : (
               filteredStudents.map((student) => (
                 <TableRow key={student.id}>
-                  <TableCell className="font-mono text-xs">{student.rollNo}</TableCell>
-                  <TableCell className="font-mono text-xs">{student.admissionNo}</TableCell>
+                  <TableCell className="font-mono text-xs">
+                    {student.rollNo}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs">
+                    {student.admissionNo}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <div>
                         <div className="font-medium">{student.name}</div>
-                        <div className="text-xs text-gray-500">{student.age} years old</div>
+                        <div className="text-xs text-gray-500">
+                          {student.age ? `${student.age} years old` : "Age pending"}
+                        </div>
                       </div>
                       {!student.profileCompleted && (
                         <button
@@ -450,78 +602,119 @@ const StudentManagement = () => {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    {student.className || 'Unassigned'}
-                  </TableCell>
+                  <TableCell>{student.className || "Unassigned"}</TableCell>
                   <TableCell>
                     <div className="flex flex-col text-sm text-gray-500 space-y-1">
                       <div>{student.guardian}</div>
-                      <div className="flex items-center text-xs"><Phone className="w-3 h-3 mr-1" /> {student.guardianPhone}</div>
+                      <div className="flex items-center text-xs">
+                        <Phone className="w-3 h-3 mr-1" />{" "}
+                        {student.guardianPhone}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={student.status === 'ACTIVE' ? 'success' : 'secondary'}>
+                    <Badge
+                      variant={
+                        student.status === "ACTIVE" ? "success" : "secondary"
+                      }
+                    >
                       {student.status}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end space-x-2">
-                      <Button variant="ghost" size="sm" onClick={() => handlePromoteClick(student)} title="Promote">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handlePromoteClick(student)}
+                        title="Promote"
+                      >
                         <ArrowRight className="w-4 h-4 text-orange-500" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleEditClick(student)} title="Edit">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditClick(student)}
+                        title="Edit"
+                      >
                         <Edit2 className="w-4 h-4 text-gray-500" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(student)} title="Delete Student">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteClick(student)}
+                        title="Delete Student"
+                      >
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </Button>
                     </div>
                   </TableCell>
                 </TableRow>
-              )))}
+              ))
+            )}
           </TableBody>
         </Table>
         <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={(newPage) => setPage(newPage)}
-            totalElements={totalElements}
-            pageSize={pageSize}
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={(newPage) => setPage(newPage)}
+          totalElements={totalElements}
+          pageSize={pageSize}
         />
       </div>
 
       {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-2xl" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent
+          className="max-w-2xl"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>Edit Student</DialogTitle>
           </DialogHeader>
           {currentStudent && (
-            <form onSubmit={handleEditSubmit} className="grid grid-cols-2 gap-4">
+            <form
+              onSubmit={handleEditSubmit}
+              className="grid grid-cols-2 gap-4"
+            >
               <div className="space-y-2 col-span-2">
                 <Label>Full Name</Label>
-                <Input name="name" value={formData.name} onChange={handleInputChange} required />
+                <Input
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label>Class</Label>
-                <Select value={formData.classId} onValueChange={(val) => setFormData(p => ({ ...p, classId: val }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Select
+                  value={formData.classId}
+                  onValueChange={(val) =>
+                    setFormData((p) => ({ ...p, classId: val }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Section</Label>
-                <Select value={formData.sectionId} onValueChange={(val) => setFormData(p => ({ ...p, sectionId: val }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {sections.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    {classes.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="col-span-2 pt-4 flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditModalOpen(false)}
+                >
+                  Cancel
+                </Button>
                 <Button type="submit">Save Changes</Button>
               </div>
             </form>
@@ -531,48 +724,76 @@ const StudentManagement = () => {
 
       {/* Promote Modal */}
       <Dialog open={isPromoteModalOpen} onOpenChange={setIsPromoteModalOpen}>
-        <DialogContent onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>Promote Student</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <p className="text-sm text-gray-500">Promoting <strong>{currentStudent?.name}</strong> to:</p>
+            <p className="text-sm text-gray-500">
+              Promoting <strong>{currentStudent?.name}</strong> to:
+            </p>
             <div className="space-y-2">
               <Label>New Class</Label>
-              <Select value={promoteData.classId} onValueChange={(val) => setPromoteData(p => ({ ...p, classId: val }))}>
-                <SelectTrigger><SelectValue placeholder="Select Class" /></SelectTrigger>
+              <Select
+                value={promoteData.classId}
+                onValueChange={(val) =>
+                  setPromoteData((p) => ({ ...p, classId: val }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Class" />
+                </SelectTrigger>
                 <SelectContent>
-                  {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>New Section</Label>
-              <Select value={promoteData.sectionId} onValueChange={(val) => setPromoteData(p => ({ ...p, sectionId: val }))}>
-                <SelectTrigger><SelectValue placeholder="Select Section" /></SelectTrigger>
-                <SelectContent>
-                  {sections.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  {classes.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsPromoteModalOpen(false)}>Cancel</Button>
-            <Button onClick={handlePromoteSubmit} disabled={!promoteData.classId}>Confirm Promotion</Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsPromoteModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handlePromoteSubmit}
+              disabled={!promoteData.classId}
+            >
+              Confirm Promotion
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Complete Profile Modal */}
-      <Dialog open={isProfileModalOpen} onOpenChange={(open) => { if (!open) handleProfileSkip(); }}>
-        <DialogContent className="max-w-2xl" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
+      <Dialog
+        open={isProfileModalOpen}
+        onOpenChange={(open) => {
+          if (!open) handleProfileSkip();
+        }}
+      >
+        <DialogContent
+          className="max-w-2xl"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-purple-600" />
               Complete Student Profile
             </DialogTitle>
             <DialogDescription>
-              Fill in additional details for <strong>{profileStudentName}</strong>. You can skip this and complete it later.
+              Fill in additional details for{" "}
+              <strong>{profileStudentName}</strong>. You can skip this and
+              complete it later.
             </DialogDescription>
           </DialogHeader>
 
@@ -600,7 +821,9 @@ const StudentManagement = () => {
               </Label>
               <Select
                 value={profileFormData.gender}
-                onValueChange={(val) => setProfileFormData(p => ({ ...p, gender: val }))}
+                onValueChange={(val) =>
+                  setProfileFormData((p) => ({ ...p, gender: val }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Gender" />
@@ -621,15 +844,21 @@ const StudentManagement = () => {
               </Label>
               <Select
                 value={profileFormData.bloodGroup}
-                onValueChange={(val) => setProfileFormData(p => ({ ...p, bloodGroup: val }))}
+                onValueChange={(val) =>
+                  setProfileFormData((p) => ({ ...p, bloodGroup: val }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Blood Group" />
                 </SelectTrigger>
                 <SelectContent>
-                  {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => (
-                    <SelectItem key={bg} value={bg}>{bg}</SelectItem>
-                  ))}
+                  {["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"].map(
+                    (bg) => (
+                      <SelectItem key={bg} value={bg}>
+                        {bg}
+                      </SelectItem>
+                    ),
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -642,14 +871,18 @@ const StudentManagement = () => {
               </Label>
               <Select
                 value={profileFormData.transportMode}
-                onValueChange={(val) => setProfileFormData(p => ({ ...p, transportMode: val }))}
+                onValueChange={(val) =>
+                  setProfileFormData((p) => ({ ...p, transportMode: val }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Transport" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="School Bus">School Bus</SelectItem>
-                  <SelectItem value="Private Vehicle">Private Vehicle</SelectItem>
+                  <SelectItem value="Private Vehicle">
+                    Private Vehicle
+                  </SelectItem>
                   <SelectItem value="Walk">Walk</SelectItem>
                   <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
@@ -670,7 +903,13 @@ const StudentManagement = () => {
                     type="radio"
                     name="educationHistory"
                     checked={profileFormData.newToEducation === true}
-                    onChange={() => setProfileFormData(p => ({ ...p, newToEducation: true, previousSchool: '' }))}
+                    onChange={() =>
+                      setProfileFormData((p) => ({
+                        ...p,
+                        newToEducation: true,
+                        previousSchool: "",
+                      }))
+                    }
                     className="w-4 h-4 text-purple-600"
                   />
                   <span className="text-sm">New to education</span>
@@ -680,10 +919,17 @@ const StudentManagement = () => {
                     type="radio"
                     name="educationHistory"
                     checked={profileFormData.newToEducation === false}
-                    onChange={() => setProfileFormData(p => ({ ...p, newToEducation: false }))}
+                    onChange={() =>
+                      setProfileFormData((p) => ({
+                        ...p,
+                        newToEducation: false,
+                      }))
+                    }
                     className="w-4 h-4 text-purple-600"
                   />
-                  <span className="text-sm">Previously admitted in another school</span>
+                  <span className="text-sm">
+                    Previously admitted in another school
+                  </span>
                 </label>
               </div>
 
@@ -724,9 +970,22 @@ const StudentManagement = () => {
             <Button type="button" variant="outline" onClick={handleProfileSkip}>
               Skip for now
             </Button>
-            <Button onClick={handleProfileSubmit} className="bg-purple-600 hover:bg-purple-700">
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Save Profile
+            <Button
+              onClick={handleProfileSubmit}
+              disabled={isUpdatingProfile}
+              className="bg-purple-600 hover:bg-purple-700 w-36"
+            >
+              {isUpdatingProfile ? (
+                 <>
+                   <span className="animate-spin mr-2 border-2 border-white border-t-transparent rounded-full w-4 h-4 inline-block" />
+                   Saving...
+                 </>
+              ) : (
+                 <>
+                   <CheckCircle className="w-4 h-4 mr-2" />
+                   Save Profile
+                 </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -737,24 +996,42 @@ const StudentManagement = () => {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {confirmAction?.type === 'delete' ? 'Delete Student?' : 'Confirm'}
+              {confirmAction?.type === "delete" ? "Delete Student?" : "Confirm"}
             </DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            {confirmAction?.type === 'delete' && (
+            {confirmAction?.type === "delete" && (
               <p className="text-gray-600">
-                Are you sure you want to delete <strong>{confirmAction?.student?.name}</strong>?
-                They will be moved to the Trash.
+                Are you sure you want to delete{" "}
+                <strong>{confirmAction?.student?.name}</strong>? They will be
+                moved to the Trash.
               </p>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsConfirmModalOpen(false)}>Cancel</Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsConfirmModalOpen(false)}
+            >
+              Cancel
+            </Button>
             <Button
               onClick={confirmActionSubmit}
-              className={confirmAction?.type === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'bg-primary'}
+              disabled={deleting}
+              className={
+                confirmAction?.type === "delete"
+                  ? "bg-red-600 hover:bg-red-700"
+                  : "bg-primary"
+              }
             >
-              {confirmAction?.type === 'delete' ? 'Delete Student' : 'Confirm'}
+              {deleting ? (
+                <>
+                  <span className="animate-spin mr-2 border-2 border-white border-t-transparent rounded-full w-4 h-4 inline-block" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Student"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
