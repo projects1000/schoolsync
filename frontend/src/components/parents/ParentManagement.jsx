@@ -126,9 +126,12 @@ const ParentManagement = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const [isSubmittingParent, setIsSubmittingParent] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      setIsSubmittingParent(true);
       if (editingParentId) {
         await adminService.updateParent(editingParentId, formData);
         toast({ title: "Success", description: "Parent updated successfully" });
@@ -148,6 +151,8 @@ const ParentManagement = () => {
       resetForm();
     } catch (error) {
       toast({ title: "Error", description: error.response?.data?.error || "Operation failed", variant: "destructive" });
+    } finally {
+      setIsSubmittingParent(false);
     }
   };
 
@@ -265,18 +270,23 @@ const ParentManagement = () => {
     );
   };
 
+  const [isMappingStudents, setIsMappingStudents] = useState(false);
+
   const handleMapSubmit = async () => {
     if (selectedStudentIds.length === 0) {
       toast({ title: "Error", description: "Please select at least one student", variant: "destructive" });
       return;
     }
     try {
+      setIsMappingStudents(true);
       await adminService.mapStudentsToParent(currentParent.id, selectedStudentIds);
       toast({ title: "Success", description: "Students mapped to parent" });
       setIsMapModalOpen(false);
       fetchData();
     } catch (error) {
       toast({ title: "Error", description: error.response?.data?.error || "Failed to map students", variant: "destructive" });
+    } finally {
+      setIsMappingStudents(false);
     }
   };
 
@@ -343,8 +353,17 @@ const ParentManagement = () => {
                 <Input id="address" name="address" value={formData.address} onChange={handleInputChange} />
               </div>
               <div className="pt-4 flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
-                <Button type="submit">{editingParentId ? 'Update Parent' : 'Create Parent'}</Button>
+                <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)} disabled={isSubmittingParent}>Cancel</Button>
+                <Button type="submit" disabled={isSubmittingParent}>
+                  {isSubmittingParent ? (
+                    <>
+                      <span className="animate-spin mr-2 border-2 border-white border-t-transparent rounded-full w-4 h-4 inline-block" />
+                      {editingParentId ? 'Updating...' : 'Creating...'}
+                    </>
+                  ) : (
+                    editingParentId ? 'Update Parent' : 'Create Parent'
+                  )}
+                </Button>
               </div>
             </form>
           </DialogContent>
@@ -489,8 +508,17 @@ const ParentManagement = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsMapModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleMapSubmit} disabled={selectedStudentIds.length === 0}>Link Students</Button>
+            <Button variant="outline" onClick={() => setIsMapModalOpen(false)} disabled={isMappingStudents}>Cancel</Button>
+            <Button onClick={handleMapSubmit} disabled={selectedStudentIds.length === 0 || isMappingStudents}>
+              {isMappingStudents ? (
+                <>
+                  <span className="animate-spin mr-2 border-2 border-white border-t-transparent rounded-full w-4 h-4 inline-block" />
+                  Linking...
+                </>
+              ) : (
+                "Link Students"
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
