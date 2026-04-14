@@ -209,7 +209,7 @@ public class ParentService {
      * Update parent profile
      */
     @Transactional
-    @CacheEvict(allEntries = true)
+    @CacheEvict(value = {"parents", "students"}, allEntries = true)
     public ParentDTO updateParent(String id, ParentDTO parentDTO, String updatedBy, String schoolId) {
         Parent parent = parentRepository.findByIdAndSchoolId(id, schoolId)
                 .orElseThrow(() -> new RuntimeException("Parent not found"));
@@ -241,6 +241,17 @@ public class ParentService {
         }
 
         Parent savedParent = parentRepository.save(parent);
+
+        // Also cascade update guardian info to mapped students
+        List<ParentStudentMap> mappings = parentStudentMapRepository.findByParentIdAndSchoolId(savedParent.getId(), schoolId);
+        for (ParentStudentMap map : mappings) {
+            studentRepository.findById(map.getStudentId()).ifPresent(student -> {
+                student.setGuardian(savedParent.getName());
+                student.setGuardianPhone(savedParent.getPhoneNumber());
+                student.setGuardianEmail(savedParent.getEmail());
+                studentRepository.save(student);
+            });
+        }
 
         // Log in audit
         auditService.logParentUpdated(updatedBy, parent.getId());
@@ -314,7 +325,7 @@ public class ParentService {
      * Validates cross-school restrictions
      */
     @Transactional
-    @CacheEvict(allEntries = true)
+    @CacheEvict(value = {"parents", "students"}, allEntries = true)
     public void mapStudentToParent(String parentId, String studentId, String createdBy, String schoolId) {
         mapStudentsToParent(parentId, List.of(studentId), createdBy, schoolId);
     }
@@ -324,7 +335,7 @@ public class ParentService {
      * Validates cross-school restrictions for all students
      */
     @Transactional
-    @CacheEvict(allEntries = true)
+    @CacheEvict(value = {"parents", "students"}, allEntries = true)
     public void mapStudentsToParent(String parentId, List<String> studentIds, String createdBy, String schoolId) {
         Parent parent = parentRepository.findByIdAndSchoolId(parentId, schoolId)
                 .orElseThrow(() -> new RuntimeException("Parent not found in this school"));
@@ -374,7 +385,7 @@ public class ParentService {
      * Unmap a student from a parent
      */
     @Transactional
-    @CacheEvict(allEntries = true)
+    @CacheEvict(value = {"parents", "students"}, allEntries = true)
     public void unmapStudentFromParent(String parentId, String studentId, String removedBy, String schoolId) {
         parentRepository.findByIdAndSchoolId(parentId, schoolId)
                 .orElseThrow(() -> new RuntimeException("Parent not found in this school"));

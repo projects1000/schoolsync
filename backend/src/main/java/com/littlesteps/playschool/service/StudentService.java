@@ -94,7 +94,10 @@ public class StudentService {
         // Resolve Class/Section Name if ID provided
         if (studentDTO.getClassId() != null) {
             classesRepository.findById(studentDTO.getClassId())
-                    .ifPresent(cls -> newStudent.setClassName(cls.getName()));
+                    .ifPresent(cls -> {
+                        newStudent.setClassName(cls.getName());
+                        newStudent.setSectionId(cls.getSection());
+                    });
         }
 
         // 1. Fetch existing students
@@ -103,7 +106,7 @@ public class StudentService {
         // 4. Reassign roll numbers
         // 5. Save (Atomic)
 
-        if (studentDTO.getClassId() != null && studentDTO.getSectionId() != null) {
+        if (newStudent.getClassId() != null && newStudent.getSectionId() != null) {
             // Save first (without roll no initially or with logic)
             // But strict rule: "Roll number must be auto-assigned by backend"
             // We can save with null/default rollNo, then recalculate.
@@ -178,7 +181,10 @@ public class StudentService {
         if (studentDTO.getClassId() != null) {
             existingStudent.setClassId(studentDTO.getClassId());
             classesRepository.findById(studentDTO.getClassId())
-                    .ifPresent(cls -> existingStudent.setClassName(cls.getName()));
+                    .ifPresent(cls -> {
+                        existingStudent.setClassName(cls.getName());
+                        existingStudent.setSectionId(cls.getSection());
+                    });
         }
         if (studentDTO.getSectionId() != null) {
             existingStudent.setSectionId(studentDTO.getSectionId());
@@ -192,7 +198,8 @@ public class StudentService {
 
         // Check for Section Change
         boolean sectionChanged = (studentDTO.getClassId() != null && !studentDTO.getClassId().equals(oldClassId)) ||
-                (studentDTO.getSectionId() != null && !studentDTO.getSectionId().equals(oldSectionId));
+                (studentDTO.getSectionId() != null && !studentDTO.getSectionId().equals(oldSectionId)) ||
+                (existingStudent.getSectionId() != null && !existingStudent.getSectionId().equals(oldSectionId));
 
         if (sectionChanged) {
             // Recalc Old Section Logic
@@ -225,22 +232,29 @@ public class StudentService {
         String schoolId = student.getSchoolId();
 
         student.setClassId(newClassId);
-        student.setSectionId(newSectionId);
+
+        // Lookup class to set name and resolve sectionId if needed
+        classesRepository.findById(newClassId).ifPresent(cls -> {
+            student.setClassName(cls.getName());
+            if (newSectionId == null || newSectionId.isEmpty()) {
+                student.setSectionId(cls.getSection());
+            } else {
+                student.setSectionId(newSectionId);
+            }
+        });
+
+        String finalizedSectionId = student.getSectionId();
 
         // Save first to be included in the new section query
         studentRepository.save(student);
 
         // Recalculate Roll No for new class/section
-        recalculateRollNumbers(schoolId, newClassId, newSectionId);
+        recalculateRollNumbers(schoolId, newClassId, finalizedSectionId);
 
         // Recalculate Roll No for old class/section to close gaps
         if (oldClassId != null && oldSectionId != null) {
             recalculateRollNumbers(schoolId, oldClassId, oldSectionId);
         }
-
-        // Update class name for display
-        classesRepository.findById(newClassId)
-                .ifPresent(cls -> student.setClassName(cls.getName()));
 
         studentRepository.save(student);
     }

@@ -71,37 +71,17 @@ const StudentManagement = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPromoteModalOpen, setIsPromoteModalOpen] = useState(false);
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   const [confirmAction, setConfirmAction] = useState(null);
   const [currentStudent, setCurrentStudent] = useState(null);
-  const [profileStudentId, setProfileStudentId] = useState(null);
-  const [profileStudentName, setProfileStudentName] = useState("");
-  const [profileFullStudent, setProfileFullStudent] = useState(null);
   
   const [isCreating, setIsCreating] = useState(false);
-  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
     name: "",
     classId: "",
-    guardian: "",
-    guardianPhone: "",
-    guardianEmail: "",
-    address: "",
-  });
-
-  // Profile Form State
-  const [profileFormData, setProfileFormData] = useState({
-    dateOfBirth: "",
-    gender: "",
-    bloodGroup: "",
-    newToEducation: true,
-    previousSchool: "",
-    medicalConditions: "",
-    transportMode: "",
   });
 
   // Promotion State
@@ -156,52 +136,21 @@ const StudentManagement = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleProfileInputChange = (e) => {
-    const { name, value } = e.target;
-    setProfileFormData((prev) => ({ ...prev, [name]: value }));
-  };
+
 
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ STRICT VALIDATION
-    if (!/^\+91 \d{10}$/.test(formData.guardianPhone)) {
-      toast({
-        title: "Invalid Phone",
-        description: "Phone number must be exactly 10 digits long (e.g., +91 9876543210)",
-        variant: "destructive",
-      });
-      return;
-    }
     try {
       setIsCreating(true);
-      const createdStudent = await adminService.createStudent(formData);
+      await adminService.createStudent(formData);
       toast({ title: "Success", description: "Student admitted successfully" });
       setIsAddModalOpen(false);
       fetchInitialData();
       setFormData({
         name: "",
         classId: "",
-        guardian: "",
-        guardianPhone: "",
-        guardianEmail: "",
-        address: "",
       });
-
-      // Auto-open the Complete Profile popup
-      setProfileStudentId(createdStudent.id);
-      setProfileStudentName(createdStudent.name);
-      setProfileFullStudent(createdStudent);
-      setProfileFormData({
-        dateOfBirth: "",
-        gender: "",
-        bloodGroup: "",
-        newToEducation: true,
-        previousSchool: "",
-        medicalConditions: "",
-        transportMode: "",
-      });
-      setIsProfileModalOpen(true);
     } catch (error) {
       toast({
         title: "Error",
@@ -214,64 +163,11 @@ const StudentManagement = () => {
     }
   };
 
-  const handleProfileSubmit = async () => {
-    try {
-      setIsUpdatingProfile(true);
-
-      let calculatedAge = profileFullStudent?.age || null;
-      if (profileFormData.dateOfBirth) {
-        const today = new Date();
-        const birthDate = new Date(profileFormData.dateOfBirth);
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-        }
-        calculatedAge = age;
-      }
-
-      const payload = {
-        ...profileFullStudent,
-        ...profileFormData,
-        age: calculatedAge,
-        profileCompleted: true,
-      };
-      await adminService.updateStudent(profileStudentId, payload);
-      toast({
-        title: "Success",
-        description: "Student profile completed successfully",
-      });
-      setIsProfileModalOpen(false);
-      setProfileStudentId(null);
-      setProfileStudentName("");
-      fetchInitialData();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save profile",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUpdatingProfile(false);
-    }
-  };
-
-  const handleProfileSkip = () => {
-    setIsProfileModalOpen(false);
-    setProfileStudentId(null);
-    setProfileStudentName("");
-    setProfileFullStudent(null);
-  };
-
   const handleEditClick = (student) => {
     setCurrentStudent(student);
     setFormData({
       name: student.name,
       classId: student.classId,
-      guardian: student.guardian,
-      guardianPhone: student.guardianPhone,
-      guardianEmail: student.guardianEmail,
-      address: student.address,
     });
     setIsEditModalOpen(true);
   };
@@ -355,22 +251,7 @@ const StudentManagement = () => {
     }
   };
 
-  // Open profile popup for existing students with incomplete profile
-  const handleCompleteProfileClick = (student) => {
-    setProfileStudentId(student.id);
-    setProfileStudentName(student.name);
-    setProfileFullStudent(student);
-    setProfileFormData({
-      dateOfBirth: student.dateOfBirth || "",
-      gender: student.gender || "",
-      bloodGroup: student.bloodGroup || "",
-      newToEducation: student.newToEducation ?? true,
-      previousSchool: student.previousSchool || "",
-      medicalConditions: student.medicalConditions || "",
-      transportMode: student.transportMode || "",
-    });
-    setIsProfileModalOpen(true);
-  };
+
 
 const filteredStudents = students.filter((student) => {
   const name = student.name?.toLowerCase() || "";
@@ -445,60 +326,7 @@ const filteredStudents = students.filter((student) => {
                 </Select>
               </div>
 
-              <hr className="col-span-2 my-2" />
 
-              <div className="space-y-2">
-                <Label htmlFor="guardian">Guardian Name</Label>
-                <Input
-                  id="guardian"
-                  name="guardian"
-                  value={formData.guardian}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <div className="flex">
-                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-100 text-gray-600 text-sm font-medium select-none">
-                    +91
-                  </span>
-                  <Input
-                    id="phone"
-                    name="guardianPhone"
-                    type="tel"
-                    inputMode="numeric"
-                    pattern="[0-9]{10}"
-                    maxLength={10}
-                    minLength={10}
-                    className="rounded-l-none"
-                    value={formData.guardianPhone.replace(/^\+91\s?/, "")}
-                    onChange={(e) => {
-                      const digits = e.target.value
-                        .replace(/\D/g, "")
-                        .slice(0, 10);
-
-                      handleInputChange({
-                        target: {
-                          name: "guardianPhone",
-                          value: "+91 " + digits,
-                        },
-                      });
-                    }}
-                    placeholder="9876543210"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="space-y-2 col-span-2">
-                <Label htmlFor="address">Address</Label>
-                <Input
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                />
-              </div>
 
               <div className="col-span-2 pt-4 flex justify-end space-x-2">
                 <Button
@@ -591,15 +419,7 @@ const filteredStudents = students.filter((student) => {
                           {student.age ? `${student.age} years old` : "Age pending"}
                         </div>
                       </div>
-                      {!student.profileCompleted && (
-                        <button
-                          onClick={() => handleCompleteProfileClick(student)}
-                          title="Profile incomplete — click to complete"
-                          className="ml-1"
-                        >
-                          <AlertCircle className="w-4 h-4 text-amber-500 hover:text-amber-600 transition-colors" />
-                        </button>
-                      )}
+
                     </div>
                   </TableCell>
                   <TableCell>{student.className || "Unassigned"}</TableCell>
@@ -773,223 +593,6 @@ const filteredStudents = students.filter((student) => {
         </DialogContent>
       </Dialog>
 
-      {/* Complete Profile Modal */}
-      <Dialog
-        open={isProfileModalOpen}
-        onOpenChange={(open) => {
-          if (!open) handleProfileSkip();
-        }}
-      >
-        <DialogContent
-          className="max-w-2xl"
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onInteractOutside={(e) => e.preventDefault()}
-        >
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-purple-600" />
-              Complete Student Profile
-            </DialogTitle>
-            <DialogDescription>
-              Fill in additional details for{" "}
-              <strong>{profileStudentName}</strong>. You can skip this and
-              complete it later.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid grid-cols-2 gap-4 py-2">
-            {/* Date of Birth */}
-            <div className="space-y-2">
-              <Label htmlFor="dob" className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-gray-500" />
-                Date of Birth
-              </Label>
-              <Input
-                id="dob"
-                name="dateOfBirth"
-                type="date"
-                value={profileFormData.dateOfBirth}
-                onChange={handleProfileInputChange}
-              />
-            </div>
-
-            {/* Gender */}
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-gray-500" />
-                Gender
-              </Label>
-              <Select
-                value={profileFormData.gender}
-                onValueChange={(val) =>
-                  setProfileFormData((p) => ({ ...p, gender: val }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Male">Male</SelectItem>
-                  <SelectItem value="Female">Female</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Blood Group */}
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1.5">
-                <Heart className="w-3.5 h-3.5 text-red-500" />
-                Blood Group
-              </Label>
-              <Select
-                value={profileFormData.bloodGroup}
-                onValueChange={(val) =>
-                  setProfileFormData((p) => ({ ...p, bloodGroup: val }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Blood Group" />
-                </SelectTrigger>
-                <SelectContent>
-                  {["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"].map(
-                    (bg) => (
-                      <SelectItem key={bg} value={bg}>
-                        {bg}
-                      </SelectItem>
-                    ),
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Transport Mode */}
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1.5">
-                <Bus className="w-3.5 h-3.5 text-gray-500" />
-                Transport Mode
-              </Label>
-              <Select
-                value={profileFormData.transportMode}
-                onValueChange={(val) =>
-                  setProfileFormData((p) => ({ ...p, transportMode: val }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Transport" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="School Bus">School Bus</SelectItem>
-                  <SelectItem value="Private Vehicle">
-                    Private Vehicle
-                  </SelectItem>
-                  <SelectItem value="Walk">Walk</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <hr className="col-span-2" />
-
-            {/* New to Education */}
-            <div className="col-span-2 space-y-3">
-              <Label className="flex items-center gap-1.5">
-                <GraduationCap className="w-3.5 h-3.5 text-gray-500" />
-                Education History
-              </Label>
-              <div className="flex items-center gap-6">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="educationHistory"
-                    checked={profileFormData.newToEducation === true}
-                    onChange={() =>
-                      setProfileFormData((p) => ({
-                        ...p,
-                        newToEducation: true,
-                        previousSchool: "",
-                      }))
-                    }
-                    className="w-4 h-4 text-purple-600"
-                  />
-                  <span className="text-sm">New to education</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="educationHistory"
-                    checked={profileFormData.newToEducation === false}
-                    onChange={() =>
-                      setProfileFormData((p) => ({
-                        ...p,
-                        newToEducation: false,
-                      }))
-                    }
-                    className="w-4 h-4 text-purple-600"
-                  />
-                  <span className="text-sm">
-                    Previously admitted in another school
-                  </span>
-                </label>
-              </div>
-
-              {/* Previous School - shown only when not new to education */}
-              {profileFormData.newToEducation === false && (
-                <div className="space-y-2 mt-2">
-                  <Label htmlFor="previousSchool">Previous School Name</Label>
-                  <Input
-                    id="previousSchool"
-                    name="previousSchool"
-                    placeholder="Enter the name of the last school"
-                    value={profileFormData.previousSchool}
-                    onChange={handleProfileInputChange}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Medical Conditions */}
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="medical" className="flex items-center gap-1.5">
-                <AlertCircle className="w-3.5 h-3.5 text-gray-500" />
-                Medical Conditions / Allergies
-              </Label>
-              <textarea
-                id="medical"
-                name="medicalConditions"
-                placeholder="Any known allergies, conditions, or medications (optional)"
-                value={profileFormData.medicalConditions}
-                onChange={handleProfileInputChange}
-                rows={2}
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              />
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button type="button" variant="outline" onClick={handleProfileSkip}>
-              Skip for now
-            </Button>
-            <Button
-              onClick={handleProfileSubmit}
-              disabled={isUpdatingProfile}
-              className="bg-purple-600 hover:bg-purple-700 w-36"
-            >
-              {isUpdatingProfile ? (
-                 <>
-                   <span className="animate-spin mr-2 border-2 border-white border-t-transparent rounded-full w-4 h-4 inline-block" />
-                   Saving...
-                 </>
-              ) : (
-                 <>
-                   <CheckCircle className="w-4 h-4 mr-2" />
-                   Save Profile
-                 </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Confirm Action Modal */}
       <Dialog open={isConfirmModalOpen} onOpenChange={setIsConfirmModalOpen}>

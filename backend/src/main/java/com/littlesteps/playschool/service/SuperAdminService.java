@@ -266,6 +266,7 @@ public class SuperAdminService {
         User admin = new User();
         admin.setName(request.getName());
         admin.setEmail(request.getEmail());
+        admin.setUsername(request.getEmail());
         admin.setPassword(passwordEncoder.encode(request.getPassword()));
         admin.setPhone(request.getPhone());
         admin.setRole(User.Role.ADMIN);
