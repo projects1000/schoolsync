@@ -55,6 +55,7 @@ import NotificationManagement from '@/components/admin/NotificationManagement';
 import ClassManagement from '@/components/classes/ClassManagement';
 import { getDefaultPath, PATH_TO_MODULE } from '@/routeConfig';
 import AdminTrashManagement from '@/components/admin/AdminTrashManagement';
+import Breadcrumbs from '@/components/common/Breadcrumbs';
 // Animated page wrapper to preserve the existing page transition effect
 const AnimatedPage = ({ children }) => {
   const location = useLocation();
@@ -118,6 +119,8 @@ const AuthenticatedLayout = ({ currentUser, onLogout }) => {
               onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
               sidebarOpen={sidebarOpen}
             />
+
+            <Breadcrumbs />
 
             <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 sm:p-6 pb-20 sm:pb-6">
               <AnimatedPage>

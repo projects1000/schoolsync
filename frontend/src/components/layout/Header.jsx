@@ -22,19 +22,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import NotificationDropdown from '@/components/common/NotificationDropdown';
 import ChangePasswordDialog from '@/components/common/ChangePasswordDialog';
+import CommandPalette from '@/components/common/CommandPalette';
 
 const Header = ({ currentUser, onLogout, onToggleSidebar, sidebarOpen }) => {
   const { toast } = useToast();
   const { selectedChild, setSelectedChild, childrenList } = useParent();
   const [showChangePassword, setShowChangePassword] = useState(false);
-
-  const handleSearchClick = () => {
-    toast({
-      title: "🚧 This feature isn't implemented yet—but don't worry! You can request it in your next prompt! 🚀"
-    });
-  };
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const isParent = currentUser?.role === 'parent';
+
+  // Detect platform for shortcut hint (⌘K on Mac, Ctrl+K elsewhere)
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+  const shortcutHint = isMac ? '⌘K' : 'Ctrl+K';
 
   return (
     <>
@@ -57,7 +57,8 @@ const Header = ({ currentUser, onLogout, onToggleSidebar, sidebarOpen }) => {
 
             <div className="block">
               <h1 className="text-lg sm:text-xl font-semibold text-gray-800 truncate max-w-[150px] sm:max-w-xs">
-                {currentUser?.name ? `Welcome, ${currentUser.name.split(' ')[0]}` : 'Welcome'}
+                <span className="sm:hidden">{currentUser?.name?.split(' ')[0] || 'Hi'}</span>
+                <span className="hidden sm:inline">{currentUser?.name ? `Welcome, ${currentUser.name.split(' ')[0]}` : 'Welcome'}</span>
               </h1>
               {/* On mobile, show role under the welcome text */}
               {currentUser?.role && (
@@ -112,12 +113,24 @@ const Header = ({ currentUser, onLogout, onToggleSidebar, sidebarOpen }) => {
 
           {/* Right Side */}
           <div className="flex items-center space-x-1 sm:space-x-4">
-            {/* Search - Hidden on small screens */}
+            {/* Search Button — opens Command Palette */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-gray-300 transition-all duration-200 group cursor-pointer"
+            >
+              <Search className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
+              <span className="text-[13px] text-gray-400 group-hover:text-gray-600 hidden md:inline">Search...</span>
+              <kbd className="hidden md:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-white border border-gray-200 text-[10px] font-medium text-gray-400 shadow-sm">
+                {shortcutHint}
+              </kbd>
+            </button>
+
+            {/* Mobile search icon */}
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleSearchClick}
-              className={`hover:bg-gray-100 hidden sm:inline-flex`}
+              onClick={() => setSearchOpen(true)}
+              className="hover:bg-gray-100 sm:hidden"
             >
               <Search className="w-5 h-5" />
             </Button>
@@ -174,9 +187,15 @@ const Header = ({ currentUser, onLogout, onToggleSidebar, sidebarOpen }) => {
         open={showChangePassword}
         onOpenChange={setShowChangePassword}
       />
+
+      {/* Command Palette (Global Search) */}
+      <CommandPalette
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+        currentUser={currentUser}
+      />
     </>
   );
 };
 
 export default Header;
-
