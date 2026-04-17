@@ -166,6 +166,14 @@ function buildBreadcrumbs(pathname) {
         path: builtPath,
         current: index === segments.length - 1,
       });
+    } else {
+      // Unmapped segment (e.g., dynamic ID)
+      const isId = segment.length > 18 || !isNaN(segment) || /^[0-9a-fA-F-]+$/.test(segment);
+      crumbs.push({
+        label: isId ? 'Details' : segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, ' '),
+        path: builtPath,
+        current: index === segments.length - 1,
+      });
     }
   });
 

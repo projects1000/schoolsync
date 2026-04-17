@@ -323,24 +323,78 @@ const SchoolManagement = ({ currentUser }) => {
                 transition={{ delay: 0.2 }}
             >
                 {isLoading ? (
-                    /* Loading State Skeleton */
-                    <div className="space-y-4">
-                        {[1, 2, 3, 4, 5].map((i) => (
-                            <div key={i} className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm animate-pulse">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
-                                    <div className="flex-1 space-y-2">
-                                        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                                        <div className="h-3 bg-gray-100 rounded w-1/6"></div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <div className="w-8 h-8 bg-gray-100 rounded"></div>
-                                        <div className="w-8 h-8 bg-gray-100 rounded"></div>
-                                    </div>
+                    <>
+                        {/* Table Skeleton - Desktop Only if viewMode is table */}
+                        {viewMode === 'table' && (
+                            <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead className="bg-gray-50 border-b border-gray-200">
+                                            <tr>
+                                                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">School</th>
+                                                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">City</th>
+                                                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Type</th>
+                                                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Admin</th>
+                                                <th className="text-center px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Students</th>
+                                                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Status</th>
+                                                <th className="text-right px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {[1, 2, 3, 4, 5].map((i) => (
+                                                <tr key={i} className="animate-pulse">
+                                                    <td className="px-6 py-4">
+                                                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                                        <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                                                    </td>
+                                                    <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
+                                                    <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                                                        <div className="h-3 bg-gray-100 rounded w-32"></div>
+                                                    </td>
+                                                    <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
+                                                    <td className="px-6 py-4"><div className="h-6 bg-gray-200 rounded-full w-16"></div></td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex justify-end gap-2">
+                                                            <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+                                                            <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+                                                            <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
-                        ))}
-                    </div>
+                        )}
+
+                        {/* Card Skeleton - Visible on Mobile OR if viewMode is card */}
+                        <div className={`${viewMode === 'table' ? 'md:hidden' : 'block'}`}>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {[1, 2, 3, 4, 5, 6].map((i) => (
+                                    <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 animate-pulse">
+                                        <div className="flex justify-between mb-4">
+                                            <div className="space-y-2 w-2/3">
+                                                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                                                <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                                            </div>
+                                            <div className="h-6 w-16 bg-gray-200 rounded-full"></div>
+                                        </div>
+                                        <div className="space-y-2 mb-4">
+                                            <div className="h-3 bg-gray-100 rounded w-3/4"></div>
+                                            <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                                        </div>
+                                        <div className="flex gap-2 pt-3 border-t border-gray-100">
+                                            <div className="h-8 bg-gray-100 rounded flex-1"></div>
+                                            <div className="h-8 bg-gray-100 rounded flex-1"></div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </>
                 ) : filteredSchools.length === 0 ? (
                     /* Empty State */
                     <div className="bg-white rounded-xl shadow-sm p-12 border border-gray-200 text-center">
@@ -373,7 +427,12 @@ const SchoolManagement = ({ currentUser }) => {
                                             {filteredSchools.map((school) => (
                                                 <tr key={school.id} className="hover:bg-gray-50 transition-colors">
                                                     <td className="px-6 py-4">
-                                                        <div className="font-medium text-gray-800">{school.name}</div>
+                                                        <div 
+                                                            className="font-medium text-indigo-600 hover:text-indigo-800 cursor-pointer transition-colors"
+                                                            onClick={() => handleViewDetails(school)}
+                                                        >
+                                                            {school.name}
+                                                        </div>
                                                         <div className="text-xs text-gray-500">{school.email}</div>
                                                     </td>
                                                     <td className="px-6 py-4 text-gray-600">{school.city}</td>
@@ -398,9 +457,6 @@ const SchoolManagement = ({ currentUser }) => {
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex justify-end gap-1">
-                                                            <button onClick={() => handleViewDetails(school)} className="p-2 hover:bg-gray-100 rounded-lg" title="View">
-                                                                <Eye className="w-4 h-4 text-gray-500" />
-                                                            </button>
                                                             <button onClick={() => handleEditSchool(school)} className="p-2 hover:bg-gray-100 rounded-lg" title="Edit">
                                                                 <Edit className="w-4 h-4 text-blue-500" />
                                                             </button>
@@ -448,7 +504,12 @@ const SchoolManagement = ({ currentUser }) => {
                                     >
                                         <div className="flex items-start justify-between mb-3">
                                             <div>
-                                                <h3 className="font-semibold text-gray-800">{school.name}</h3>
+                                                <h3 
+                                                    className="font-medium text-indigo-600 hover:text-indigo-800 cursor-pointer transition-colors"
+                                                    onClick={() => handleViewDetails(school)}
+                                                >
+                                                    {school.name}
+                                                </h3>
                                                 <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
                                                     <MapPin className="w-3 h-3" /> {school.city}
                                                 </p>
@@ -472,9 +533,6 @@ const SchoolManagement = ({ currentUser }) => {
                                         </div>
 
                                         <div className="flex gap-2 pt-3 border-t border-gray-100">
-                                            <button onClick={() => handleViewDetails(school)} className="flex-1 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
-                                                View
-                                            </button>
                                             <button onClick={() => handleEditSchool(school)} className="flex-1 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                                                 Edit
                                             </button>
