@@ -193,6 +193,7 @@ function AppInner() {
   const [currentUser, setCurrentUser] = useState(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -289,18 +290,20 @@ function AppInner() {
     navigate('/login');
   };
 
+  const landingPageElement = (
+    <>
+      <Helmet>
+        <title>SchoolSync — Smart School Management Platform</title>
+        <meta name="description" content="The all-in-one platform for administrators, teachers, and parents to streamline school operations, enhance learning, and build stronger communities." />
+      </Helmet>
+      <LandingPage />
+    </>
+  );
+
   if (!isAuthenticated) {
     return (
       <Routes>
-        <Route path="/" element={
-          <>
-            <Helmet>
-              <title>SchoolSync — Smart School Management Platform</title>
-              <meta name="description" content="The all-in-one platform for administrators, teachers, and parents to streamline school operations, enhance learning, and build stronger communities." />
-            </Helmet>
-            <LandingPage />
-          </>
-        } />
+        <Route path="/" element={landingPageElement} />
         <Route path="/login" element={
           <>
             <Helmet>
@@ -322,6 +325,10 @@ function AppInner() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
+  }
+
+  if (location.pathname === '/') {
+    return landingPageElement;
   }
 
   return (
