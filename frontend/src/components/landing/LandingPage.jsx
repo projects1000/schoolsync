@@ -157,6 +157,20 @@ const LandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeFeatureSpotlight, setActiveFeatureSpotlight] = useState(0);
+  const [headlinePhraseIndex, setHeadlinePhraseIndex] = useState(0);
+  const [typedHeadline, setTypedHeadline] = useState('');
+  const [isHeadlineDeleting, setIsHeadlineDeleting] = useState(false);
+
+  const headlinePhrases = [
+    'with Smart Management',
+    'with Connected Classrooms',
+    'with Real-Time Insights',
+    'with Seamless Operations',
+  ];
+  const longestHeadlinePhrase = headlinePhrases.reduce(
+    (longest, phrase) => (phrase.length > longest.length ? phrase : longest),
+    headlinePhrases[0]
+  );
 
   const spotlightFeatures = [
     { icon: CalendarCheck, title: 'Smart Attendance', desc: 'Automated tracking with real-time sync' },
@@ -175,6 +189,33 @@ const LandingPage = () => {
     const t = setInterval(() => setActiveFeatureSpotlight(i => (i + 1) % spotlightFeatures.length), 3500);
     return () => clearInterval(t);
   }, []);
+
+  useEffect(() => {
+    const currentPhrase = headlinePhrases[headlinePhraseIndex];
+    const typingSpeed = isHeadlineDeleting ? 42 : 70;
+    const holdDelay = 1250;
+
+    if (!isHeadlineDeleting && typedHeadline === currentPhrase) {
+      const holdTimer = setTimeout(() => setIsHeadlineDeleting(true), holdDelay);
+      return () => clearTimeout(holdTimer);
+    }
+
+    if (isHeadlineDeleting && typedHeadline === '') {
+      setIsHeadlineDeleting(false);
+      setHeadlinePhraseIndex((prev) => (prev + 1) % headlinePhrases.length);
+      return undefined;
+    }
+
+    const timer = setTimeout(() => {
+      if (isHeadlineDeleting) {
+        setTypedHeadline(currentPhrase.slice(0, typedHeadline.length - 1));
+      } else {
+        setTypedHeadline(currentPhrase.slice(0, typedHeadline.length + 1));
+      }
+    }, typingSpeed);
+
+    return () => clearTimeout(timer);
+  }, [typedHeadline, isHeadlineDeleting, headlinePhraseIndex]);
 
   const scrollToSection = (id) => {
     setMobileMenuOpen(false);
@@ -511,14 +552,41 @@ const LandingPage = () => {
                 <span className="text-xs font-semibold text-white/90 tracking-wide">THE FUTURE OF SCHOOL MANAGEMENT</span>
               </motion.div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-[1.08] tracking-tight mb-4"
+              <h1 className="relative text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-[1.08] tracking-tight mb-4"
                 style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                Empowering Schools
-                <span className="block mt-2" style={{
-                  background: 'linear-gradient(135deg, #c3c0ff 0%, #eaddff 50%, #e2dfff 100%)',
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                }}>
-                  with Smart Management
+                <span className="block">
+                  Empowering Schools
+                </span>
+
+                <span className="relative block mt-2 min-h-[2.3em] sm:min-h-[1.2em]">
+                  <span
+                    className="invisible"
+                    style={{
+                      background: 'linear-gradient(135deg, #c3c0ff 0%, #eaddff 50%, #e2dfff 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                    }}
+                  >
+                    {longestHeadlinePhrase}
+                  </span>
+                  <span
+                    className="absolute left-0 top-0"
+                    style={{
+                      background: 'linear-gradient(135deg, #c3c0ff 0%, #eaddff 50%, #e2dfff 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                    }}
+                  >
+                    {typedHeadline}
+                    <motion.span
+                      aria-hidden="true"
+                      className="inline-block ml-1 text-white/90"
+                      animate={{ opacity: [0.15, 1, 0.15] }}
+                      transition={{ duration: 0.85, repeat: Infinity, ease: 'easeInOut' }}
+                    >
+                      |
+                    </motion.span>
+                  </span>
                 </span>
               </h1>
 
