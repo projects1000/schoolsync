@@ -299,10 +299,11 @@ const LandingPage = () => {
 
                 {/* Mobile menu button */}
                 <button
-                  className="md:hidden p-2 rounded-xl text-white/80"
+                  className="md:hidden inline-flex h-10 min-w-[44px] items-center justify-center rounded-full border border-white/30 bg-white/10 px-3 text-white shadow-[0_10px_25px_rgba(14,9,71,0.25)] backdrop-blur-md transition-all duration-200 hover:bg-white/20"
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  aria-label="Toggle menu"
                 >
-                  {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                  {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
               </div>
             </div>
@@ -311,27 +312,34 @@ const LandingPage = () => {
             <AnimatePresence>
               {mobileMenuOpen && (
                 <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="md:hidden overflow-hidden"
-                  style={{ background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(24px)' }}
+                  initial={{ opacity: 0, y: -10, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                  transition={{ type: 'spring', stiffness: 260, damping: 28, mass: 0.8 }}
+                  className="md:hidden overflow-hidden px-4 pb-4"
                 >
-                  <div className="px-4 pb-4 space-y-1">
+                  <div
+                    className="rounded-2xl p-2"
+                    style={{
+                      background: 'rgba(23, 27, 34, 0.82)',
+                      backdropFilter: 'blur(22px)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      boxShadow: '0 14px 36px rgba(10, 10, 35, 0.35)',
+                    }}
+                  >
                     {navLinks.map((link) => (
                       <button
                         key={link.id}
                         onClick={() => scrollToSection(link.id)}
-                        className="block w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-colors hover:bg-indigo-50"
-                        style={{ color: '#464555' }}
+                        className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-medium text-white/90 transition-colors hover:bg-white/10"
                       >
-                        {link.label}
+                        <span>{link.label}</span>
+                        <ChevronRight className="h-4 w-4 text-white/50" />
                       </button>
                     ))}
                     <button
                       onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}
-                      className="block w-full px-4 py-3 rounded-xl text-sm font-semibold text-white text-center mt-2"
+                      className="mt-2 block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold text-white"
                       style={{ background: 'linear-gradient(135deg, #3525cd, #712ae2)' }}
                     >
                       Login
@@ -352,17 +360,17 @@ const LandingPage = () => {
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: -80, opacity: 0, scale: 0.8 }}
             transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-            className="fixed top-5 left-0 right-0 z-50 flex justify-center pointer-events-none"
+            className="fixed top-5 left-0 right-0 z-50 flex justify-end px-4 pointer-events-none md:justify-center md:px-0"
           >
-            <nav className="pointer-events-auto">
+            <nav className="pointer-events-auto relative">
               <div
-                className="flex items-center gap-1 px-2 py-2 rounded-full"
+                className="flex w-auto items-center justify-end gap-1 rounded-full px-2 py-2 md:w-auto md:justify-start"
                 style={{
-                  background: 'rgba(25, 28, 30, 0.45)',
+                  background: 'linear-gradient(135deg, rgba(53,37,205,0.3), rgba(79,70,229,0.18))',
                   backdropFilter: 'blur(24px)',
                   WebkitBackdropFilter: 'blur(24px)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(229, 224, 255, 0.35)',
+                  boxShadow: '0 10px 26px rgba(28, 21, 92, 0.28), inset 0 1px 0 rgba(255,255,255,0.16)',
                 }}
               >
                 {/* Logo icon in pill */}
@@ -370,7 +378,7 @@ const LandingPage = () => {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => scrollToSection('hero')}
-                  className="p-2.5 rounded-full transition-colors duration-200 hover:bg-white/10 flex-shrink-0"
+                  className="hidden flex-shrink-0 rounded-full p-2.5 transition-colors duration-200 hover:bg-white/10 md:inline-flex"
                 >
                   <GraduationCap className="w-[18px] h-[18px] text-indigo-300" />
                 </motion.button>
@@ -401,7 +409,7 @@ const LandingPage = () => {
                   whileHover={{ scale: 1.05, boxShadow: '0 4px 20px rgba(79, 70, 229, 0.4)' }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => navigate('/login')}
-                  className="px-5 py-2 rounded-full text-[13px] font-semibold text-white transition-all duration-300 flex-shrink-0"
+                  className="hidden flex-shrink-0 rounded-full px-5 py-2 text-[13px] font-semibold text-white transition-all duration-300 md:block"
                   style={{ background: 'linear-gradient(135deg, #4f46e5, #712ae2)' }}
                 >
                   Login
@@ -409,10 +417,11 @@ const LandingPage = () => {
 
                 {/* Mobile menu in pill */}
                 <button
-                  className="md:hidden p-2 rounded-full text-white/70 hover:bg-white/10 transition-colors"
+                  className="md:hidden inline-flex h-9 min-w-[44px] items-center justify-center rounded-full border border-white/70 bg-white/30 px-3 text-white shadow-[0_8px_20px_rgba(17,15,61,0.38)] transition-colors duration-200 hover:bg-white/40"
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  aria-label="Toggle mobile menu"
                 >
-                  {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+                  {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
                 </button>
               </div>
 
@@ -420,30 +429,34 @@ const LandingPage = () => {
               <AnimatePresence>
                 {mobileMenuOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                    initial={{ opacity: 0, y: -10, scale: 0.97 }}
                     animate={{ opacity: 1, y: 8, scale: 1 }}
-                    exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                    className="md:hidden absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 rounded-2xl overflow-hidden p-2"
+                    exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 26, mass: 0.85 }}
+                    className="md:hidden absolute right-0 top-full mt-2 w-[calc(100vw-1.25rem)] max-w-[320px] rounded-2xl overflow-hidden p-2"
                     style={{
-                      background: 'rgba(25, 28, 30, 0.92)',
+                      background: 'linear-gradient(165deg, rgba(35, 38, 65, 0.92), rgba(24, 27, 52, 0.94))',
                       backdropFilter: 'blur(24px)',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      boxShadow: '0 12px 40px rgba(0,0,0,0.3)',
+                      border: '1px solid rgba(216, 210, 255, 0.18)',
+                      boxShadow: '0 16px 42px rgba(15, 12, 42, 0.45)',
                     }}
                   >
+                    <div className="mb-1 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/45">
+                      Navigate
+                    </div>
                     {navLinks.map((link) => (
                       <button
                         key={link.id}
                         onClick={() => scrollToSection(link.id)}
-                        className="block w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                        className="flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-left text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
                       >
-                        {link.label}
+                        <span>{link.label}</span>
+                        <ChevronRight className="h-4 w-4 text-white/45" />
                       </button>
                     ))}
                     <button
                       onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}
-                      className="block w-full px-4 py-2.5 rounded-xl text-sm font-semibold text-white text-center mt-1"
+                      className="mt-2 block w-full rounded-xl px-4 py-2.5 text-center text-sm font-semibold text-white"
                       style={{ background: 'linear-gradient(135deg, #4f46e5, #712ae2)' }}
                     >
                       Login
