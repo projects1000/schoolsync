@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/components/ui/use-toast';
 import LoginPage from '@/components/auth/LoginPage';
+import LandingPage from '@/components/landing/LandingPage';
 import VerifyEmail from '@/components/auth/VerifyEmail';
 import Dashboard from '@/components/dashboard/Dashboard';
 import Sidebar from '@/components/layout/Sidebar';
@@ -291,6 +292,15 @@ function AppInner() {
   if (!isAuthenticated) {
     return (
       <Routes>
+        <Route path="/" element={
+          <>
+            <Helmet>
+              <title>SchoolSync — Smart School Management Platform</title>
+              <meta name="description" content="The all-in-one platform for administrators, teachers, and parents to streamline school operations, enhance learning, and build stronger communities." />
+            </Helmet>
+            <LandingPage />
+          </>
+        } />
         <Route path="/login" element={
           <>
             <Helmet>
@@ -309,7 +319,7 @@ function AppInner() {
             <VerifyEmail />
           </>
         } />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
   }
