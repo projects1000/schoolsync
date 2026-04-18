@@ -85,6 +85,11 @@ const SchoolManagement = ({ currentUser }) => {
 
     const isLoading = schoolsQuery.isLoading || schoolsQuery.isFetching;
 
+    const refreshSuperAdminViews = () => {
+        queryClient.invalidateQueries({ queryKey: ['superadmin', 'schools-management'] });
+        queryClient.invalidateQueries({ queryKey: ['superadmin', 'dashboard'] });
+    };
+
     // Filter schools
     const filteredSchools = useMemo(() => {
         return schools.filter(school => {
@@ -172,7 +177,7 @@ const SchoolManagement = ({ currentUser }) => {
                     toast({ title: 'School Deleted', description: 'School has been permanently deleted.' });
                     break;
             }
-                    queryClient.invalidateQueries({ queryKey: ['superadmin', 'schools-management'] });
+                    refreshSuperAdminViews();
         } catch (error) {
             console.error(error);
             toast({ title: 'Error', description: 'Operation failed', variant: 'destructive' });
@@ -191,7 +196,7 @@ const SchoolManagement = ({ currentUser }) => {
                 await SuperAdminService.createSchool(schoolData);
                 toast({ title: 'Success', description: 'School created successfully' });
             }
-            queryClient.invalidateQueries({ queryKey: ['superadmin', 'schools-management'] });
+            refreshSuperAdminViews();
             setShowAddEditModal(false);
         } catch (error) {
             console.error(error);
@@ -203,7 +208,7 @@ const SchoolManagement = ({ currentUser }) => {
         try {
             await SuperAdminService.assignAdminToSchool(selectedSchool.id, admin.id);
             toast({ title: 'Success', description: `Admin ${admin.name} assigned to school.` });
-            queryClient.invalidateQueries({ queryKey: ['superadmin', 'schools-management'] });
+            refreshSuperAdminViews();
             setShowAssignAdminModal(false);
         } catch (error) {
             console.error(error);
