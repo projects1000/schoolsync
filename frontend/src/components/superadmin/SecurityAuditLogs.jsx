@@ -169,7 +169,7 @@ const SecurityAuditLogs = ({ currentUser }) => {
     const getStatusColor = (status) => {
         const colors = {
             success: 'bg-emerald-100 text-emerald-700',
-            failed: 'bg-rose-100 text-rose-700',
+            failed: 'bg-orange-100 text-orange-700',
             blocked: 'bg-gray-100 text-gray-700'
         };
         return colors[status] || colors.success;
@@ -177,7 +177,7 @@ const SecurityAuditLogs = ({ currentUser }) => {
 
     const getRoleBadge = (role) => {
         const colors = {
-            superadmin: 'bg-purple-100 text-purple-700',
+            superadmin: 'bg-emerald-100 text-emerald-700',
             admin: 'bg-blue-100 text-blue-700',
             teacher: 'bg-amber-100 text-amber-700',
             parent: 'bg-green-100 text-green-700',
@@ -292,7 +292,7 @@ const SecurityAuditLogs = ({ currentUser }) => {
                         <p className="text-sm text-slate-300">Logins (24h)</p>
                     </div>
                     <div className="text-center p-2 bg-white/5 rounded-lg md:bg-transparent">
-                        <p className="text-2xl font-bold text-rose-400">{securityStats.failedLogins24h}</p>
+                        <p className="text-2xl font-bold text-orange-400">{securityStats.failedLogins24h}</p>
                         <p className="text-sm text-slate-300">Failed (24h)</p>
                     </div>
                     <div className="text-center p-2 bg-white/5 rounded-lg md:bg-transparent">
@@ -475,10 +475,10 @@ const SecurityAuditLogs = ({ currentUser }) => {
                                                 {log.sessionActive && log.user !== currentUser?.name && (
                                                     <button
                                                         onClick={() => handleForceLogout(log.id, log.user)}
-                                                        className="p-2 hover:bg-rose-100 rounded-lg"
+                                                        className="p-2 hover:bg-orange-100 rounded-lg"
                                                         title="Force Logout"
                                                     >
-                                                        <LogOut className="w-4 h-4 text-rose-500" />
+                                                        <LogOut className="w-4 h-4 text-orange-500" />
                                                     </button>
                                                 )}
                                             </div>
@@ -589,13 +589,13 @@ const SecurityAuditLogs = ({ currentUser }) => {
                                         <td className="px-4 py-3 font-medium text-gray-800">{log.user}</td>
                                         <td className="px-4 py-3">
                                             <div>
-                                                <span className="px-2 py-1 text-xs bg-purple-50 text-purple-700 rounded">{log.entity}</span>
+                                                <span className="px-2 py-1 text-xs bg-emerald-50 text-emerald-700 rounded">{log.entity}</span>
                                                 <p className="text-xs text-gray-400 mt-1">{log.entityId}</p>
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 font-mono text-sm text-gray-600">{log.field}</td>
                                         <td className="px-4 py-3">
-                                            <span className="px-2 py-1 text-sm bg-rose-50 text-rose-700 rounded line-through">
+                                            <span className="px-2 py-1 text-sm bg-orange-50 text-orange-700 rounded line-through">
                                                 {log.oldValue}
                                             </span>
                                         </td>
@@ -677,8 +677,8 @@ const SecurityAuditLogs = ({ currentUser }) => {
                                     </div>
                                 </div>
                                 {showLogDetail.reason && (
-                                    <div className="p-3 bg-rose-50 rounded-lg">
-                                        <p className="text-sm text-rose-700">
+                                    <div className="p-3 bg-orange-50 rounded-lg">
+                                        <p className="text-sm text-orange-700">
                                             <AlertTriangle className="w-4 h-4 inline mr-1" />
                                             {showLogDetail.reason}
                                         </p>

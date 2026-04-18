@@ -11,7 +11,7 @@ const FloatingParticle = ({ delay, duration, x, y, size }) => (
     style={{
       width: size, height: size,
       left: `${x}%`, top: `${y}%`,
-      background: 'radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%)',
+      background: 'radial-gradient(circle, rgba(5,150,105,0.3) 0%, transparent 70%)',
     }}
     animate={{
       y: [0, -30, 0],
@@ -56,9 +56,9 @@ const VerifyEmail = () => {
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-slate-50">
       {/* Animated Background */}
       <div className="absolute inset-0 pointer-events-none">
-        <motion.div className="absolute w-[500px] h-[500px] rounded-full" style={{ top: '-10%', right: '-5%', background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 65%)' }}
+        <motion.div className="absolute w-[500px] h-[500px] rounded-full" style={{ top: '-10%', right: '-5%', background: 'radial-gradient(circle, rgba(5,150,105,0.08) 0%, transparent 65%)' }}
           animate={{ scale: [1, 1.15, 1], x: [0, 30, 0] }} transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }} />
-        <motion.div className="absolute w-[600px] h-[600px] rounded-full" style={{ bottom: '-15%', left: '-10%', background: 'radial-gradient(circle, rgba(16,185,129,0.05) 0%, transparent 65%)' }}
+        <motion.div className="absolute w-[600px] h-[600px] rounded-full" style={{ bottom: '-15%', left: '-10%', background: 'radial-gradient(circle, rgba(5,150,105,0.05) 0%, transparent 65%)' }}
           animate={{ scale: [1.1, 1, 1.1], y: [0, -30, 0] }} transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }} />
         
         <FloatingParticle delay={0} duration={6} x={10} y={20} size={8} />
@@ -72,17 +72,17 @@ const VerifyEmail = () => {
         transition={{ duration: 0.6, ease: 'easeOut' }}
         className="relative z-10 w-full max-w-md bg-white rounded-3xl p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-slate-100 mx-4 text-center"
       >
-        <div className="absolute top-0 right-0 w-32 h-32 pointer-events-none" style={{ background: 'radial-gradient(circle at top right, rgba(99,102,241,0.05) 0%, transparent 60%)' }} />
+        <div className="absolute top-0 right-0 w-32 h-32 pointer-events-none" style={{ background: 'radial-gradient(circle at top right, rgba(5,150,105,0.05) 0%, transparent 60%)' }} />
 
         {/* Icon Container */}
         <div className="flex justify-center mb-6">
           <AnimatePresence mode="wait">
             {status === 'loading' && (
               <motion.div key="loading" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }}
-                className="w-20 h-20 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center relative">
-                <motion.div className="absolute inset-0 rounded-full border-2 border-indigo-500/20 border-t-indigo-500"
+                className="w-20 h-20 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center relative">
+                <motion.div className="absolute inset-0 rounded-full border-2 border-emerald-500/20 border-t-emerald-500"
                   animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} />
-                <MailOpen className="w-8 h-8 text-indigo-500 relative z-10" />
+                <MailOpen className="w-8 h-8 text-emerald-500 relative z-10" />
               </motion.div>
             )}
 
@@ -124,10 +124,10 @@ const VerifyEmail = () => {
                 style={{ 
                   background: status === 'error' 
                     ? 'linear-gradient(135deg, #475569 0%, #334155 100%)' 
-                    : 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #6366f1 100%)',
+                    : 'linear-gradient(135deg, #059669 0%, #059669 50%, #059669 100%)',
                   boxShadow: status === 'error' 
                     ? '0 4px 15px rgba(71,85,105,0.2)' 
-                    : '0 4px 20px rgba(99,102,241,0.3)' 
+                    : '0 4px 20px rgba(5,150,105,0.3)' 
                 }}>
                 <span>Return to Login</span>
                 <ArrowRight className="w-4 h-4" />

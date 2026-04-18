@@ -30,7 +30,7 @@ const SchoolOnboardingChart = ({ data }) => {
                     <p className="text-sm text-gray-500">Monthly growth trend</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" />
+                    <div className="w-3 h-3 bg-gradient-to-r from-emerald-500 to-emerald-500 rounded-full" />
                     <span className="text-xs text-gray-500">Schools Added</span>
                 </div>
             </div>
@@ -46,13 +46,13 @@ const SchoolOnboardingChart = ({ data }) => {
                     >
                         <div className="relative w-full flex justify-center">
                             <motion.div
-                                className="w-8 rounded-t-md bg-gradient-to-t from-indigo-500 to-purple-500 relative"
+                                className="w-8 rounded-t-md bg-gradient-to-t from-emerald-500 to-emerald-500 relative"
                                 initial={{ height: 0 }}
                                 animate={{ height: `${Math.max(((item.schools || 0) / maxSchools) * barMaxHeight, (item.schools || 0) > 0 ? 20 : 4)}px` }}
                                 transition={{ delay: index * 0.05, duration: 0.6, ease: "easeOut" }}
                             >
                                 {(item.schools || 0) > 0 && (
-                                    <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs font-bold text-indigo-600">
+                                    <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs font-bold text-emerald-600">
                                         {item.schools}
                                     </div>
                                 )}

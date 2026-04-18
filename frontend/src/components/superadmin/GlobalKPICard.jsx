@@ -25,9 +25,9 @@ const GlobalKPICard = ({ title, value, change, trend, icon: Icon, color, subtitl
                             {trend === 'up' ? (
                                 <TrendingUp className="w-3.5 h-3.5 text-emerald-500 mr-1" />
                             ) : (
-                                <TrendingDown className="w-3.5 h-3.5 text-rose-500 mr-1" />
+                                <TrendingDown className="w-3.5 h-3.5 text-orange-500 mr-1" />
                             )}
-                            <span className={`text-xs font-semibold ${trend === 'up' ? 'text-emerald-600' : 'text-rose-600'
+                            <span className={`text-xs font-semibold ${trend === 'up' ? 'text-emerald-600' : 'text-orange-600'
                                 }`}>
                                 {change}
                             </span>

@@ -230,7 +230,7 @@ const SchoolProfile = () => {
                     </div>
 
                     <div className="flex justify-end pt-4">
-                        <Button type="submit" disabled={saving} className="bg-purple-600 hover:bg-purple-700">
+                        <Button type="submit" disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
                             <Save className="w-4 h-4 mr-2" />
                             {saving ? 'Saving...' : 'Save Changes'}
                         </Button>

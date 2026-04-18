@@ -209,7 +209,7 @@ const ParentStudentProfile = ({ currentUser }) => {
                             name={`educationHistory-${prefix}`}
                             checked={profileFormData.newToEducation === true}
                             onChange={() => setProfileFormData(p => ({ ...p, newToEducation: true, previousSchool: '', previousClass: '', previousPercentage: '' }))}
-                            className="w-4 h-4 text-purple-600"
+                            className="w-4 h-4 text-emerald-600"
                         />
                         <span className="text-sm">New to education</span>
                     </label>
@@ -219,7 +219,7 @@ const ParentStudentProfile = ({ currentUser }) => {
                             name={`educationHistory-${prefix}`}
                             checked={profileFormData.newToEducation === false}
                             onChange={() => setProfileFormData(p => ({ ...p, newToEducation: false }))}
-                            className="w-4 h-4 text-purple-600"
+                            className="w-4 h-4 text-emerald-600"
                         />
                         <span className="text-sm">Previously admitted in another school</span>
                     </label>
@@ -314,10 +314,10 @@ const ParentStudentProfile = ({ currentUser }) => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-100"
+                className="bg-gradient-to-r from-emerald-50 to-emerald-50 rounded-xl p-6 border border-emerald-100"
             >
                 <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg">
+                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
                         <span className="text-white font-bold text-xl">
                             {selectedChild.name?.charAt(0)}
                         </span>
@@ -343,7 +343,7 @@ const ParentStudentProfile = ({ currentUser }) => {
                 className="bg-white rounded-xl shadow-sm p-6 border border-gray-200"
             >
                 <div className="flex items-center gap-2 mb-6">
-                    <User className="w-5 h-5 text-purple-600" />
+                    <User className="w-5 h-5 text-emerald-600" />
                     <h3 className="text-lg font-semibold text-gray-900">Profile Details</h3>
                     <span className="text-xs text-gray-400 ml-2">Fields marked with <span className="text-red-500">*</span> are required</span>
                 </div>
@@ -354,7 +354,7 @@ const ParentStudentProfile = ({ currentUser }) => {
                     <Button
                         onClick={handleSaveProfile}
                         disabled={isSaving || !isProfileComplete()}
-                        className="bg-purple-600 hover:bg-purple-700 px-6"
+                        className="bg-emerald-600 hover:bg-emerald-700 px-6"
                     >
                         {isSaving ? (
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
@@ -390,7 +390,7 @@ const ParentStudentProfile = ({ currentUser }) => {
                         <Button
                             onClick={handleSaveProfile}
                             disabled={isSaving || !isProfileComplete()}
-                            className="bg-purple-600 hover:bg-purple-700 px-6"
+                            className="bg-emerald-600 hover:bg-emerald-700 px-6"
                         >
                             {isSaving ? (
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />

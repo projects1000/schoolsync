@@ -99,7 +99,7 @@ const MODULE_LABELS = {
 
 // Role metadata for categorized display
 const ROLE_META = {
-  superadmin: { label: 'Super Admin', color: 'text-violet-600 bg-violet-50 border-violet-200' },
+  superadmin: { label: 'Super Admin', color: 'text-green-600 bg-green-50 border-green-200' },
   admin: { label: 'Admin', color: 'text-blue-600 bg-blue-50 border-blue-200' },
   teacher: { label: 'Teacher', color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
   parent: { label: 'Parent', color: 'text-amber-600 bg-amber-50 border-amber-200' },
@@ -386,20 +386,20 @@ const CommandPalette = ({ open, onOpenChange, currentUser }) => {
                       onMouseEnter={() => setSelectedIndex(index)}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors duration-100 group ${
                         isSelected
-                          ? 'bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-100'
+                          ? 'bg-gradient-to-r from-emerald-50 to-blue-50 border border-emerald-100'
                           : 'hover:bg-gray-50 border border-transparent'
                       }`}
                     >
                       <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                         isSelected
-                          ? 'bg-gradient-to-br from-purple-500 to-blue-500 text-white shadow-sm'
+                          ? 'bg-gradient-to-br from-emerald-500 to-blue-500 text-white shadow-sm'
                           : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
                       }`}>
                         <Icon className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm font-medium truncate ${
-                          isSelected ? 'text-purple-900' : 'text-gray-800'
+                          isSelected ? 'text-emerald-900' : 'text-gray-800'
                         }`}>
                           {item.label}
                         </p>
@@ -407,8 +407,8 @@ const CommandPalette = ({ open, onOpenChange, currentUser }) => {
                       </div>
                       {isSelected && (
                         <div className="flex items-center gap-1 shrink-0">
-                          <span className="text-[10px] text-purple-500 font-medium">Go</span>
-                          <CornerDownLeft className="w-3.5 h-3.5 text-purple-400" />
+                          <span className="text-[10px] text-emerald-500 font-medium">Go</span>
+                          <CornerDownLeft className="w-3.5 h-3.5 text-emerald-400" />
                         </div>
                       )}
                     </button>

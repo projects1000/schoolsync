@@ -181,8 +181,8 @@ const AdminManagement = ({ currentUser }) => {
         const styles = {
             ACTIVE: 'bg-emerald-100 text-emerald-700 border-emerald-200',
             INACTIVE: 'bg-gray-100 text-gray-600 border-gray-200',
-            SUSPENDED: 'bg-rose-100 text-rose-700 border-rose-200',
-            BLOCKED: 'bg-rose-100 text-rose-700 border-rose-200' // Handle potential frontend legacy
+            SUSPENDED: 'bg-orange-100 text-orange-700 border-orange-200',
+            BLOCKED: 'bg-orange-100 text-orange-700 border-orange-200' // Handle potential frontend legacy
         };
         return styles[status] || styles.INACTIVE;
     };
@@ -218,12 +218,12 @@ const AdminManagement = ({ currentUser }) => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                            <Shield className="w-7 h-7 text-purple-600" />
+                            <Shield className="w-7 h-7 text-emerald-600" />
                             Admin Management
                         </h1>
                         <p className="text-gray-500 text-sm mt-1">Manage school admins (Principals)</p>
                     </div>
-                    <Button onClick={() => setShowCreateModal(true)} className="bg-purple-600 hover:bg-purple-700">
+                    <Button onClick={() => setShowCreateModal(true)} className="bg-emerald-600 hover:bg-emerald-700">
                         <Plus className="w-4 h-4 mr-2" />
                         Create Admin
                     </Button>
@@ -245,13 +245,13 @@ const AdminManagement = ({ currentUser }) => {
                             placeholder="Search admins by name, email or school..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                         />
                     </div>
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 text-sm"
+                        className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 text-sm"
                     >
                         <option value="all">All Status</option>
                         <option value="active">Active</option>
@@ -312,8 +312,8 @@ const AdminManagement = ({ currentUser }) => {
                                     <tr key={admin.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                                                    <span className="font-semibold text-purple-600">{(admin.name || 'A').charAt(0)}</span>
+                                                <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                                                    <span className="font-semibold text-emerald-600">{(admin.name || 'A').charAt(0)}</span>
                                                 </div>
                                                 <div>
                                                     <div className="font-medium text-gray-800">{admin.name}</div>
@@ -378,7 +378,7 @@ const AdminManagement = ({ currentUser }) => {
                                                             {admin.status === 'ACTIVE' ? (
                                                                 <button
                                                                     onClick={() => handleConfirmAction(admin, 'block')}
-                                                                    className="w-full px-4 py-2 text-left text-sm hover:bg-rose-50 flex items-center gap-2 text-rose-600"
+                                                                    className="w-full px-4 py-2 text-left text-sm hover:bg-orange-50 flex items-center gap-2 text-orange-600"
                                                                 >
                                                                     <UserX className="w-4 h-4" />
                                                                     Block Admin
@@ -434,8 +434,8 @@ const AdminManagement = ({ currentUser }) => {
                             <div key={admin.id} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-3">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                                            <span className="font-semibold text-purple-600">{(admin.name || 'A').charAt(0)}</span>
+                                        <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                                            <span className="font-semibold text-emerald-600">{(admin.name || 'A').charAt(0)}</span>
                                         </div>
                                         <div>
                                             <div className="font-medium text-gray-800">{admin.name}</div>
@@ -476,7 +476,7 @@ const AdminManagement = ({ currentUser }) => {
                                                     {admin.status === 'ACTIVE' ? (
                                                         <button
                                                             onClick={() => handleConfirmAction(admin, 'block')}
-                                                            className="w-full px-4 py-2 text-left text-sm hover:bg-rose-50 flex items-center gap-2 text-rose-600"
+                                                            className="w-full px-4 py-2 text-left text-sm hover:bg-orange-50 flex items-center gap-2 text-orange-600"
                                                         >
                                                             <UserX className="w-4 h-4" />
                                                             Block Admin
@@ -581,11 +581,11 @@ const AdminManagement = ({ currentUser }) => {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="text-center">
-                                <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${confirmAction === 'block' ? 'bg-rose-100' :
+                                <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${confirmAction === 'block' ? 'bg-orange-100' :
                                     confirmAction === 'unblock' ? 'bg-emerald-100' :
                                         confirmAction === 'forceLogout' ? 'bg-orange-100' : 'bg-amber-100'
                                     }`}>
-                                    {confirmAction === 'block' && <UserX className="w-8 h-8 text-rose-600" />}
+                                    {confirmAction === 'block' && <UserX className="w-8 h-8 text-orange-600" />}
                                     {confirmAction === 'unblock' && <UserCheck className="w-8 h-8 text-emerald-600" />}
                                     {confirmAction === 'resetPassword' && <Key className="w-8 h-8 text-amber-600" />}
                                     {confirmAction === 'forceLogout' && <LogOut className="w-8 h-8 text-orange-600" />}
@@ -608,7 +608,7 @@ const AdminManagement = ({ currentUser }) => {
                                     </Button>
                                     <Button
                                         onClick={executeConfirmAction}
-                                        className={`flex-1 ${confirmAction === 'block' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-purple-600 hover:bg-purple-700'}`}
+                                        className={`flex-1 ${confirmAction === 'block' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}
                                     >
                                         Confirm
                                     </Button>

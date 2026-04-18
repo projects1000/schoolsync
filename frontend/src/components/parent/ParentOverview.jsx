@@ -128,7 +128,7 @@ const ParentOverview = ({ currentUser }) => {
                             Later
                         </Button>
                         <Button
-                            className="bg-purple-600 hover:bg-purple-700"
+                            className="bg-emerald-600 hover:bg-emerald-700"
                             onClick={() => {
                                 setShowProfileReminder(false);
                                 navigate(MODULE_TO_PATH['parent-student-profile']);
@@ -219,16 +219,16 @@ const ParentOverview = ({ currentUser }) => {
                         </div>
 
                         <div
-                            className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                            className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-6 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow"
                             onClick={() => navigate(MODULE_TO_PATH['parent-messages'])}
                         >
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-purple-600 text-sm font-medium">Messages</p>
+                                    <p className="text-emerald-600 text-sm font-medium">Messages</p>
                                     <p className="text-2xl font-bold text-gray-900">{messages.length}</p>
                                     <p className="text-xs text-gray-500 mt-1">Total Messages</p>
                                 </div>
-                                <MessageSquare className="w-8 h-8 text-purple-600" />
+                                <MessageSquare className="w-8 h-8 text-emerald-600" />
                             </div>
                         </div>
                     </motion.div>
@@ -236,7 +236,7 @@ const ParentOverview = ({ currentUser }) => {
                     <div className="flex justify-end">
                         <Button
                             onClick={handleDownloadReport}
-                            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 flex items-center space-x-2"
+                            className="bg-gradient-to-r from-emerald-600 to-amber-600 hover:from-emerald-700 hover:to-amber-700 flex items-center space-x-2"
                         >
                             <Download className="w-4 h-4" />
                             <span>Download Report for {selectedChild?.name}</span>

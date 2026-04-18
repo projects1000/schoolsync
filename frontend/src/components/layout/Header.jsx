@@ -80,8 +80,8 @@ const Header = ({ currentUser, onLogout, onToggleSidebar, sidebarOpen }) => {
           {/* Center/Right Side child Selector for Parents */}
           <div className="flex-1 flex justify-center px-2 sm:px-4">
             {isParent && childrenList.length > 1 && selectedChild && (
-              <div className="flex items-center gap-2 sm:gap-3 bg-indigo-50 px-2 sm:px-4 py-1 sm:py-2 rounded-full border border-indigo-100 shadow-sm max-w-[200px] sm:max-w-none">
-                <div className="hidden md:flex items-center gap-2 text-indigo-700 font-medium text-sm">
+              <div className="flex items-center gap-2 sm:gap-3 bg-emerald-50 px-2 sm:px-4 py-1 sm:py-2 rounded-full border border-emerald-100 shadow-sm max-w-[200px] sm:max-w-none">
+                <div className="hidden md:flex items-center gap-2 text-emerald-700 font-medium text-sm">
                   <Users className="w-4 h-4" />
                   <span>Switch Profile:</span>
                 </div>
@@ -96,7 +96,7 @@ const Header = ({ currentUser, onLogout, onToggleSidebar, sidebarOpen }) => {
                     });
                   }}
                 >
-                  <SelectTrigger className="w-full sm:w-[200px] h-8 sm:h-9 border-indigo-200 bg-white rounded-full text-xs sm:text-sm px-2">
+                  <SelectTrigger className="w-full sm:w-[200px] h-8 sm:h-9 border-emerald-200 bg-white rounded-full text-xs sm:text-sm px-2">
                     <SelectValue placeholder="Select Child" />
                   </SelectTrigger>
                   <SelectContent>
@@ -147,7 +147,7 @@ const Header = ({ currentUser, onLogout, onToggleSidebar, sidebarOpen }) => {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center shrink-0 cursor-pointer hover:ring-2 hover:ring-purple-300 hover:ring-offset-2 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2">
+                  <button className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center shrink-0 cursor-pointer hover:ring-2 hover:ring-emerald-300 hover:ring-offset-2 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2">
                     <span className="text-white font-semibold text-sm">
                       {currentUser?.name?.charAt(0)}
                     </span>

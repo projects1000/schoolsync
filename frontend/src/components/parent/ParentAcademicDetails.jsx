@@ -122,9 +122,9 @@ const ParentAcademicDetails = ({ currentUser }) => {
                 className="space-y-6"
             >
                 {/* Child Header */}
-                <div className="flex items-center space-x-3 bg-purple-50 p-4 rounded-lg border border-purple-100">
-                    <div className="bg-purple-100 p-2 rounded-full">
-                        <GraduationCap className="w-6 h-6 text-purple-600" />
+                <div className="flex items-center space-x-3 bg-emerald-50 p-4 rounded-lg border border-emerald-100">
+                    <div className="bg-emerald-100 p-2 rounded-full">
+                        <GraduationCap className="w-6 h-6 text-emerald-600" />
                     </div>
                     <div>
                         <h2 className="text-lg font-bold text-gray-900">{academicInfo.childName}</h2>

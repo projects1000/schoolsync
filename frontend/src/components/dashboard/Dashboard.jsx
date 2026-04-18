@@ -53,7 +53,7 @@ const Dashboard = ({ currentUser }) => {
   const stats = [
     { title: 'Total Students', value: (dashboardData.totalStudents || 0).toString(), change: '', trend: 'neutral', icon: Users, color: 'from-blue-500 to-blue-600' },
     { title: 'Total Teachers', value: (dashboardData.totalTeachers || 0).toString(), change: '', trend: 'neutral', icon: GraduationCap, color: 'from-green-500 to-green-600' },
-    { title: 'Today\'s Attendance', value: `${(dashboardData.attendancePercentage || 0).toFixed(1)}%`, change: '', trend: 'neutral', icon: Calendar, color: 'from-purple-500 to-purple-600' },
+    { title: 'Today\'s Attendance', value: `${(dashboardData.attendancePercentage || 0).toFixed(1)}%`, change: '', trend: 'neutral', icon: Calendar, color: 'from-emerald-500 to-emerald-600' },
     { title: 'Pending Fees', value: `₹${(dashboardData.pendingFees || 0).toLocaleString()}`, change: '', trend: 'neutral', icon: CreditCard, color: 'from-orange-500 to-orange-600' }
   ];
 

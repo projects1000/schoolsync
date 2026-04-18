@@ -277,7 +277,7 @@ const AddEditSchoolForm = ({
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
+                <div className="bg-gradient-to-r from-emerald-600 to-emerald-600 p-6 text-white">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-white/20 rounded-lg">
@@ -285,7 +285,7 @@ const AddEditSchoolForm = ({
                             </div>
                             <div>
                                 <h2 className="text-xl font-bold">{editSchool ? 'Edit School' : 'Add New School'}</h2>
-                                <p className="text-indigo-100 text-sm">Fill in the details to {editSchool ? 'update' : 'create'} the school</p>
+                                <p className="text-emerald-100 text-sm">Fill in the details to {editSchool ? 'update' : 'create'} the school</p>
                             </div>
                         </div>
                         <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-lg transition-colors">
@@ -295,19 +295,19 @@ const AddEditSchoolForm = ({
 
                     {/* Breadcrumb / Steps */}
                     <div className="flex items-center gap-2 mt-6">
-                        <button onClick={() => setCurrentStep(1)} className="flex items-center gap-1 text-sm text-indigo-100 hover:text-white">
+                        <button onClick={() => setCurrentStep(1)} className="flex items-center gap-1 text-sm text-emerald-100 hover:text-white">
                             <Home className="w-4 h-4" />
                         </button>
-                        <ChevronRight className="w-4 h-4 text-indigo-200" />
+                        <ChevronRight className="w-4 h-4 text-emerald-200" />
                         {steps.map((step, index) => (
                             <React.Fragment key={step.num}>
                                 <button
                                     onClick={() => step.num <= currentStep && setCurrentStep(step.num)}
                                     className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${currentStep === step.num
-                                        ? 'bg-white text-indigo-600'
+                                        ? 'bg-white text-emerald-600'
                                         : currentStep > step.num
                                             ? 'bg-white/20 text-white hover:bg-white/30'
-                                            : 'text-indigo-200'
+                                            : 'text-emerald-200'
                                         }`}
                                 >
                                     {currentStep > step.num ? (
@@ -320,7 +320,7 @@ const AddEditSchoolForm = ({
                                     {step.label}
                                 </button>
                                 {index < steps.length - 1 && (
-                                    <ChevronRight className="w-4 h-4 text-indigo-200" />
+                                    <ChevronRight className="w-4 h-4 text-emerald-200" />
                                 )}
                             </React.Fragment>
                         ))}
@@ -341,7 +341,7 @@ const AddEditSchoolForm = ({
                                 {/* School Name */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                        School Name <span className="text-rose-500">*</span>
+                                        School Name <span className="text-orange-500">*</span>
                                     </label>
                                     <div className="relative">
                                         <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -349,13 +349,13 @@ const AddEditSchoolForm = ({
                                             type="text"
                                             value={formData.name}
                                             onChange={(e) => handleInputChange('name', e.target.value)}
-                                            className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${errors.name ? 'border-rose-500 bg-rose-50' : 'border-gray-200'
+                                            className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${errors.name ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
                                                 }`}
                                             placeholder="Enter school name"
                                         />
                                     </div>
                                     {errors.name && (
-                                        <p className="mt-1 text-sm text-rose-500 flex items-center gap-1">
+                                        <p className="mt-1 text-sm text-orange-500 flex items-center gap-1">
                                             <AlertCircle className="w-3.5 h-3.5" />
                                             {errors.name}
                                         </p>
@@ -366,9 +366,9 @@ const AddEditSchoolForm = ({
                                 <div>
                                     <div className="flex items-center justify-between mb-1.5">
                                         <label className="block text-sm font-medium text-gray-700">
-                                            School Code <span className="text-rose-500">*</span>
+                                            School Code <span className="text-orange-500">*</span>
                                         </label>
-                                        <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded">
+                                        <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded">
                                             System Generated
                                         </span>
                                     </div>
@@ -386,7 +386,7 @@ const AddEditSchoolForm = ({
                                         Unique identifier generated automatically from school name
                                     </p>
                                     {errors.code && (
-                                        <p className="mt-1 text-sm text-rose-500 flex items-center gap-1">
+                                        <p className="mt-1 text-sm text-orange-500 flex items-center gap-1">
                                             <AlertCircle className="w-3.5 h-3.5" />
                                             {errors.code}
                                         </p>
@@ -401,7 +401,7 @@ const AddEditSchoolForm = ({
                                         <textarea
                                             value={formData.address}
                                             onChange={(e) => handleInputChange('address', e.target.value)}
-                                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
                                             placeholder="Full address"
                                             rows={2}
                                         />
@@ -412,7 +412,7 @@ const AddEditSchoolForm = ({
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                            State <span className="text-rose-500">*</span>
+                                            State <span className="text-orange-500">*</span>
                                         </label>
                                         <select
                                             value={formData.state}
@@ -427,14 +427,14 @@ const AddEditSchoolForm = ({
                                                     setErrors(prev => ({ ...prev, state: null }));
                                                 }
                                             }}
-                                            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${errors.state ? 'border-rose-500 bg-rose-50' : 'border-gray-200'
+                                            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 ${errors.state ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
                                                 }`}
                                         >
                                             <option value="">Select state</option>
                                             {states.map(state => <option key={state} value={state}>{state}</option>)}
                                         </select>
                                         {errors.state && (
-                                            <p className="mt-1 text-sm text-rose-500 flex items-center gap-1">
+                                            <p className="mt-1 text-sm text-orange-500 flex items-center gap-1">
                                                 <AlertCircle className="w-3.5 h-3.5" />
                                                 {errors.state}
                                             </p>
@@ -442,13 +442,13 @@ const AddEditSchoolForm = ({
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                            City <span className="text-rose-500">*</span>
+                                            City <span className="text-orange-500">*</span>
                                         </label>
                                         <select
                                             value={formData.city}
                                             disabled={!formData.state}
                                             onChange={(e) => handleInputChange('city', e.target.value)}
-                                            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${!formData.state ? 'bg-gray-50 cursor-not-allowed text-gray-400' : ''} ${errors.city ? 'border-rose-500 bg-rose-50' : 'border-gray-200'
+                                            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 ${!formData.state ? 'bg-gray-50 cursor-not-allowed text-gray-400' : ''} ${errors.city ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
                                                 }`}
                                         >
                                             <option value="">Select city</option>
@@ -456,7 +456,7 @@ const AddEditSchoolForm = ({
                                             <option value="Other">Other</option>
                                         </select>
                                         {errors.city && (
-                                            <p className="mt-1 text-sm text-rose-500 flex items-center gap-1">
+                                            <p className="mt-1 text-sm text-orange-500 flex items-center gap-1">
                                                 <AlertCircle className="w-3.5 h-3.5" />
                                                 {errors.city}
                                             </p>
@@ -475,7 +475,7 @@ const AddEditSchoolForm = ({
                                         >
                                             <div className="pt-2">
                                                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                                    Specify City <span className="text-rose-500">*</span>
+                                                    Specify City <span className="text-orange-500">*</span>
                                                 </label>
                                                 <div className="relative">
                                                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -483,12 +483,12 @@ const AddEditSchoolForm = ({
                                                         type="text"
                                                         value={formData.otherCity || ''}
                                                         onChange={(e) => handleInputChange('otherCity', e.target.value)}
-                                                        className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors.otherCity ? 'border-rose-500 bg-rose-50' : 'border-gray-200'}`}
+                                                        className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${errors.otherCity ? 'border-orange-500 bg-orange-50' : 'border-gray-200'}`}
                                                         placeholder="Enter your city name"
                                                     />
                                                 </div>
                                                 {errors.otherCity && (
-                                                    <p className="mt-1 text-sm text-rose-500 flex items-center gap-1">
+                                                    <p className="mt-1 text-sm text-orange-500 flex items-center gap-1">
                                                         <AlertCircle className="w-3.5 h-3.5" />
                                                         {errors.otherCity}
                                                     </p>
@@ -508,12 +508,12 @@ const AddEditSchoolForm = ({
                                                 type="tel"
                                                 value={(formData.phone || '').replace(/^\+91\s?/, '')}
                                                 onChange={(e) => { const digits = e.target.value.replace(/\D/g, '').slice(0, 10); handleInputChange('phone', '+91 ' + digits); }}
-                                                className={`flex-1 pr-4 py-2.5 border rounded-r-lg rounded-l-none focus:ring-2 focus:ring-indigo-500 ${errors.phone ? 'border-rose-500 bg-rose-50' : 'border-gray-200'}`}
+                                                className={`flex-1 pr-4 py-2.5 border rounded-r-lg rounded-l-none focus:ring-2 focus:ring-emerald-500 ${errors.phone ? 'border-orange-500 bg-orange-50' : 'border-gray-200'}`}
                                                 placeholder="9876543210"
                                             />
                                         </div>
                                         {errors.phone && (
-                                            <p className="mt-1 text-sm text-rose-500 flex items-center gap-1">
+                                            <p className="mt-1 text-sm text-orange-500 flex items-center gap-1">
                                                 <AlertCircle className="w-3.5 h-3.5" />
                                                 {errors.phone}
                                             </p>
@@ -527,13 +527,13 @@ const AddEditSchoolForm = ({
                                                 type="email"
                                                 value={formData.email}
                                                 onChange={(e) => handleInputChange('email', e.target.value)}
-                                                className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${errors.email ? 'border-rose-500 bg-rose-50' : 'border-gray-200'
+                                                className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 ${errors.email ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
                                                     }`}
                                                 placeholder="school@example.com"
                                             />
                                         </div>
                                         {errors.email && (
-                                            <p className="mt-1 text-sm text-rose-500 flex items-center gap-1">
+                                            <p className="mt-1 text-sm text-orange-500 flex items-center gap-1">
                                                 <AlertCircle className="w-3.5 h-3.5" />
                                                 {errors.email}
                                             </p>
@@ -548,7 +548,7 @@ const AddEditSchoolForm = ({
                                         <select
                                             value={formData.type}
                                             onChange={(e) => handleInputChange('type', e.target.value)}
-                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500"
                                         >
                                             {schoolTypes.map(type => <option key={type} value={type}>{type}</option>)}
                                         </select>
@@ -558,7 +558,7 @@ const AddEditSchoolForm = ({
                                         <select
                                             value={formData.status}
                                             onChange={(e) => handleInputChange('status', e.target.value)}
-                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500"
                                         >
                                             {statusOptions.map(option => (
                                                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -578,8 +578,8 @@ const AddEditSchoolForm = ({
                                 className="space-y-5"
                             >
                                 <div className="text-center mb-6">
-                                    <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                                        <UserPlus className="w-8 h-8 text-indigo-600" />
+                                    <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <UserPlus className="w-8 h-8 text-emerald-600" />
                                     </div>
                                     <h3 className="text-lg font-semibold text-gray-800">Assign School Admin</h3>
                                     <p className="text-sm text-gray-500">Select an admin (Principal) for this school</p>
@@ -618,11 +618,11 @@ const AddEditSchoolForm = ({
                                                 key={admin.id}
                                                 onClick={() => setSelectedAdmin(admin)}
                                                 className={`w-full p-4 flex items-center gap-3 rounded-xl border transition-all ${selectedAdmin?.email === admin.email
-                                                    ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200'
-                                                    : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50'
+                                                    ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-200'
+                                                    : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
                                                     }`}
                                             >
-                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selectedAdmin?.email === admin.email ? 'bg-indigo-500' : 'bg-gray-200'
+                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selectedAdmin?.email === admin.email ? 'bg-emerald-500' : 'bg-gray-200'
                                                     }`}>
                                                     <span className={`font-semibold ${selectedAdmin?.email === admin.email ? 'text-white' : 'text-gray-600'
                                                         }`}>
@@ -634,7 +634,7 @@ const AddEditSchoolForm = ({
                                                     <p className="text-sm text-gray-500">{admin.email}</p>
                                                 </div>
                                                 {selectedAdmin?.email === admin.email && (
-                                                    <Check className="w-5 h-5 text-indigo-600" />
+                                                    <Check className="w-5 h-5 text-emerald-600" />
                                                 )}
                                             </button>
                                         ))
@@ -674,12 +674,12 @@ const AddEditSchoolForm = ({
                             )}
 
                             {currentStep === 1 ? (
-                                <Button onClick={handleNext} className="bg-indigo-600 hover:bg-indigo-700">
+                                <Button onClick={handleNext} className="bg-emerald-600 hover:bg-emerald-700">
                                     Next
                                     <ChevronRight className="w-4 h-4 ml-1" />
                                 </Button>
                             ) : (
-                                <Button onClick={() => handleSave(false)} className="bg-indigo-600 hover:bg-indigo-700">
+                                <Button onClick={() => handleSave(false)} className="bg-emerald-600 hover:bg-emerald-700">
                                     <Send className="w-4 h-4 mr-1" />
                                     {editSchool ? 'Update School' : 'Publish School'}
                                 </Button>

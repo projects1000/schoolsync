@@ -78,8 +78,8 @@ const GlobalAcademicSettings = ({ currentUser }) => {
             className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
         >
             <div className="flex items-center gap-3">
-                <div className="p-2 bg-indigo-100 rounded-lg">
-                    <Icon className="w-5 h-5 text-indigo-600" />
+                <div className="p-2 bg-emerald-100 rounded-lg">
+                    <Icon className="w-5 h-5 text-emerald-600" />
                 </div>
                 <div className="text-left">
                     <h3 className="font-semibold text-gray-800">{title}</h3>
@@ -116,7 +116,7 @@ const GlobalAcademicSettings = ({ currentUser }) => {
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl shadow-lg p-6 text-white"
+                className="bg-gradient-to-r from-emerald-600 to-emerald-600 rounded-xl shadow-lg p-6 text-white"
             >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
@@ -125,7 +125,7 @@ const GlobalAcademicSettings = ({ currentUser }) => {
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold">Global Academic Settings</h1>
-                            <p className="text-indigo-100 text-sm mt-1">
+                            <p className="text-emerald-100 text-sm mt-1">
                                 Configure academic standards across all schools
                             </p>
                         </div>
@@ -141,7 +141,7 @@ const GlobalAcademicSettings = ({ currentUser }) => {
                         {isSuperAdmin && hasChanges && (
                             <Button
                                 onClick={() => setShowConfirmModal(true)}
-                                className="bg-white text-indigo-600 hover:bg-indigo-50"
+                                className="bg-white text-emerald-600 hover:bg-emerald-50"
                             >
                                 <Save className="w-4 h-4 mr-2" />
                                 Save Changes
@@ -151,7 +151,7 @@ const GlobalAcademicSettings = ({ currentUser }) => {
                 </div>
 
                 {/* Version Info */}
-                <div className="flex items-center gap-4 mt-4 pt-4 border-t border-white/20 text-sm text-indigo-100">
+                <div className="flex items-center gap-4 mt-4 pt-4 border-t border-white/20 text-sm text-emerald-100">
                     <span>Current Version: <strong className="text-white">{currentVersion}</strong></span>
                     <span className="text-white/50">•</span>
                     <span>Last Updated: {new Date(lastUpdated).toLocaleDateString()}</span>
@@ -198,8 +198,8 @@ const GlobalAcademicSettings = ({ currentUser }) => {
                                                 className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 gap-4"
                                             >
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center shrink-0">
-                                                        <span className="font-bold text-indigo-600">{cls.shortCode}</span>
+                                                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center shrink-0">
+                                                        <span className="font-bold text-emerald-600">{cls.shortCode}</span>
                                                     </div>
                                                     <div>
                                                         <h4 className="font-medium text-gray-800">{cls.name}</h4>
@@ -268,7 +268,7 @@ const GlobalAcademicSettings = ({ currentUser }) => {
                                                 <tr key={index} className="text-gray-700">
                                                     <td className="py-3 font-medium">{mapping.ageRange}</td>
                                                     <td className="py-3">
-                                                        <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm">
+                                                        <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm">
                                                             {mapping.class}
                                                         </span>
                                                     </td>
@@ -323,9 +323,9 @@ const GlobalAcademicSettings = ({ currentUser }) => {
                                                 {academicYear.admissionWindow.start} - {academicYear.admissionWindow.end}
                                             </p>
                                         </div>
-                                        <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-                                            <p className="text-sm text-purple-600 mb-1">Exam Months</p>
-                                            <p className="font-semibold text-purple-800">
+                                        <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                                            <p className="text-sm text-emerald-600 mb-1">Exam Months</p>
+                                            <p className="font-semibold text-emerald-800">
                                                 {academicYear.examWeeks.join(', ')}
                                             </p>
                                         </div>
@@ -508,11 +508,11 @@ const GlobalAcademicSettings = ({ currentUser }) => {
                                             initial={{ opacity: 0, x: 20 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             transition={{ delay: index * 0.05 }}
-                                            className="relative pl-6 border-l-2 border-indigo-200"
+                                            className="relative pl-6 border-l-2 border-emerald-200"
                                         >
-                                            <div className="absolute -left-2 top-0 w-4 h-4 bg-indigo-500 rounded-full" />
+                                            <div className="absolute -left-2 top-0 w-4 h-4 bg-emerald-500 rounded-full" />
                                             <div className="mb-1 flex items-center gap-2">
-                                                <span className="font-bold text-indigo-600">{entry.version}</span>
+                                                <span className="font-bold text-emerald-600">{entry.version}</span>
                                                 <span className="text-sm text-gray-400">•</span>
                                                 <span className="text-sm text-gray-500">{entry.date}</span>
                                             </div>
@@ -520,7 +520,7 @@ const GlobalAcademicSettings = ({ currentUser }) => {
                                             <ul className="space-y-1">
                                                 {entry.changes.map((change, i) => (
                                                     <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
-                                                        <span className="text-indigo-400 mt-1">•</span>
+                                                        <span className="text-emerald-400 mt-1">•</span>
                                                         {change}
                                                     </li>
                                                 ))}
@@ -564,7 +564,7 @@ const GlobalAcademicSettings = ({ currentUser }) => {
                                     <Button onClick={() => setShowConfirmModal(false)} className="flex-1 bg-gray-100 text-gray-700 hover:bg-gray-200">
                                         Cancel
                                     </Button>
-                                    <Button onClick={handleSaveSettings} className="flex-1 bg-indigo-600 hover:bg-indigo-700">
+                                    <Button onClick={handleSaveSettings} className="flex-1 bg-emerald-600 hover:bg-emerald-700">
                                         <Check className="w-4 h-4 mr-1" />
                                         Confirm & Save
                                     </Button>

@@ -6,7 +6,7 @@ import { useToast } from '@/components/ui/use-toast';
 const ROLES = [
   { value: 'superadmin', label: 'Super Admin', icon: ShieldCheck, color: '#a78bfa' },
   { value: 'admin', label: 'School Admin', icon: BarChart3, color: '#60a5fa' },
-  { value: 'teacher', label: 'Teacher', icon: BookOpen, color: '#34d399' },
+  { value: 'teacher', label: 'Teacher', icon: BookOpen, color: '#10b981' },
   { value: 'parent', label: 'Parent', icon: Users, color: '#fbbf24' },
 ];
 
@@ -17,7 +17,7 @@ const FloatingParticle = ({ delay, duration, x, y, size }) => (
     style={{
       width: size, height: size,
       left: `${x}%`, top: `${y}%`,
-      background: 'radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%)',
+      background: 'radial-gradient(circle, rgba(5,150,105,0.3) 0%, transparent 70%)',
     }}
     animate={{
       y: [0, -30, 0],
@@ -45,7 +45,7 @@ const StatCounter = ({ end, label, suffix = '' }) => {
   return (
     <div className="text-center">
       <p className="text-2xl font-bold text-white">{count}{suffix}</p>
-      <p className="text-[11px] text-indigo-200/60 mt-0.5">{label}</p>
+      <p className="text-[11px] text-emerald-200/60 mt-0.5">{label}</p>
     </div>
   );
 };
@@ -142,11 +142,11 @@ const LoginPage = ({ onLogin }) => {
       {/* ── Animated background layer ── */}
       <div className="absolute inset-0">
         {/* Mesh gradient blobs */}
-        <motion.div className="absolute w-[500px] h-[500px] rounded-full" style={{ top: '-10%', right: '-5%', background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 65%)' }}
+        <motion.div className="absolute w-[500px] h-[500px] rounded-full" style={{ top: '-10%', right: '-5%', background: 'radial-gradient(circle, rgba(5,150,105,0.12) 0%, transparent 65%)' }}
           animate={{ scale: [1, 1.15, 1], x: [0, 30, 0] }} transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }} />
-        <motion.div className="absolute w-[600px] h-[600px] rounded-full" style={{ bottom: '-15%', left: '-10%', background: 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 65%)' }}
+        <motion.div className="absolute w-[600px] h-[600px] rounded-full" style={{ bottom: '-15%', left: '-10%', background: 'radial-gradient(circle, rgba(5,150,105,0.08) 0%, transparent 65%)' }}
           animate={{ scale: [1.1, 1, 1.1], y: [0, -30, 0] }} transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }} />
-        <motion.div className="absolute w-[400px] h-[400px] rounded-full" style={{ top: '40%', left: '30%', background: 'radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 60%)' }}
+        <motion.div className="absolute w-[400px] h-[400px] rounded-full" style={{ top: '40%', left: '30%', background: 'radial-gradient(circle, rgba(5,150,105,0.06) 0%, transparent 60%)' }}
           animate={{ rotate: 360 }} transition={{ duration: 80, repeat: Infinity, ease: 'linear' }} />
 
         {/* Floating particles */}
@@ -160,7 +160,7 @@ const LoginPage = ({ onLogin }) => {
         <FloatingParticle delay={0.8} duration={8} x={60} y={85} size={8} />
 
         {/* Grid overlay */}
-        <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'linear-gradient(rgba(139,92,246,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,.1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+        <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'linear-gradient(rgba(5,150,105,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(5,150,105,.1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
       </div>
 
       <div className="relative z-10 w-full max-w-[1100px] mx-auto grid lg:grid-cols-[1.15fr_1fr] items-stretch m-4">
@@ -171,14 +171,14 @@ const LoginPage = ({ onLogin }) => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
           className="hidden lg:flex flex-col justify-between p-10 rounded-l-[28px] relative overflow-hidden"
-          style={{ background: 'linear-gradient(160deg, #4f46e5 0%, #6366f1 40%, #818cf8 100%)' }}
+          style={{ background: 'linear-gradient(160deg, #022c22 0%, #064E3B 42%, #047857 100%)' }}
         >
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-40 h-40" style={{ background: 'radial-gradient(circle at top right, rgba(255,255,255,0.08) 0%, transparent 60%)' }} />
           <PulsingRing size={120} delay={0} color="rgba(255,255,255,0.06)" />
           <motion.div className="absolute bottom-20 right-8 w-3 h-3 rounded-full bg-emerald-400/30"
             animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 2, repeat: Infinity }} />
-          <motion.div className="absolute top-32 right-16 w-2 h-2 rounded-full bg-violet-300/40"
+          <motion.div className="absolute top-32 right-16 w-2 h-2 rounded-full bg-green-300/40"
             animate={{ scale: [1, 2, 1], opacity: [0.2, 0.6, 0.2] }} transition={{ duration: 3, delay: 1, repeat: Infinity }} />
 
           {/* Top section */}
@@ -188,7 +188,7 @@ const LoginPage = ({ onLogin }) => {
                 <div className="p-2.5 bg-white/15 rounded-xl backdrop-blur-sm border border-white/20">
                   <GraduationCap className="w-6 h-6 text-white" />
                 </div>
-                <motion.div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-indigo-600"
+                <motion.div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-emerald-600"
                   animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 2, repeat: Infinity }} />
               </div>
               <span className="text-lg font-bold text-white tracking-tight">SchoolSync</span>
@@ -197,11 +197,11 @@ const LoginPage = ({ onLogin }) => {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
               <h2 className="text-[2.6rem] font-extrabold text-white leading-[1.1] mb-3 tracking-tight">
                 Smart School
-                <span className="block bg-gradient-to-r from-emerald-300 to-cyan-300 bg-clip-text text-transparent">
+                <span className="block bg-gradient-to-r from-emerald-300 to-green-300 bg-clip-text text-transparent">
                   Management
                 </span>
               </h2>
-              <p className="text-indigo-200/70 text-sm leading-relaxed max-w-xs">
+              <p className="text-emerald-200/70 text-sm leading-relaxed max-w-xs">
                 Everything you need to run your school efficiently — all in one place.
               </p>
             </motion.div>
@@ -228,14 +228,14 @@ const LoginPage = ({ onLogin }) => {
                   </div>
                   <div>
                     <h4 className="text-white font-semibold text-sm mb-1">{features[featureIdx].title}</h4>
-                    <p className="text-indigo-200/60 text-xs leading-relaxed">{features[featureIdx].desc}</p>
+                    <p className="text-emerald-200/60 text-xs leading-relaxed">{features[featureIdx].desc}</p>
                   </div>
                 </motion.div>
               </AnimatePresence>
               {/* Progress dots */}
               <div className="flex items-center space-x-1.5 mt-4">
                 {features.map((_, i) => (
-                  <motion.div key={i} className="h-1 rounded-full" style={{ background: i === featureIdx ? '#34d399' : 'rgba(255,255,255,0.15)' }}
+                  <motion.div key={i} className="h-1 rounded-full" style={{ background: i === featureIdx ? '#10b981' : 'rgba(255,255,255,0.15)' }}
                     animate={{ width: i === featureIdx ? 20 : 6 }} transition={{ duration: 0.3 }} />
                 ))}
               </div>
@@ -250,7 +250,7 @@ const LoginPage = ({ onLogin }) => {
             <StatCounter end={realStats.totalStudents} suffix="" label="Students" />
             <div className="text-center">
               <p className="text-2xl font-bold text-white">{realStats.uptime}</p>
-              <p className="text-[11px] text-indigo-200/60 mt-0.5">Uptime</p>
+              <p className="text-[11px] text-emerald-200/60 mt-0.5">Uptime</p>
             </div>
           </motion.div>
         </motion.div>
@@ -263,12 +263,12 @@ const LoginPage = ({ onLogin }) => {
           className="flex flex-col justify-center p-8 sm:p-10 rounded-3xl lg:rounded-l-none lg:rounded-r-[28px] relative bg-white shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-slate-100"
         >
           {/* Decorative corner glow */}
-          <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none" style={{ background: 'radial-gradient(circle at top right, rgba(99,102,241,0.08) 0%, transparent 60%)' }} />
+          <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none" style={{ background: 'radial-gradient(circle at top right, rgba(5,150,105,0.08) 0%, transparent 60%)' }} />
 
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center justify-center space-x-3 mb-8">
-            <div className="p-2.5 bg-indigo-500/20 rounded-xl border border-indigo-500/30">
-              <GraduationCap className="w-7 h-7 text-indigo-400" />
+            <div className="p-2.5 bg-emerald-500/20 rounded-xl border border-emerald-500/30">
+              <GraduationCap className="w-7 h-7 text-emerald-400" />
             </div>
             <span className="text-xl font-bold text-slate-900 tracking-tight">SchoolSync</span>
           </div>
@@ -279,7 +279,7 @@ const LoginPage = ({ onLogin }) => {
               className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full mb-4"
               style={{ background: '#eef2ff', border: '1px solid #e0e7ff' }}>
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[11px] font-semibold text-indigo-600">Secure Portal</span>
+              <span className="text-[11px] font-semibold text-emerald-600">Secure Portal</span>
             </motion.div>
             <h3 className="text-2xl font-bold text-slate-900 mb-1.5">Welcome back</h3>
             <p className="text-slate-500 text-sm">Sign in to continue to your dashboard</p>
@@ -304,7 +304,7 @@ const LoginPage = ({ onLogin }) => {
                         color: isActive ? '#fff' : '#64748b',
                       }}
                     >
-                      {isActive && <motion.div layoutId="activeRole" className="absolute inset-0 rounded-lg shadow-sm" style={{ background: '#6366f1' }} transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }} />}
+                      {isActive && <motion.div layoutId="activeRole" className="absolute inset-0 rounded-lg shadow-sm" style={{ background: '#059669' }} transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }} />}
                       <role.icon className="w-3.5 h-3.5 relative z-10" style={{ color: isActive ? '#fff' : undefined }} />
                       <span className="relative z-10 leading-tight">{role.label}</span>
                     </motion.button>
@@ -317,13 +317,13 @@ const LoginPage = ({ onLogin }) => {
             <div>
               <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Email</label>
               <div className="relative group">
-                <div className={`absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors duration-300 ${focusedField === 'email' ? 'text-indigo-400' : 'text-slate-500'}`}>
+                <div className={`absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors duration-300 ${focusedField === 'email' ? 'text-emerald-400' : 'text-slate-500'}`}>
                   <Mail className="w-4 h-4" />
                 </div>
                 <input type="email" name="email" value={formData.email} onChange={handleChange}
                   onFocus={() => setFocusedField('email')} onBlur={() => setFocusedField(null)}
                   placeholder="you@school.com" required
-                  className="w-full pl-10 pr-4 py-3 rounded-xl text-sm text-slate-900 placeholder-slate-400 transition-all duration-300 focus:outline-none bg-white border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl text-sm text-slate-900 placeholder-slate-400 transition-all duration-300 focus:outline-none bg-white border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
                 />
               </div>
             </div>
@@ -332,13 +332,13 @@ const LoginPage = ({ onLogin }) => {
             <div>
               <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Password</label>
               <div className="relative group">
-                <div className={`absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors duration-300 ${focusedField === 'password' ? 'text-indigo-400' : 'text-slate-500'}`}>
+                <div className={`absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors duration-300 ${focusedField === 'password' ? 'text-emerald-400' : 'text-slate-500'}`}>
                   <Lock className="w-4 h-4" />
                 </div>
                 <input type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange}
                   onFocus={() => setFocusedField('password')} onBlur={() => setFocusedField(null)}
                   placeholder="Enter your password" required
-                  className="w-full pl-10 pr-12 py-3 rounded-xl text-sm text-slate-900 placeholder-slate-400 transition-all duration-300 focus:outline-none bg-white border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
+                  className="w-full pl-10 pr-12 py-3 rounded-xl text-sm text-slate-900 placeholder-slate-400 transition-all duration-300 focus:outline-none bg-white border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors duration-200">
@@ -349,10 +349,10 @@ const LoginPage = ({ onLogin }) => {
 
             {/* Sign In Button */}
             <motion.button type="submit" disabled={isLoading}
-              whileHover={{ scale: isLoading ? 1 : 1.015, boxShadow: '0 8px 30px rgba(99,102,241,0.35)' }}
+              whileHover={{ scale: isLoading ? 1 : 1.015, boxShadow: '0 8px 30px rgba(5,150,105,0.35)' }}
               whileTap={{ scale: isLoading ? 1 : 0.985 }}
               className="w-full py-3.5 rounded-xl text-sm font-semibold text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group mt-2"
-              style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #6366f1 100%)', boxShadow: '0 4px 20px rgba(99,102,241,0.3)' }}>
+              style={{ background: 'linear-gradient(135deg, #059669 0%, #059669 50%, #059669 100%)', boxShadow: '0 4px 20px rgba(5,150,105,0.3)' }}>
               {/* Shimmer sweep */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
               {/* Animated border glow */}

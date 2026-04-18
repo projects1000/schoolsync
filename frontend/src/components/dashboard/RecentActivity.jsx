@@ -34,7 +34,7 @@ const RecentActivity = ({ activities }) => {
       
       <motion.button
         whileHover={{ scale: 1.02 }}
-        className="w-full mt-4 py-2 text-sm text-purple-600 hover:text-purple-700 font-medium"
+        className="w-full mt-4 py-2 text-sm text-emerald-600 hover:text-emerald-700 font-medium"
       >
         View All Activities
       </motion.button>

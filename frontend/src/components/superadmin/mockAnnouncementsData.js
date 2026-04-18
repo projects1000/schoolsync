@@ -87,7 +87,7 @@ export const announcementTypes = [
     { id: 'announcement', label: 'General Announcement', icon: '📢', color: 'blue' },
     { id: 'emergency', label: 'Emergency Alert', icon: '🚨', color: 'red' },
     { id: 'maintenance', label: 'Maintenance Notice', icon: '🔧', color: 'amber' },
-    { id: 'update', label: 'Platform Update', icon: '✨', color: 'purple' }
+    { id: 'update', label: 'Platform Update', icon: '✨', color: 'teal' }
 ];
 
 export const communicationChannels = [

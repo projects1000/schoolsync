@@ -62,7 +62,7 @@ const NotificationDropdown = () => {
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="text-xs h-6 px-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                            className="text-xs h-6 px-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
                             onClick={(e) => {
                                 e.preventDefault();
                                 markAllAsRead();

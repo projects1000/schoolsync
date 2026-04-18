@@ -116,8 +116,8 @@ const ParentMessages = ({ currentUser }) => {
                                 >
                                     <div className="flex items-start justify-between mb-2">
                                         <div className="flex items-center space-x-2">
-                                            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                                                <MessageSquare className="w-4 h-4 text-purple-600" />
+                                            <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                                                <MessageSquare className="w-4 h-4 text-emerald-600" />
                                             </div>
                                             <div>
                                                 <p className="font-medium text-gray-900">{message.senderName || 'Teacher'}</p>

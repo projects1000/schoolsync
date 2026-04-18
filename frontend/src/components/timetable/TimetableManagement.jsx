@@ -113,7 +113,7 @@ const TimetableManagement = ({ currentUser }) => {
             <h1 className="text-2xl font-bold text-gray-800">Timetable Management</h1>
             <p className="text-gray-600 mt-1">Manage class schedules and routines</p>
           </div>
-          <Button onClick={handleEdit} className="bg-gradient-to-r from-blue-600 to-indigo-600"><Edit className="w-4 h-4 mr-2" />Edit Timetable</Button>
+          <Button onClick={handleEdit} className="bg-gradient-to-r from-blue-600 to-emerald-600"><Edit className="w-4 h-4 mr-2" />Edit Timetable</Button>
         </div>
       </motion.div>
 

@@ -13,7 +13,7 @@ const RecentSchoolsWidget = ({ schools }) => {
     const getStatusColor = (status) => {
         switch (status) {
             case 'active': return 'bg-emerald-100 text-emerald-700';
-            case 'suspended': return 'bg-rose-100 text-rose-700';
+            case 'suspended': return 'bg-orange-100 text-orange-700';
             case 'inactive': return 'bg-gray-100 text-gray-600';
             default: return 'bg-gray-100 text-gray-600';
         }
@@ -28,8 +28,8 @@ const RecentSchoolsWidget = ({ schools }) => {
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-slate-50 to-gray-50">
                 <div className="flex items-center gap-2">
-                    <div className="p-2 bg-indigo-100 rounded-lg">
-                        <Building2 className="w-4 h-4 text-indigo-600" />
+                    <div className="p-2 bg-emerald-100 rounded-lg">
+                        <Building2 className="w-4 h-4 text-emerald-600" />
                     </div>
                     <div>
                         <h3 className="font-semibold text-gray-800">Recent Schools</h3>
@@ -78,7 +78,7 @@ const RecentSchoolsWidget = ({ schools }) => {
             <div className="p-3 bg-gray-50 border-t border-gray-100">
                 <button
                     onClick={() => navigate('/superadmin/schools')}
-                    className="w-full text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                    className="w-full text-sm text-emerald-600 hover:text-emerald-700 font-medium"
                 >
                     View All Schools →
                 </button>

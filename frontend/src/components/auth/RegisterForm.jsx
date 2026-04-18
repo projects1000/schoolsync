@@ -141,7 +141,7 @@ const RegisterForm = ({ onRegisterSuccess, onSwitchToLogin }) => {
               name="role" 
               value={formData.role} 
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
             >
               <option value="superadmin">Super Admin</option>
               <option value="admin">School Admin</option>
@@ -160,7 +160,7 @@ const RegisterForm = ({ onRegisterSuccess, onSwitchToLogin }) => {
               name="name" 
               value={formData.name} 
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all" 
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" 
               placeholder="Enter your full name" 
               required 
             />
@@ -177,7 +177,7 @@ const RegisterForm = ({ onRegisterSuccess, onSwitchToLogin }) => {
               name="email" 
               value={formData.email} 
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all" 
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" 
               placeholder="Enter your email" 
               required 
             />
@@ -196,7 +196,7 @@ const RegisterForm = ({ onRegisterSuccess, onSwitchToLogin }) => {
                 name="phone" 
                 value={formData.phone.replace(/^\+91\s?/, '')} 
                 onChange={(e) => { const digits = e.target.value.replace(/\D/g, '').slice(0, 10); handleChange({ target: { name: 'phone', value: '+91 ' + digits } }); }}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-r-lg rounded-l-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all" 
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-r-lg rounded-l-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" 
                 placeholder="9876543210" 
                 required 
               />
@@ -215,7 +215,7 @@ const RegisterForm = ({ onRegisterSuccess, onSwitchToLogin }) => {
                 name="password" 
                 value={formData.password} 
                 onChange={handleChange}
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all" 
+                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" 
                 placeholder="Create a strong password" 
                 required 
                 minLength={8}
@@ -243,7 +243,7 @@ const RegisterForm = ({ onRegisterSuccess, onSwitchToLogin }) => {
                 name="confirmPassword" 
                 value={formData.confirmPassword} 
                 onChange={handleChange}
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all" 
+                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" 
                 placeholder="Re-enter your password" 
                 required 
               />
@@ -283,7 +283,7 @@ const RegisterForm = ({ onRegisterSuccess, onSwitchToLogin }) => {
             Already have an account?{' '}
             <button 
               onClick={onSwitchToLogin}
-              className="text-purple-600 hover:text-purple-700 font-medium transition-colors"
+              className="text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
             >
               Sign In Here
             </button>

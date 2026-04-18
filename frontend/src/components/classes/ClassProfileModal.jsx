@@ -110,24 +110,24 @@ const ClassProfileModal = ({ isOpen, onClose, selectedClass, globalSubjects, tea
                         <motion.div
                             initial={{ rotate: -10, scale: 0.9 }}
                             animate={{ rotate: 0, scale: 1 }}
-                            className="h-16 w-16 rounded-[1.5rem] bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-200"
+                            className="h-16 w-16 rounded-[1.5rem] bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200"
                         >
                             <GraduationCap className="w-8 h-8 text-white" />
                         </motion.div>
                         <div>
                             <div className="flex items-center gap-3">
                                 <h2 className="text-3xl font-black text-gray-900 tracking-tight leading-none">{selectedClass.name}</h2>
-                                <span className="px-3 py-1 bg-purple-50 text-purple-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-purple-100/50">
+                                <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-emerald-100/50">
                                     Section {selectedClass.section || 'A'}
                                 </span>
                             </div>
                             <div className="flex items-center gap-4 text-sm font-bold text-gray-400 mt-2">
                                 <span className="flex items-center gap-2">
-                                    <BookOpen className="w-4 h-4 text-purple-400" /> Grade {selectedClass.grade}
+                                    <BookOpen className="w-4 h-4 text-emerald-400" /> Grade {selectedClass.grade}
                                 </span>
                                 {selectedClass.room && (
                                     <span className="flex items-center gap-2 h-4 border-l border-gray-200 pl-4">
-                                        <MapPin className="w-4 h-4 text-purple-400" /> Room {selectedClass.room}
+                                        <MapPin className="w-4 h-4 text-emerald-400" /> Room {selectedClass.room}
                                     </span>
                                 )}
                             </div>
@@ -145,17 +145,17 @@ const ClassProfileModal = ({ isOpen, onClose, selectedClass, globalSubjects, tea
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-20">
                             <div className="relative">
-                                <Loader2 className="w-12 h-12 text-purple-600 animate-spin" />
+                                <Loader2 className="w-12 h-12 text-emerald-600 animate-spin" />
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
+                                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
                                 </div>
                             </div>
                             <p className="text-gray-400 font-bold mt-6 tracking-wide uppercase text-xs">Synchronizing Academic Records</p>
                         </div>
                     ) : error ? (
                         <div className="flex flex-col items-center justify-center py-20 text-center">
-                            <div className="h-20 w-20 bg-rose-50 rounded-[2rem] flex items-center justify-center mb-6 border border-rose-100 shadow-sm">
-                                <AlertCircle className="h-10 w-10 text-rose-500" />
+                            <div className="h-20 w-20 bg-orange-50 rounded-[2rem] flex items-center justify-center mb-6 border border-orange-100 shadow-sm">
+                                <AlertCircle className="h-10 w-10 text-orange-500" />
                             </div>
                             <h3 className="text-xl font-black text-gray-900 mb-2">Data Retrieval Failed</h3>
                             <p className="text-gray-500 max-w-sm mx-auto font-medium">{error}</p>
@@ -166,13 +166,13 @@ const ClassProfileModal = ({ isOpen, onClose, selectedClass, globalSubjects, tea
                             {/* Class Teacher Profile & Quick Stats */}
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <motion.div variants={itemVariants} className="lg:col-span-2 bg-white p-6 rounded-[2rem] border border-gray-200/50 shadow-sm hover:shadow-md transition-shadow group flex items-center gap-6">
-                                    <div className="h-20 w-20 rounded-[1.5rem] bg-indigo-50 border border-indigo-100 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                                        <User className="w-10 h-10 text-indigo-600" />
+                                    <div className="h-20 w-20 rounded-[1.5rem] bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                                        <User className="w-10 h-10 text-emerald-600" />
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <Star className="w-4 h-4 text-indigo-400 fill-indigo-400" />
-                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500">Primary Mentor</p>
+                                            <Star className="w-4 h-4 text-emerald-400 fill-emerald-400" />
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Primary Mentor</p>
                                         </div>
                                         <h3 className="text-2xl font-black text-gray-900 tracking-tight">{classTeacher ? classTeacher.name : 'Not Assigned'}</h3>
                                         <div className="flex items-center gap-4 mt-1">
@@ -196,7 +196,7 @@ const ClassProfileModal = ({ isOpen, onClose, selectedClass, globalSubjects, tea
                                             initial={{ width: 0 }}
                                             animate={{ width: `${Math.min((students.length / (selectedClass.capacity || 1)) * 100, 100)}%` }}
                                             transition={{ duration: 1, ease: "easeOut" }}
-                                            className="h-full bg-indigo-500 rounded-full"
+                                            className="h-full bg-emerald-500 rounded-full"
                                         />
                                     </div>
                                 </motion.div>
@@ -206,8 +206,8 @@ const ClassProfileModal = ({ isOpen, onClose, selectedClass, globalSubjects, tea
                                 {/* Academic Curriculum */}
                                 <motion.div variants={itemVariants} className="bg-white p-7 rounded-[2.5rem] border border-gray-200/50 shadow-sm flex flex-col min-h-[450px]">
                                     <div className="flex items-center gap-4 mb-6 pb-4 border-b border-gray-50/80">
-                                        <div className="p-3 bg-purple-50 rounded-2xl shadow-sm">
-                                            <BookOpen className="w-6 h-6 text-purple-600" />
+                                        <div className="p-3 bg-emerald-50 rounded-2xl shadow-sm">
+                                            <BookOpen className="w-6 h-6 text-emerald-600" />
                                         </div>
                                         <div>
                                             <h3 className="font-black text-xl text-gray-900 tracking-tight">Academic Curriculum</h3>
@@ -226,16 +226,16 @@ const ClassProfileModal = ({ isOpen, onClose, selectedClass, globalSubjects, tea
                                             classSubjects.map(sub => {
                                                 const SubjectIcon = subjectIconMap[sub.subjectName] || subjectIconMap[sub.subjectName.split(' ')[0]] || BookOpen;
                                                 return (
-                                                    <div key={sub.id} className="p-5 bg-gray-50/50 rounded-3xl border border-gray-100/80 hover:bg-white hover:shadow-md hover:border-purple-100 transition-all group">
+                                                    <div key={sub.id} className="p-5 bg-gray-50/50 rounded-3xl border border-gray-100/80 hover:bg-white hover:shadow-md hover:border-emerald-100 transition-all group">
                                                         <div className="flex items-start gap-4">
                                                             <div className="p-3 bg-white rounded-2xl border border-gray-100 group-hover:scale-110 transition-transform shadow-sm">
-                                                                <SubjectIcon className="w-5 h-5 text-indigo-500" />
+                                                                <SubjectIcon className="w-5 h-5 text-emerald-500" />
                                                             </div>
                                                             <div className="flex-1">
                                                                 <p className="font-black text-gray-900 tracking-tight text-lg">{sub.subjectName}</p>
                                                                 <div className="flex items-center gap-2 mt-2">
-                                                                    <div className="h-6 w-6 rounded-full bg-indigo-50 flex items-center justify-center border border-indigo-100">
-                                                                        <User className="w-3 h-3 text-indigo-600" />
+                                                                    <div className="h-6 w-6 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100">
+                                                                        <User className="w-3 h-3 text-emerald-600" />
                                                                     </div>
                                                                     <span className="text-xs font-bold text-gray-500">{sub.teacherName}</span>
                                                                 </div>
@@ -252,15 +252,15 @@ const ClassProfileModal = ({ isOpen, onClose, selectedClass, globalSubjects, tea
                                 <motion.div variants={itemVariants} className="bg-white p-7 rounded-[2.5rem] border border-gray-200/50 shadow-sm flex flex-col min-h-[450px]">
                                     <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-50/80">
                                         <div className="flex items-center gap-4">
-                                            <div className="p-3 bg-indigo-50 rounded-2xl shadow-sm">
-                                                <Users className="w-6 h-6 text-indigo-600" />
+                                            <div className="p-3 bg-emerald-50 rounded-2xl shadow-sm">
+                                                <Users className="w-6 h-6 text-emerald-600" />
                                             </div>
                                             <div>
                                                 <h3 className="font-black text-xl text-gray-900 tracking-tight">Active Roster</h3>
                                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Enrolled Student Registry</p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50/50 text-indigo-600 border border-indigo-100/50 font-black text-[10px] rounded-xl uppercase tracking-wider">
+                                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50/50 text-emerald-600 border border-emerald-100/50 font-black text-[10px] rounded-xl uppercase tracking-wider">
                                             {students.length} Verified
                                         </div>
                                     </div>
@@ -276,7 +276,7 @@ const ClassProfileModal = ({ isOpen, onClose, selectedClass, globalSubjects, tea
                                             <div className="space-y-6">
                                                 {/* Top Performers Section */}
                                                 <div className="space-y-3">
-                                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 flex items-center gap-2 mb-4">
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 flex items-center gap-2 mb-4">
                                                         <Trophy className="w-3 h-3" /> Top Performers
                                                     </p>
                                                     {topPerformers.map((student, index) => (
@@ -296,7 +296,7 @@ const ClassProfileModal = ({ isOpen, onClose, selectedClass, globalSubjects, tea
                                                             <div className="min-w-0 flex-1">
                                                                 <div className="flex items-center gap-2">
                                                                     <p className="font-black text-gray-900 text-sm truncate">{student.name}</p>
-                                                                    <span className="text-[10px] font-black text-indigo-400 px-1.5 py-0.5 bg-white border border-indigo-50 rounded-md">#{student.rollNo || (index + 1)}</span>
+                                                                    <span className="text-[10px] font-black text-emerald-400 px-1.5 py-0.5 bg-white border border-emerald-50 rounded-md">#{student.rollNo || (index + 1)}</span>
                                                                 </div>
                                                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Adm: {student.admissionNo}</p>
                                                             </div>
@@ -310,7 +310,7 @@ const ClassProfileModal = ({ isOpen, onClose, selectedClass, globalSubjects, tea
                                                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Student Registry</p>
                                                         {regularStudents.map(student => (
                                                             <div key={student.id} className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-2xl transition-all border border-transparent hover:border-gray-100 group">
-                                                                <div className="h-10 w-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 font-bold text-xs shrink-0 group-hover:bg-indigo-50 transition-colors">
+                                                                <div className="h-10 w-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 font-bold text-xs shrink-0 group-hover:bg-emerald-50 transition-colors">
                                                                     {(student.name || '?').charAt(0)}
                                                                 </div>
                                                                 <div className="min-w-0 flex-1">

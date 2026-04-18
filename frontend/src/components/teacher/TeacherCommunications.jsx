@@ -170,13 +170,13 @@ const TeacherCommunications = ({ currentUser }) => {
                                         <div key={msg.id} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm transition-all hover:shadow-md">
                                             <div className="flex justify-between items-start mb-2">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`p-2 rounded-full ${msg.type === 'BROADCAST' ? 'bg-amber-50 text-amber-600' : 'bg-purple-50 text-purple-600'}`}>
+                                                    <div className={`p-2 rounded-full ${msg.type === 'BROADCAST' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
                                                         {msg.type === 'BROADCAST' ? <Users className="w-5 h-5" /> : <User className="w-5 h-5" />}
                                                     </div>
                                                     <div>
                                                         <div className="flex items-center gap-2">
                                                             <h4 className="font-semibold text-gray-800 text-lg">{msg.subject}</h4>
-                                                            <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${msg.type === 'BROADCAST' ? 'bg-amber-100 text-amber-800' : 'bg-purple-100 text-purple-800'}`}>
+                                                            <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${msg.type === 'BROADCAST' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
                                                                 {msg.type}
                                                             </span>
                                                         </div>

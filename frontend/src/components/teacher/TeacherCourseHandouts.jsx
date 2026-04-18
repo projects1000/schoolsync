@@ -127,7 +127,7 @@ const TeacherCourseHandouts = ({ currentUser }) => {
                         <h2 className="text-2xl font-bold text-gray-800">Course Handouts</h2>
                         <p className="text-gray-500">Manage your course handouts and track topic progress</p>
                     </div>
-                    <Button onClick={() => navigate(MODULE_TO_PATH['teacher-create-handout'])} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                    <Button onClick={() => navigate(MODULE_TO_PATH['teacher-create-handout'])} className="bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700">
                         <Plus className="w-4 h-4 mr-2" />
                         Create Handout
                     </Button>

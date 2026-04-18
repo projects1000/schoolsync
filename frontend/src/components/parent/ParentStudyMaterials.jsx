@@ -144,7 +144,7 @@ const ParentStudyMaterials = ({ currentUser }) => {
                     <Button
                         onClick={() => setFilterType('ALL')}
                         variant={filterType === 'ALL' ? 'default' : 'outline'}
-                        className={filterType === 'ALL' ? 'bg-purple-600 hover:bg-purple-700' : ''}
+                        className={filterType === 'ALL' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
                     >
                         All ({materials.length})
                     </Button>
@@ -212,7 +212,7 @@ const ParentStudyMaterials = ({ currentUser }) => {
                                             href={material.fileUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="flex items-center text-sm text-purple-600 hover:text-purple-700 font-medium"
+                                            className="flex items-center text-sm text-emerald-600 hover:text-emerald-700 font-medium"
                                         >
                                             <Download className="w-4 h-4 mr-1" />
                                             Download

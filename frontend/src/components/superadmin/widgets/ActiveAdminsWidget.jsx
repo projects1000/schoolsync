@@ -29,7 +29,7 @@ const ActiveAdminsWidget = ({ admins }) => {
                         className="p-4 hover:bg-gray-50 transition-colors"
                     >
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center flex-shrink-0">
                                 <span className="text-white text-sm font-semibold">{admin.avatar}</span>
                             </div>
                             <div className="flex-1 min-w-0">
@@ -48,7 +48,7 @@ const ActiveAdminsWidget = ({ admins }) => {
             <div className="p-3 bg-gray-50 border-t border-gray-100">
                 <button
                     onClick={() => navigate('/superadmin/admins')}
-                    className="w-full text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                    className="w-full text-sm text-emerald-600 hover:text-emerald-700 font-medium"
                 >
                     View All Admins →
                 </button>
