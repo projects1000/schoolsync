@@ -26,6 +26,7 @@ import ParentAcademicDetails from '@/components/parent/ParentAcademicDetails';
 import ParentStudentProfile from '@/components/parent/ParentStudentProfile';
 import { ParentProvider } from '@/context/ParentContext';
 import { NotificationProvider } from '@/context/NotificationContext';
+import useDataVersionSync from '@/hooks/useDataVersionSync';
 
 import ParentManagement from '@/components/parents/ParentManagement';
 import ParentRegistrationManagement from '@/components/admin/ParentRegistrationManagement';
@@ -194,6 +195,8 @@ function AppInner() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+
+  useDataVersionSync(isAuthenticated);
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
