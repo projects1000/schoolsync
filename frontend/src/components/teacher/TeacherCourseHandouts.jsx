@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,6 @@ import { MODULE_TO_PATH } from '@/routeConfig';
 const TeacherCourseHandouts = ({ currentUser }) => {
     const navigate = useNavigate();
     const [handouts, setHandouts] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [filterClass, setFilterClass] = useState('');
     const [filterSubject, setFilterSubject] = useState('');
     const [expandedHandout, setExpandedHandout] = useState(null);
@@ -30,39 +30,42 @@ const TeacherCourseHandouts = ({ currentUser }) => {
         return classId; // fallback to ID if not found
     };
 
-    useEffect(() => {
-        fetchAssignedClasses();
-    }, []);
+    const assignedClassesQuery = useQuery({
+        queryKey: ['teacher', 'course-handouts', 'classes'],
+        queryFn: () => api.get('/teacher/classes'),
+        staleTime: 1000 * 60,
+    });
 
-    useEffect(() => {
-        fetchHandouts();
-    }, [filterClass, filterSubject]);
-
-    const fetchAssignedClasses = async () => {
-        try {
-            const response = await api.get('/teacher/classes');
-            setAssignedClasses(response.data || []);
-        } catch (error) {
-            console.error('Error fetching assigned classes:', error);
-        }
-    };
-
-    const fetchHandouts = async () => {
-        try {
-            setLoading(true);
+    const handoutsQuery = useQuery({
+        queryKey: ['teacher', 'course-handouts', 'list', filterClass, filterSubject],
+        queryFn: () => {
             const params = new URLSearchParams();
             if (filterClass) params.append('classId', filterClass);
             if (filterSubject) params.append('subject', filterSubject);
+            return api.get(`/teacher/course-handouts?${params.toString()}`);
+        },
+        staleTime: 1000 * 30,
+        placeholderData: (previousData) => previousData,
+    });
 
-            const response = await api.get(`/teacher/course-handouts?${params.toString()}`);
-            setHandouts(Array.isArray(response.data) ? response.data : (response.data?.content || []));
-        } catch (error) {
-            console.error('Error fetching handouts:', error);
-            toast({ title: 'Failed to load course handouts', variant: 'destructive' });
-        } finally {
-            setLoading(false);
-        }
-    };
+    useEffect(() => {
+        if (!assignedClassesQuery.data) return;
+        setAssignedClasses(assignedClassesQuery.data.data || []);
+    }, [assignedClassesQuery.data]);
+
+    useEffect(() => {
+        if (!handoutsQuery.data) return;
+        const data = handoutsQuery.data.data;
+        setHandouts(Array.isArray(data) ? data : (data?.content || []));
+    }, [handoutsQuery.data]);
+
+    useEffect(() => {
+        if (!handoutsQuery.error) return;
+        console.error('Error fetching handouts:', handoutsQuery.error);
+        toast({ title: 'Failed to load course handouts', variant: 'destructive' });
+    }, [handoutsQuery.error, toast]);
+
+    const loading = handoutsQuery.isLoading || handoutsQuery.isFetching;
 
     const handleToggleTopic = async (handoutId, topicId, topicIndex, currentStatus) => {
         try {

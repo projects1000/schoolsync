@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Trash2,
@@ -16,6 +17,7 @@ import Pagination from '../common/Pagination';
 
 const AdminTrashManagement = () => {
     const { toast } = useToast();
+    const queryClient = useQueryClient();
     const [activeTab, setActiveTab] = useState('students');
     const [deletedItems, setDeletedItems] = useState({
         students: [],
@@ -23,7 +25,6 @@ const AdminTrashManagement = () => {
         parents: [],
         classes: []
     });
-    const [isLoading, setIsLoading] = useState(true);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
 
@@ -35,67 +36,65 @@ const AdminTrashManagement = () => {
         pageSize: 10
     });
 
-    const fetchDeletedItems = async (page = 0, tab = activeTab) => {
-        setIsLoading(true);
-        try {
-            let response;
-            const params = { page, size: pagination.pageSize, sort: 'deletedAt,desc' };
-
-            switch (tab) {
+    const trashQuery = useQuery({
+        queryKey: ['admin', 'trash', activeTab, pagination.currentPage, pagination.pageSize],
+        queryFn: async () => {
+            const params = { page: pagination.currentPage, size: pagination.pageSize, sort: 'deletedAt,desc' };
+            switch (activeTab) {
                 case 'students':
-                    response = await adminService.getDeletedStudents(params);
-                    setDeletedItems(prev => ({ ...prev, students: response.content || [] }));
-                    break;
+                    return adminService.getDeletedStudents(params);
                 case 'teachers':
-                    response = await adminService.getDeletedTeachers(params);
-                    setDeletedItems(prev => ({ ...prev, teachers: response.content || [] }));
-                    break;
+                    return adminService.getDeletedTeachers(params);
                 case 'parents':
-                    response = await adminService.getDeletedParents(params);
-                    setDeletedItems(prev => ({ ...prev, parents: response.content || [] }));
-                    break;
+                    return adminService.getDeletedParents(params);
                 case 'classes':
-                    response = await adminService.getDeletedClasses(params);
-                    // For classes, handle if it's a Page object or legacy array
-                    if (response && response.content) {
-                        setDeletedItems(prev => ({ ...prev, classes: response.content }));
-                    } else {
-                        setDeletedItems(prev => ({ ...prev, classes: response || [] }));
-                    }
-                    break;
+                    return adminService.getDeletedClasses(params);
                 default:
-                    break;
+                    return { content: [] };
             }
-
-            if (response && typeof response.number === 'number') {
-                setPagination({
-                    currentPage: response.number,
-                    totalPages: response.totalPages,
-                    totalElements: response.totalElements,
-                    pageSize: response.size
-                });
-            } else {
-                setPagination(prev => ({
-                    ...prev,
-                    currentPage: 0,
-                    totalPages: 1,
-                    totalElements: (Array.isArray(response) ? response : (response?.content || [])).length
-                }));
-            }
-        } catch (error) {
-            console.error(error);
-            toast({ title: 'Error', description: 'Failed to fetch trash items', variant: 'destructive' });
-        } finally {
-            setIsLoading(false);
-        }
-    };
+        },
+        staleTime: 1000 * 60,
+        placeholderData: (previousData) => previousData,
+    });
 
     useEffect(() => {
-        fetchDeletedItems(0, activeTab);
+        setPagination(prev => ({ ...prev, currentPage: 0 }));
     }, [activeTab]);
 
+    useEffect(() => {
+        if (!trashQuery.data) return;
+
+        const response = trashQuery.data;
+        const items = response && response.content ? response.content : (Array.isArray(response) ? response : []);
+        setDeletedItems(prev => ({ ...prev, [activeTab]: items }));
+
+        if (response && typeof response.number === 'number') {
+            setPagination(prev => ({
+                ...prev,
+                currentPage: response.number,
+                totalPages: response.totalPages,
+                totalElements: response.totalElements,
+                pageSize: response.size || prev.pageSize
+            }));
+        } else {
+            setPagination(prev => ({
+                ...prev,
+                totalPages: 1,
+                totalElements: items.length
+            }));
+        }
+    }, [trashQuery.data, activeTab]);
+
+    useEffect(() => {
+        if (!trashQuery.error) return;
+        console.error(trashQuery.error);
+        toast({ title: 'Error', description: 'Failed to fetch trash items', variant: 'destructive' });
+    }, [trashQuery.error, toast]);
+
+    const isLoading = trashQuery.isLoading || trashQuery.isFetching;
+
     const handlePageChange = (newPage) => {
-        fetchDeletedItems(newPage);
+        setPagination(prev => ({ ...prev, currentPage: newPage }));
     };
 
     const handleRestoreClick = (item, type) => {
@@ -118,7 +117,7 @@ const AdminTrashManagement = () => {
             }
 
             toast({ title: 'Success', description: `${selectedItem.name} restored successfully.` });
-            fetchDeletedItems();
+            queryClient.invalidateQueries({ queryKey: ['admin', 'trash'] });
         } catch (error) {
             console.error(error);
             toast({ title: 'Error', description: `Failed to restore ${selectedItem.type.slice(0, -1)}`, variant: 'destructive' });

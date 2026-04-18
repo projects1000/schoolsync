@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -18,27 +19,26 @@ const CreateCourseHandout = ({ currentUser }) => {
     });
     const [assignedClasses, setAssignedClasses] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [fetchingClasses, setFetchingClasses] = useState(true);
     const { toast } = useToast();
 
-    useEffect(() => {
-        fetchAssignedClasses();
-    }, []);
+    const assignedClassesQuery = useQuery({
+        queryKey: ['teacher', 'create-course-handout', 'classes'],
+        queryFn: () => api.get('/teacher/classes'),
+        staleTime: 1000 * 60,
+    });
 
-    const fetchAssignedClasses = async () => {
-        try {
-            // Fetch all assigned classes (subject teacher + class teacher)
-            const response = await api.get('/teacher/classes');
-            if (response.data) {
-                setAssignedClasses(response.data);
-            }
-        } catch (error) {
-            console.error('Error fetching assigned classes:', error);
-            toast({ title: 'Failed to load assigned classes', variant: 'destructive' });
-        } finally {
-            setFetchingClasses(false);
-        }
-    };
+    useEffect(() => {
+        if (!assignedClassesQuery.data) return;
+        setAssignedClasses(assignedClassesQuery.data.data || []);
+    }, [assignedClassesQuery.data]);
+
+    useEffect(() => {
+        if (!assignedClassesQuery.error) return;
+        console.error('Error fetching assigned classes:', assignedClassesQuery.error);
+        toast({ title: 'Failed to load assigned classes', variant: 'destructive' });
+    }, [assignedClassesQuery.error, toast]);
+
+    const fetchingClasses = assignedClassesQuery.isLoading || assignedClassesQuery.isFetching;
 
     const handleInputChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));

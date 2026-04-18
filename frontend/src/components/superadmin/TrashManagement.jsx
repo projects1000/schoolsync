@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Trash2,
@@ -18,27 +19,29 @@ import SuperAdminService from '../../services/superAdminService';
 
 const TrashManagement = () => {
     const { toast } = useToast();
+    const queryClient = useQueryClient();
     const [deletedSchools, setDeletedSchools] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [selectedSchool, setSelectedSchool] = useState(null);
 
-    const fetchDeletedSchools = async () => {
-        setIsLoading(true);
-        try {
-            const response = await SuperAdminService.getDeletedSchools();
-            setDeletedSchools(response.data || []);
-        } catch (error) {
-            console.error(error);
-            toast({ title: 'Error', description: 'Failed to fetch deleted schools', variant: 'destructive' });
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const deletedSchoolsQuery = useQuery({
+        queryKey: ['superadmin', 'trash', 'schools'],
+        queryFn: () => SuperAdminService.getDeletedSchools(),
+        staleTime: 1000 * 30,
+    });
 
     useEffect(() => {
-        fetchDeletedSchools();
-    }, []);
+        if (!deletedSchoolsQuery.data) return;
+        setDeletedSchools(deletedSchoolsQuery.data.data || []);
+    }, [deletedSchoolsQuery.data]);
+
+    useEffect(() => {
+        if (!deletedSchoolsQuery.error) return;
+        console.error(deletedSchoolsQuery.error);
+        toast({ title: 'Error', description: 'Failed to fetch deleted schools', variant: 'destructive' });
+    }, [deletedSchoolsQuery.error, toast]);
+
+    const isLoading = deletedSchoolsQuery.isLoading || deletedSchoolsQuery.isFetching;
 
     const handleRestoreClick = (school) => {
         setSelectedSchool(school);
@@ -50,7 +53,7 @@ const TrashManagement = () => {
         try {
             await SuperAdminService.restoreSchool(selectedSchool.id);
             toast({ title: 'Success', description: 'School restored successfully and set to INACTIVE status.' });
-            fetchDeletedSchools();
+            queryClient.invalidateQueries({ queryKey: ['superadmin', 'trash', 'schools'] });
         } catch (error) {
             console.error(error);
             toast({ title: 'Error', description: 'Failed to restore school', variant: 'destructive' });

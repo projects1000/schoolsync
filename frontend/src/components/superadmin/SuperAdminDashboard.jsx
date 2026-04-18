@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
     Building2,
@@ -24,80 +25,67 @@ import PendingActionsWidget from './widgets/PendingActionsWidget';
 import SuperAdminService from '../../services/superAdminService';
 
 const SuperAdminDashboard = ({ currentUser }) => {
-    const [isLoading, setIsLoading] = useState(true);
-    const [stats, setStats] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(new Date());
 
-    const [error, setError] = useState(null);
-
-    const fetchDashboardData = async () => {
-        try {
-            setError(null);
+    const dashboardQuery = useQuery({
+        queryKey: ['superadmin', 'dashboard'],
+        queryFn: async () => {
             const response = await SuperAdminService.getDashboardData();
-            if (response.data) {
-                const data = response.data;
-                console.log("Dashboard API Data:", data);
+            const data = response.data || {};
 
-                // Transform Map to Array for SchoolDistributionChart
-                const schoolDistArray = data.studentDistribution
-                    ? Object.entries(data.studentDistribution).map(([name, count], index) => ({
-                        id: index,
-                        name: name,
-                        students: count,
-                        status: 'active' // Assuming active if they have students
-                    }))
-                    : [];
+            const schoolDistArray = data.studentDistribution
+                ? Object.entries(data.studentDistribution).map(([name, count], index) => ({
+                    id: index,
+                    name: name,
+                    students: count,
+                    status: 'active'
+                }))
+                : [];
 
-                // Transform StudentGrowth for chart (map totalStudents -> students)
-                const studentGrowthData = data.studentGrowth
-                    ? data.studentGrowth.map(g => ({
-                        year: g.year,
-                        students: g.totalStudents
-                    }))
-                    : [];
+            const studentGrowthData = data.studentGrowth
+                ? data.studentGrowth.map(g => ({
+                    year: g.year,
+                    students: g.totalStudents
+                }))
+                : [];
 
-                // Transform RecentSchools (date -> joinDate)
-                const recentSchoolsData = data.recentSchools
-                    ? data.recentSchools.map(s => ({
-                        ...s,
-                        joinDate: s.date
-                    }))
-                    : [];
+            const recentSchoolsData = data.recentSchools
+                ? data.recentSchools.map(s => ({
+                    ...s,
+                    joinDate: s.date
+                }))
+                : [];
 
-                setStats({
-                    totalSchools: data.totalSchools || 0,
-                    activeSchools: data.activeSchools || 0,
-                    suspendedSchools: data.inactiveSchools || 0,
-                    totalStudents: data.totalStudents || 0,
-                    totalTeachers: data.totalTeachers || 0,
-
-                    // Complex Data Objects
-                    onboardingData: data.schoolGrowth || [],
-                    studentGrowthData: studentGrowthData.length > 0 ? studentGrowthData : [{ year: new Date().getFullYear(), students: 0 }],
-                    attendanceTrend: data.attendanceTrend || [],
-                    schoolDistribution: schoolDistArray,
-
-                    recentSchools: recentSchoolsData,
-                    activeAdmins: data.activeAdmins || [],
-                    systemAlerts: data.systemAlerts || [],
-                    pendingActions: data.pendingActions || []
-                });
-            }
-        } catch (error) {
-            console.error('Failed to fetch dashboard data:', error);
-            setError(error.message || 'Failed to load dashboard data');
-        }
-        setLastUpdated(new Date());
-        setIsLoading(false);
-    };
+            return {
+                totalSchools: data.totalSchools || 0,
+                activeSchools: data.activeSchools || 0,
+                suspendedSchools: data.inactiveSchools || 0,
+                totalStudents: data.totalStudents || 0,
+                totalTeachers: data.totalTeachers || 0,
+                onboardingData: data.schoolGrowth || [],
+                studentGrowthData: studentGrowthData.length > 0 ? studentGrowthData : [{ year: new Date().getFullYear(), students: 0 }],
+                attendanceTrend: data.attendanceTrend || [],
+                schoolDistribution: schoolDistArray,
+                recentSchools: recentSchoolsData,
+                activeAdmins: data.activeAdmins || [],
+                systemAlerts: data.systemAlerts || [],
+                pendingActions: data.pendingActions || []
+            };
+        },
+        staleTime: 1000 * 60,
+    });
 
     useEffect(() => {
-        fetchDashboardData();
-    }, []);
+        if (!dashboardQuery.data && !dashboardQuery.error) return;
+        setLastUpdated(new Date());
+    }, [dashboardQuery.data, dashboardQuery.error]);
+
+    const isLoading = dashboardQuery.isLoading || dashboardQuery.isFetching;
+    const stats = dashboardQuery.data;
+    const error = dashboardQuery.error?.message || null;
 
     const handleRefresh = () => {
-        setIsLoading(true);
-        fetchDashboardData();
+        dashboardQuery.refetch();
     };
 
     if (isLoading) {

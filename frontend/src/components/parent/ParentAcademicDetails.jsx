@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { User, BookOpen, GraduationCap, Users } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -9,33 +10,32 @@ const ParentAcademicDetails = ({ currentUser }) => {
     const { toast } = useToast();
     const { selectedChild } = useParent();
     const [academicInfo, setAcademicInfo] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
+
+    const academicInfoQuery = useQuery({
+        queryKey: ['parent', 'academic-info', selectedChild?.id],
+        queryFn: () => api.get('/parent/academic-info'),
+        enabled: Boolean(selectedChild?.id),
+        staleTime: 1000 * 60,
+    });
 
     useEffect(() => {
-        if (selectedChild) {
-            fetchAcademicInfo();
-        }
-    }, [selectedChild]);
+        if (!academicInfoQuery.data || !selectedChild) return;
+        const allInfo = academicInfoQuery.data.data || [];
+        const childInfo = allInfo.find(info => info.childId === selectedChild.id);
+        setAcademicInfo(childInfo || null);
+    }, [academicInfoQuery.data, selectedChild]);
 
-    const fetchAcademicInfo = async () => {
-        try {
-            setIsLoading(true);
-            const response = await api.get('/parent/academic-info');
-            const allInfo = response.data || [];
-            // Filter to only show the selected child's info
-            const childInfo = allInfo.find(info => info.childId === selectedChild.id);
-            setAcademicInfo(childInfo || null);
-        } catch (error) {
-            console.error('Error fetching academic info:', error);
-            toast({
-                title: "Error",
-                description: "Failed to load academic details",
-                variant: "destructive"
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    useEffect(() => {
+        if (!academicInfoQuery.error) return;
+        console.error('Error fetching academic info:', academicInfoQuery.error);
+        toast({
+            title: 'Error',
+            description: 'Failed to load academic details',
+            variant: 'destructive'
+        });
+    }, [academicInfoQuery.error, toast]);
+
+    const isLoading = academicInfoQuery.isLoading || academicInfoQuery.isFetching;
 
     if (!selectedChild) {
         return null; // ParentProvider handles selection screen

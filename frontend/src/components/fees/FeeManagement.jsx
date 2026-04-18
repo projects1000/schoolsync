@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, DollarSign, FileText, Download, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import adminService from '@/services/adminService';
 import { useToast } from '@/components/ui/use-toast';
@@ -39,7 +40,7 @@ import Pagination from '../common/Pagination';
 
 const FeeManagement = () => {
     const { toast } = useToast();
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
     const [invoices, setInvoices] = useState([]);
     const [students, setStudents] = useState([]);
     const [report, setReport] = useState({});
@@ -69,49 +70,62 @@ const FeeManagement = () => {
     const [paymentMethod, setPaymentMethod] = useState('CASH');
     const [transactionId, setTransactionId] = useState('');
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = async (page = 0) => {
-        try {
-            setLoading(true);
+    const feeDataQuery = useQuery({
+        queryKey: ['admin', 'fees-management', pagination.currentPage, pagination.pageSize],
+        queryFn: async () => {
             const [invoicesResponse, studentsData, reportData] = await Promise.all([
-                adminService.getFees({ page, size: pagination.pageSize, sort: 'createdAt,desc' }),
-                adminService.getStudents({ size: 1000 }), // For create invoice selection
+                adminService.getFees({ page: pagination.currentPage, size: pagination.pageSize, sort: 'createdAt,desc' }),
+                adminService.getStudents({ size: 1000 }),
                 adminService.getFeeReport()
             ]);
-            
-            // Handle invoices pagination
-            if (invoicesResponse && invoicesResponse.content) {
-                setInvoices(invoicesResponse.content);
-                setPagination(prev => ({
-                    ...prev,
-                    currentPage: invoicesResponse.number,
-                    totalPages: invoicesResponse.totalPages,
-                    totalElements: invoicesResponse.totalElements
-                }));
-            } else {
-                setInvoices(invoicesResponse || []);
-                setPagination(prev => ({
-                    ...prev,
-                    totalPages: 1,
-                    totalElements: (invoicesResponse || []).length
-                }));
-            }
 
-            setStudents(studentsData.content || studentsData || []);
-            setReport(reportData);
-        } catch (error) {
-            console.error("Failed to fetch data", error);
-            toast({ title: "Error", description: "Failed to load fee data", variant: "destructive" });
-        } finally {
-            setLoading(false);
+            return {
+                invoicesResponse,
+                studentsData,
+                reportData,
+            };
+        },
+        staleTime: 1000 * 60,
+        placeholderData: (previousData) => previousData,
+    });
+
+    useEffect(() => {
+        if (!feeDataQuery.data) return;
+
+        const { invoicesResponse, studentsData, reportData } = feeDataQuery.data;
+
+        if (invoicesResponse && invoicesResponse.content) {
+            setInvoices(invoicesResponse.content);
+            setPagination(prev => ({
+                ...prev,
+                currentPage: invoicesResponse.number,
+                totalPages: invoicesResponse.totalPages,
+                totalElements: invoicesResponse.totalElements
+            }));
+        } else {
+            setInvoices(invoicesResponse || []);
+            setPagination(prev => ({
+                ...prev,
+                totalPages: 1,
+                totalElements: (invoicesResponse || []).length
+            }));
         }
-    };
+
+        setStudents(studentsData.content || studentsData || []);
+        setReport(reportData);
+    }, [feeDataQuery.data]);
+
+    useEffect(() => {
+        if (!feeDataQuery.error) return;
+
+        console.error('Failed to fetch data', feeDataQuery.error);
+        toast({ title: 'Error', description: 'Failed to load fee data', variant: 'destructive' });
+    }, [feeDataQuery.error, toast]);
+
+    const loading = feeDataQuery.isLoading || feeDataQuery.isFetching;
 
     const handlePageChange = (newPage) => {
-        fetchData(newPage);
+        setPagination(prev => ({ ...prev, currentPage: newPage }));
     };
 
     const handleCreateSubmit = async (e) => {
@@ -123,7 +137,7 @@ const FeeManagement = () => {
             });
             toast({ title: "Success", description: "Invoice created successfully" });
             setIsCreateModalOpen(false);
-            fetchData();
+            queryClient.invalidateQueries({ queryKey: ['admin', 'fees-management'] });
             setFormData({ studentId: '', amount: '', feeType: 'TUITION', dueDate: '' });
         } catch (error) {
             toast({ title: "Error", description: "Failed to create invoice", variant: "destructive" });
@@ -142,7 +156,7 @@ const FeeManagement = () => {
             await adminService.markInvoicePaid(currentInvoice.id, paymentMethod, transactionId);
             toast({ title: "Success", description: "Payment recorded successfully" });
             setIsPayModalOpen(false);
-            fetchData();
+            queryClient.invalidateQueries({ queryKey: ['admin', 'fees-management'] });
         } catch (error) {
             toast({ title: "Error", description: "Failed to record payment", variant: "destructive" });
         }

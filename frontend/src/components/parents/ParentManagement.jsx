@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, Edit2, Users, Mail, Phone, Link2, Copy, Check, Lock, Ban, CheckCircle, Eye, Trash2 } from 'lucide-react';
 import adminService from '@/services/adminService';
 import { useToast } from '@/components/ui/use-toast';
@@ -34,7 +35,7 @@ import Pagination from '../common/Pagination';
 
 const ParentManagement = () => {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [parents, setParents] = useState([]);
   const [students, setStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -78,47 +79,55 @@ const ParentManagement = () => {
   const [mappedStudentIds, setMappedStudentIds] = useState([]);
   const [isMapLoading, setIsMapLoading] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async (page = 0) => {
-    try {
-      setLoading(true);
+  const parentDataQuery = useQuery({
+    queryKey: ['admin', 'parents-management', pagination.currentPage, pagination.pageSize],
+    queryFn: async () => {
       const [parentsResponse, studentsData] = await Promise.all([
-        adminService.getParents({ page, size: pagination.pageSize, sort: 'createdAt,desc' }),
-        adminService.getStudents({ size: 1000 }) // Fetch more students for mapping until search is implemented
+        adminService.getParents({ page: pagination.currentPage, size: pagination.pageSize, sort: 'createdAt,desc' }),
+        adminService.getStudents({ size: 1000 })
       ]);
-      
-      // Handle parents pagination
-      if (parentsResponse && parentsResponse.content) {
-        setParents(parentsResponse.content);
-        setPagination(prev => ({
-          ...prev,
-          currentPage: parentsResponse.number,
-          totalPages: parentsResponse.totalPages,
-          totalElements: parentsResponse.totalElements
-        }));
-      } else {
-        setParents(parentsResponse || []);
-        setPagination(prev => ({
-          ...prev,
-          totalPages: 1,
-          totalElements: (parentsResponse || []).length
-        }));
-      }
 
-      setStudents(studentsData.content || studentsData || []);
-    } catch (error) {
-      console.error("Failed to fetch data", error);
-      toast({ title: "Error", description: "Failed to load data", variant: "destructive" });
-    } finally {
-      setLoading(false);
+      return { parentsResponse, studentsData };
+    },
+    staleTime: 1000 * 60,
+    placeholderData: (previousData) => previousData,
+  });
+
+  useEffect(() => {
+    if (!parentDataQuery.data) return;
+
+    const { parentsResponse, studentsData } = parentDataQuery.data;
+    if (parentsResponse && parentsResponse.content) {
+      setParents(parentsResponse.content);
+      setPagination(prev => ({
+        ...prev,
+        currentPage: parentsResponse.number,
+        totalPages: parentsResponse.totalPages,
+        totalElements: parentsResponse.totalElements
+      }));
+    } else {
+      setParents(parentsResponse || []);
+      setPagination(prev => ({
+        ...prev,
+        totalPages: 1,
+        totalElements: (parentsResponse || []).length
+      }));
     }
-  };
+
+    setStudents(studentsData.content || studentsData || []);
+  }, [parentDataQuery.data]);
+
+  useEffect(() => {
+    if (!parentDataQuery.error) return;
+
+    console.error('Failed to fetch data', parentDataQuery.error);
+    toast({ title: 'Error', description: 'Failed to load data', variant: 'destructive' });
+  }, [parentDataQuery.error, toast]);
+
+  const loading = parentDataQuery.isLoading || parentDataQuery.isFetching;
 
   const handlePageChange = (newPage) => {
-    fetchData(newPage);
+    setPagination(prev => ({ ...prev, currentPage: newPage }));
   };
 
   const handleInputChange = (e) => {
@@ -136,7 +145,7 @@ const ParentManagement = () => {
         await adminService.updateParent(editingParentId, formData);
         toast({ title: "Success", description: "Parent updated successfully" });
         setIsAddModalOpen(false);
-        fetchData();
+        queryClient.invalidateQueries({ queryKey: ['admin', 'parents-management'] });
       } else {
         const response = await adminService.createParent(formData);
         // Response contains: { parent, password, userId }
@@ -146,7 +155,7 @@ const ParentManagement = () => {
         });
         setIsAddModalOpen(false);
         setIsSuccessModalOpen(true);
-        fetchData();
+        queryClient.invalidateQueries({ queryKey: ['admin', 'parents-management'] });
       }
       resetForm();
     } catch (error) {
@@ -186,7 +195,7 @@ const ParentManagement = () => {
     try {
       await adminService.updateParentStatus(parent.id, newStatus);
       toast({ title: "Success", description: `Parent ${newStatus.toLowerCase()}` });
-      fetchData();
+      queryClient.invalidateQueries({ queryKey: ['admin', 'parents-management'] });
     } catch (error) {
       toast({ title: "Error", description: "Failed to update status", variant: "destructive" });
     }
@@ -218,7 +227,7 @@ const ParentManagement = () => {
       }
       setIsConfirmModalOpen(false);
       setConfirmAction(null);
-      fetchData();
+      queryClient.invalidateQueries({ queryKey: ['admin', 'parents-management'] });
     } catch (error) {
       toast({ title: "Error", description: `Failed to ${confirmAction.type} parent`, variant: "destructive" });
     }
@@ -282,7 +291,7 @@ const ParentManagement = () => {
       await adminService.mapStudentsToParent(currentParent.id, selectedStudentIds);
       toast({ title: "Success", description: "Students mapped to parent" });
       setIsMapModalOpen(false);
-      fetchData();
+      queryClient.invalidateQueries({ queryKey: ['admin', 'parents-management'] });
     } catch (error) {
       toast({ title: "Error", description: error.response?.data?.error || "Failed to map students", variant: "destructive" });
     } finally {

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -38,12 +39,12 @@ import SuperAdminService from '../../services/superAdminService';
 const SchoolManagement = ({ currentUser }) => {
     const { toast } = useToast();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const [schools, setSchools] = useState([]);
     const [viewMode, setViewMode] = useState('table'); // 'table' or 'card'
     const [searchQuery, setSearchQuery] = useState('');
     const [filters, setFilters] = useState({ city: '', status: '', dateFrom: '', dateTo: '' });
     const [showFilters, setShowFilters] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
 
     // Pagination states
     const [page, setPage] = useState(0);
@@ -61,31 +62,28 @@ const SchoolManagement = ({ currentUser }) => {
     const [confirmAction, setConfirmAction] = useState(null);
     const [confirmationInput, setConfirmationInput] = useState('');
 
-    // Fetch schools
-    const fetchSchools = async () => {
-        setIsLoading(true);
-        try {
-            const params = {
-                page,
-                size: pageSize
-            };
-            const response = await SuperAdminService.getAllSchools(params);
-            const data = response.data;
-            setSchools(data.content || []);
-            setTotalPages(data.totalPages || 0);
-            setTotalElements(data.totalElements || 0);
-        } catch (error) {
-            console.error(error);
-            toast({ title: 'Error', description: 'Failed to fetch schools', variant: 'destructive' });
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const schoolsQuery = useQuery({
+        queryKey: ['superadmin', 'schools-management', page, pageSize],
+        queryFn: () => SuperAdminService.getAllSchools({ page, size: pageSize }),
+        staleTime: 1000 * 60,
+        placeholderData: (previousData) => previousData,
+    });
 
     useEffect(() => {
-        // console.log('SchoolManagement mounted, fetching schools...');
-        fetchSchools();
-    }, [page, pageSize]);
+        if (!schoolsQuery.data) return;
+        const data = schoolsQuery.data.data || {};
+        setSchools(data.content || []);
+        setTotalPages(data.totalPages || 0);
+        setTotalElements(data.totalElements || 0);
+    }, [schoolsQuery.data]);
+
+    useEffect(() => {
+        if (!schoolsQuery.error) return;
+        console.error(schoolsQuery.error);
+        toast({ title: 'Error', description: 'Failed to fetch schools', variant: 'destructive' });
+    }, [schoolsQuery.error, toast]);
+
+    const isLoading = schoolsQuery.isLoading || schoolsQuery.isFetching;
 
     // Filter schools
     const filteredSchools = useMemo(() => {
@@ -118,7 +116,8 @@ const SchoolManagement = ({ currentUser }) => {
         setShowAssignAdminModal(true);
         try {
             // Filter out admins who already have a school assigned
-            const allAdmins = response.data || [];
+            const response = await SuperAdminService.getAllAdmins({ page: 0, size: 1000 });
+            const allAdmins = response.data?.content || response.data || [];
             const unassignedAdmins = allAdmins.filter(admin => !admin.schoolId);
             setAvailableAdmins(unassignedAdmins);
         } catch (error) {
@@ -173,7 +172,7 @@ const SchoolManagement = ({ currentUser }) => {
                     toast({ title: 'School Deleted', description: 'School has been permanently deleted.' });
                     break;
             }
-            fetchSchools(); // Refresh list
+                    queryClient.invalidateQueries({ queryKey: ['superadmin', 'schools-management'] });
         } catch (error) {
             console.error(error);
             toast({ title: 'Error', description: 'Operation failed', variant: 'destructive' });
@@ -192,7 +191,7 @@ const SchoolManagement = ({ currentUser }) => {
                 await SuperAdminService.createSchool(schoolData);
                 toast({ title: 'Success', description: 'School created successfully' });
             }
-            fetchSchools();
+            queryClient.invalidateQueries({ queryKey: ['superadmin', 'schools-management'] });
             setShowAddEditModal(false);
         } catch (error) {
             console.error(error);
@@ -204,7 +203,7 @@ const SchoolManagement = ({ currentUser }) => {
         try {
             await SuperAdminService.assignAdminToSchool(selectedSchool.id, admin.id);
             toast({ title: 'Success', description: `Admin ${admin.name} assigned to school.` });
-            fetchSchools();
+            queryClient.invalidateQueries({ queryKey: ['superadmin', 'schools-management'] });
             setShowAssignAdminModal(false);
         } catch (error) {
             console.error(error);

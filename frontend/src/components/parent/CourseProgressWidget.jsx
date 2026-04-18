@@ -1,29 +1,30 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { BookOpen, TrendingUp, ChevronRight } from 'lucide-react';
 import api from '@/services/api';
 
 const CourseProgressWidget = ({ studentId, onViewAll }) => {
     const [progress, setProgress] = useState([]);
-    const [loading, setLoading] = useState(true);
+
+    const progressQuery = useQuery({
+        queryKey: ['parent', 'course-progress', studentId],
+        queryFn: () => api.get(`/parent/course-progress/${studentId}`),
+        enabled: Boolean(studentId),
+        staleTime: 1000 * 60,
+    });
 
     useEffect(() => {
-        if (studentId) {
-            fetchProgress();
-        }
-    }, [studentId]);
+        if (!progressQuery.data) return;
+        setProgress(progressQuery.data.data || []);
+    }, [progressQuery.data]);
 
-    const fetchProgress = async () => {
-        try {
-            setLoading(true);
-            const response = await api.get(`/parent/course-progress/${studentId}`);
-            setProgress(response.data);
-        } catch (error) {
-            console.error('Error fetching course progress:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    useEffect(() => {
+        if (!progressQuery.error) return;
+        console.error('Error fetching course progress:', progressQuery.error);
+    }, [progressQuery.error]);
+
+    const loading = progressQuery.isLoading || progressQuery.isFetching;
 
     const getProgressColor = (percentage) => {
         if (percentage >= 80) return 'bg-green-500';

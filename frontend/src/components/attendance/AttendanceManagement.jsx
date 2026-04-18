@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Calendar, Search, Edit2, CheckCircle, XCircle, Clock, BarChart2, CalendarDays, ArrowLeft, Download, User } from 'lucide-react';
 import adminService from '@/services/adminService';
 import Pagination from '../common/Pagination';
@@ -36,12 +37,13 @@ import {
 
 const AttendanceManagement = ({ currentUser }) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const isTeacher = currentUser?.role === 'teacher';
 
   // Views: 'daily', 'report', 'mark'
   const [view, setView] = useState('daily');
 
-  const [loading, setLoading] = useState(false);
+  const [manualLoading, setManualLoading] = useState(false);
   const [attendance, setAttendance] = useState([]);
   const [classes, setClasses] = useState([]);
 
@@ -89,88 +91,102 @@ const AttendanceManagement = ({ currentUser }) => {
   const [editReason, setEditReason] = useState('');
   const [isEditWithinWindow, setIsEditWithinWindow] = useState(true); // Track if within 24-hour edit window
 
-  useEffect(() => {
-    fetchClasses();
-    fetchAllStudents();
-  }, []);
-
-  useEffect(() => {
-    if (view === 'daily' && selectedDate) {
-      fetchDailyAttendance();
-    }
-    // Class report now uses Search button, no auto-fetch needed
-  }, [selectedDate, selectedClassId, view, page, pageSize]);
-
-  const fetchClasses = async () => {
-    try {
-      let data;
+  const classesQuery = useQuery({
+    queryKey: ['attendance', 'classes', isTeacher],
+    queryFn: async () => {
       if (isTeacher) {
         const response = await api.get('/teacher/attendance/classes');
-        data = response.data;
-        // Auto-select the first (and only) class for teachers
-        if (data && data.length > 0) {
-          setSelectedClassId(data[0].id);
-        }
-      } else {
-        data = await adminService.getClasses();
+        return response.data || [];
       }
-      setClasses(data.content || data || []);
-    } catch (error) {
-      console.error("Failed to fetch classes", error);
+
+      const data = await adminService.getClasses();
+      return data.content || data || [];
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  useEffect(() => {
+    if (!classesQuery.data) return;
+
+    setClasses(classesQuery.data);
+    if (isTeacher && classesQuery.data.length > 0) {
+      setSelectedClassId(classesQuery.data[0].id);
     }
-  };
+  }, [classesQuery.data, isTeacher]);
 
-  const fetchAllStudents = async () => {
-    try {
-      let response;
-      if (isTeacher) {
-        response = await api.get('/teacher/students');
-      } else {
-        response = await api.get('/admin/students');
-      }
-      setAllStudents(response.data.content || response.data || []);
-    } catch (error) {
-      console.error("Failed to fetch students", error);
-    }
-  };
+  useEffect(() => {
+    if (!classesQuery.error) return;
+    console.error('Failed to fetch classes', classesQuery.error);
+  }, [classesQuery.error]);
 
-  const fetchDailyAttendance = async () => {
-    try {
-      setLoading(true);
-      // Find Class Name from ID
-      const clsObj = classes.find(c => c.id === selectedClassId);
-      const className = clsObj ? clsObj.name : null;
+  const allStudentsQuery = useQuery({
+    queryKey: ['attendance', 'all-students', isTeacher],
+    queryFn: async () => {
+      const response = isTeacher
+        ? await api.get('/teacher/students')
+        : await api.get('/admin/students');
 
-      let response;
+      return response.data.content || response.data || [];
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  useEffect(() => {
+    if (!allStudentsQuery.data) return;
+    setAllStudents(allStudentsQuery.data);
+  }, [allStudentsQuery.data]);
+
+  useEffect(() => {
+    if (!allStudentsQuery.error) return;
+    console.error('Failed to fetch students', allStudentsQuery.error);
+  }, [allStudentsQuery.error]);
+
+  const selectedClassObj = classes.find(c => c.id === selectedClassId);
+  const selectedClassName = selectedClassObj ? selectedClassObj.name : null;
+
+  const dailyAttendanceQuery = useQuery({
+    queryKey: ['attendance', 'daily', isTeacher, selectedDate, selectedClassId, selectedClassName, page, pageSize, view],
+    enabled: view === 'daily' && Boolean(selectedDate),
+    queryFn: async () => {
       if (isTeacher) {
         const params = { date: selectedDate, page, size: pageSize };
-        if (className) params.className = className;
-        response = await api.get('/teacher/attendance', { params });
-      } else {
-        const params = { date: selectedDate, page, size: pageSize };
-        if (className && className !== 'all') params.className = className;
-        response = await adminService.getAttendance(params);
+        if (selectedClassName) params.className = selectedClassName;
+        const response = await api.get('/teacher/attendance', { params });
+        return response.data;
       }
-      
-      if (response && response.content) {
-        setAttendance(response.content);
-        setTotalPages(response.totalPages);
-        setTotalElements(response.totalElements);
-      } else {
-        setAttendance(Array.isArray(response) ? response : []);
-        setTotalPages(1);
-        setTotalElements(Array.isArray(response) ? response.length : 0);
-      }
-    } catch (error) {
-      console.error("Failed to fetch attendance", error);
-    } finally {
-      setLoading(false);
+
+      const params = { date: selectedDate, page, size: pageSize };
+      if (selectedClassName && selectedClassName !== 'all') params.className = selectedClassName;
+      return adminService.getAttendance(params);
+    },
+    placeholderData: (previousData) => previousData,
+  });
+
+  useEffect(() => {
+    if (!dailyAttendanceQuery.data) return;
+
+    const response = dailyAttendanceQuery.data;
+    if (response && response.content) {
+      setAttendance(response.content);
+      setTotalPages(response.totalPages);
+      setTotalElements(response.totalElements);
+    } else {
+      setAttendance(Array.isArray(response) ? response : []);
+      setTotalPages(1);
+      setTotalElements(Array.isArray(response) ? response.length : 0);
     }
-  };
+  }, [dailyAttendanceQuery.data]);
+
+  useEffect(() => {
+    if (!dailyAttendanceQuery.error) return;
+    console.error('Failed to fetch attendance', dailyAttendanceQuery.error);
+  }, [dailyAttendanceQuery.error]);
+
+  const loading = manualLoading || dailyAttendanceQuery.isLoading || dailyAttendanceQuery.isFetching;
 
   const fetchReport = async () => {
     if (selectedClassId === 'all') return;
-    setLoading(true);
+    setManualLoading(true);
     setSingleDayStudents([]); // Clear single day data
     try {
       const dates = getDatesInRange(classStartDate, classEndDate);
@@ -251,7 +267,7 @@ const AttendanceManagement = ({ currentUser }) => {
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      setManualLoading(false);
     }
   };
 
@@ -260,7 +276,7 @@ const AttendanceManagement = ({ currentUser }) => {
       toast({ title: "Error", description: "Please select a student", variant: "destructive" });
       return;
     }
-    setLoading(true);
+    setManualLoading(true);
     try {
       const response = await api.get(`/attendance/student/${selectedStudentId}`, {
         params: { startDate: studentStartDate, endDate: studentEndDate }
@@ -278,7 +294,7 @@ const AttendanceManagement = ({ currentUser }) => {
       console.error("Failed to fetch student attendance", error);
       toast({ title: "Error", description: "Failed to fetch student attendance", variant: "destructive" });
     } finally {
-      setLoading(false);
+      setManualLoading(false);
     }
   };
 
@@ -322,7 +338,7 @@ const AttendanceManagement = ({ currentUser }) => {
       }
       toast({ title: "Success", description: "Attendance updated" });
       setIsEditModalOpen(false);
-      fetchDailyAttendance();
+      queryClient.invalidateQueries({ queryKey: ['attendance', 'daily'] });
     } catch (error) {
       toast({ title: "Error", description: "Failed to update", variant: "destructive" });
     }
@@ -424,7 +440,7 @@ const AttendanceManagement = ({ currentUser }) => {
       </div>
 
       {view === 'mark' ? (
-        <MarkAttendance onBack={() => { setView('daily'); fetchDailyAttendance(); }} onSuccess={() => { setView('daily'); fetchDailyAttendance(); }} />
+        <MarkAttendance onBack={() => { setView('daily'); queryClient.invalidateQueries({ queryKey: ['attendance', 'daily'] }); }} onSuccess={() => { setView('daily'); queryClient.invalidateQueries({ queryKey: ['attendance', 'daily'] }); }} />
       ) : view === 'report' ? (
         <div className="space-y-4">
           {/* Sub-tab toggle for Class vs Student attendance */}
@@ -763,7 +779,7 @@ const AttendanceManagement = ({ currentUser }) => {
                 </SelectContent>
               </Select>
             )}
-            <Button onClick={fetchDailyAttendance} variant="outline" size="icon">
+            <Button onClick={() => dailyAttendanceQuery.refetch()} variant="outline" size="icon">
               <Search className="w-4 h-4" />
             </Button>
           </div>

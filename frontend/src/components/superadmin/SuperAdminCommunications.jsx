@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Send, Bell, Users, User, History, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,12 +18,12 @@ import SuperAdminService from '../../services/superAdminService';
 
 const SuperAdminCommunications = ({ currentUser }) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('DIRECT');
 
   // Data state
   const [admins, setAdmins] = useState([]);
   const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(false);
 
   // Direct Message state
   const [dmAdminId, setDmAdminId] = useState('');
@@ -33,35 +34,43 @@ const SuperAdminCommunications = ({ currentUser }) => {
   const [bcSubject, setBcSubject] = useState('');
   const [bcBody, setBcBody] = useState('');
 
+  const adminsQuery = useQuery({
+    queryKey: ['superadmin', 'communications', 'admins'],
+    queryFn: () => SuperAdminService.getAdminsForComms(),
+    staleTime: 1000 * 60,
+  });
+
+  const historyQuery = useQuery({
+    queryKey: ['superadmin', 'communications', 'history'],
+    queryFn: () => SuperAdminService.getCommHistory(),
+    staleTime: 1000 * 30,
+  });
+
   useEffect(() => {
-    fetchAdmins();
-    fetchHistory();
-  }, []);
+    if (!adminsQuery.data) return;
+    setAdmins(adminsQuery.data.data || []);
+  }, [adminsQuery.data]);
 
-  const fetchAdmins = async () => {
-    try {
-      const res = await SuperAdminService.getAdminsForComms();
-      setAdmins(res.data);
-    } catch (error) {
-      console.error('Failed to fetch admins:', error);
-      toast({ title: "Error", description: "Failed to load admins list.", variant: "destructive" });
-    }
-  };
+  useEffect(() => {
+    if (!historyQuery.data) return;
+    const data = historyQuery.data.data;
+    const items = Array.isArray(data) ? data : (Array.isArray(data?.content) ? data.content : []);
+    setHistory(items);
+  }, [historyQuery.data]);
 
-  const fetchHistory = async () => {
-    setLoading(true);
-    try {
-      const res = await SuperAdminService.getCommHistory();
-      const data = res.data;
-      // Backend returns a Spring Page object; extract content array safely
-      const items = Array.isArray(data) ? data : (Array.isArray(data?.content) ? data.content : []);
-      setHistory(items);
-    } catch (error) {
-      console.error('Failed to fetch history:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    if (!adminsQuery.error) return;
+    console.error('Failed to fetch admins:', adminsQuery.error);
+    toast({ title: 'Error', description: 'Failed to load admins list.', variant: 'destructive' });
+  }, [adminsQuery.error, toast]);
+
+  useEffect(() => {
+    if (!historyQuery.error) return;
+    console.error('Failed to fetch history:', historyQuery.error);
+    toast({ title: 'Error', description: 'Failed to load communication history.', variant: 'destructive' });
+  }, [historyQuery.error, toast]);
+
+  const loading = historyQuery.isLoading || historyQuery.isFetching;
 
   const handleSendDirect = async () => {
     if (!dmSubject.trim() || !dmBody.trim()) {
@@ -83,7 +92,7 @@ const SuperAdminCommunications = ({ currentUser }) => {
       setDmSubject('');
       setDmBody('');
       setDmAdminId('');
-      fetchHistory();
+      queryClient.invalidateQueries({ queryKey: ['superadmin', 'communications', 'history'] });
     } catch (error) {
       console.error('Error sending DM:', error);
       toast({ title: "Error", description: "Failed to send message.", variant: "destructive" });
@@ -104,7 +113,7 @@ const SuperAdminCommunications = ({ currentUser }) => {
       toast({ title: "Success!", description: "Broadcast sent to all admins successfully." });
       setBcSubject('');
       setBcBody('');
-      fetchHistory();
+      queryClient.invalidateQueries({ queryKey: ['superadmin', 'communications', 'history'] });
     } catch (error) {
       console.error('Error sending broadcast:', error);
       toast({ title: "Error", description: "Failed to send broadcast.", variant: "destructive" });
@@ -255,7 +264,7 @@ const SuperAdminCommunications = ({ currentUser }) => {
                 <CardTitle>Sent History</CardTitle>
                 <CardDescription>View all messages and broadcasts sent by you to admins.</CardDescription>
               </div>
-              <Button variant="outline" size="sm" onClick={fetchHistory}>
+              <Button variant="outline" size="sm" onClick={() => historyQuery.refetch()}>
                 <History className="w-4 h-4 mr-2" /> Refresh
               </Button>
             </CardHeader>

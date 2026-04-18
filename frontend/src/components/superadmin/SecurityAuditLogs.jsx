@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Shield,
@@ -36,7 +37,6 @@ import adminService from '@/services/adminService';
 
 const SecurityAuditLogs = ({ currentUser }) => {
     const { toast } = useToast();
-    const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('logins');
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
@@ -65,56 +65,50 @@ const SecurityAuditLogs = ({ currentUser }) => {
     const [showPasswordRules, setShowPasswordRules] = useState(false);
     const [passwordRules, setPasswordRules] = useState(initialPasswordRules);
 
-    React.useEffect(() => {
-        // Only fetch dashboard stats once on mount
-        if (securityStats.totalLogins24h === 0 && securityStats.lastSecurityAudit === '-') {
-            fetchDashboardStats();
-        }
-    }, []);
+    const securityStatsQuery = useQuery({
+        queryKey: ['superadmin', 'security-stats'],
+        queryFn: () => adminService.getSecurityLogs(),
+        staleTime: 1000 * 60,
+    });
+
+    const securityLogsQuery = useQuery({
+        queryKey: ['superadmin', 'security-logs', activeTab, page, pageSize],
+        queryFn: () => adminService.getPaginatedAuditLogs({ page, size: pageSize, tab: activeTab }),
+        staleTime: 1000 * 30,
+        placeholderData: (previousData) => previousData,
+    });
 
     React.useEffect(() => {
-        // Fetch logs when page, pageSize, or activeTab changes
-        fetchSecurityLogs();
-    }, [page, pageSize, activeTab]);
+        if (!securityStatsQuery.data) return;
+        setSecurityStats(securityStatsQuery.data.securityStats || {
+            totalLogins24h: 0, failedLogins24h: 0, activeSessions: 0, blockedIPs: 0, lastSecurityAudit: '-'
+        });
+    }, [securityStatsQuery.data]);
 
-    const fetchDashboardStats = async () => {
-        try {
-            const dashboardData = await adminService.getSecurityLogs();
-            setSecurityStats(dashboardData.securityStats || {
-                totalLogins24h: 0, failedLogins24h: 0, activeSessions: 0, blockedIPs: 0, lastSecurityAudit: '-'
-            });
-        } catch (error) {
-            console.error("Failed to fetch security dashboard stats", error);
-        }
-    };
+    React.useEffect(() => {
+        if (!securityLogsQuery.data) return;
 
-    const fetchSecurityLogs = async () => {
-        setIsLoading(true);
-        try {
-            // Fetch Paginated Logs for the currently active view
-            const params = { page, size: pageSize, tab: activeTab };
-            const paginatedData = await adminService.getPaginatedAuditLogs(params);
-            
-            // Map data correctly based on active tab
-            const content = paginatedData.content || [];
-            setTotalPages(paginatedData.totalPages || 0);
-            setTotalElements(paginatedData.totalElements || 0);
+        const paginatedData = securityLogsQuery.data;
+        const content = paginatedData.content || [];
+        setTotalPages(paginatedData.totalPages || 0);
+        setTotalElements(paginatedData.totalElements || 0);
 
-            if (activeTab === 'logins') setLoginHistory(content);
-            else if (activeTab === 'activity') setActivityLogs(content);
-            else if (activeTab === 'changes') setDataChangeLogs(content);
+        if (activeTab === 'logins') setLoginHistory(content);
+        else if (activeTab === 'activity') setActivityLogs(content);
+        else if (activeTab === 'changes') setDataChangeLogs(content);
+    }, [securityLogsQuery.data, activeTab]);
 
-        } catch (error) {
-            console.error("Failed to fetch search logs", error);
-            toast({
-                title: "Error",
-                description: "Failed to load security logs from the server.",
-                variant: "destructive"
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    React.useEffect(() => {
+        if (!securityLogsQuery.error) return;
+        console.error('Failed to fetch search logs', securityLogsQuery.error);
+        toast({
+            title: 'Error',
+            description: 'Failed to load security logs from the server.',
+            variant: 'destructive'
+        });
+    }, [securityLogsQuery.error, toast]);
+
+    const isLoading = securityStatsQuery.isLoading || securityLogsQuery.isLoading || securityLogsQuery.isFetching;
 
     // Filter login history
     const filteredLogins = useMemo(() => {

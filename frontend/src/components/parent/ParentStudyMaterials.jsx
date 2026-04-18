@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { BookOpen, Download, FileText, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,34 +11,32 @@ const ParentStudyMaterials = ({ currentUser }) => {
     const { toast } = useToast();
     const { selectedChild } = useParent();
     const [materials, setMaterials] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
     const [filterType, setFilterType] = useState('ALL');
 
+    const materialsQuery = useQuery({
+        queryKey: ['parent', 'study-materials', selectedChild?.id],
+        queryFn: () => api.get(`/parent/study-materials/${selectedChild.id}`),
+        enabled: Boolean(selectedChild?.id),
+        staleTime: 1000 * 60,
+    });
+
     useEffect(() => {
-        if (selectedChild) {
-            fetchStudyMaterials();
-        }
-    }, [selectedChild]);
+        if (!materialsQuery.data) return;
+        setMaterials(materialsQuery.data.data || []);
+    }, [materialsQuery.data]);
 
-    const fetchStudyMaterials = async () => {
-        if (!selectedChild) return;
+    useEffect(() => {
+        if (!materialsQuery.error) return;
+        console.error('Error fetching study materials:', materialsQuery.error);
+        toast({
+            title: 'Error',
+            description: 'Failed to load study materials',
+            variant: 'destructive'
+        });
+        setMaterials([]);
+    }, [materialsQuery.error, toast]);
 
-        try {
-            setIsLoading(true);
-            const response = await api.get(`/parent/study-materials/${selectedChild.id}`);
-            setMaterials(response.data || []);
-        } catch (error) {
-            console.error('Error fetching study materials:', error);
-            toast({
-                title: "Error",
-                description: "Failed to load study materials",
-                variant: "destructive"
-            });
-            setMaterials([]);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const isLoading = materialsQuery.isLoading || materialsQuery.isFetching;
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);

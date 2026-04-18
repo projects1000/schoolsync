@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, ChevronDown, ChevronUp, CheckCircle2, Circle, Calendar, Filter, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,6 @@ import api from '@/services/api';
 const ParentCourseHandouts = ({ currentUser, onBack }) => {
     const { selectedChild } = useParent();
     const [handouts, setHandouts] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [expandedHandout, setExpandedHandout] = useState(null);
     const [filterSubject, setFilterSubject] = useState('');
     const { toast } = useToast();
@@ -17,24 +17,25 @@ const ParentCourseHandouts = ({ currentUser, onBack }) => {
     // Get unique subjects for filter dropdown
     const uniqueSubjects = [...new Set(handouts.map(h => h.subject))];
 
-    useEffect(() => {
-        if (selectedChild) {
-            fetchHandouts();
-        }
-    }, [selectedChild]);
+    const handoutsQuery = useQuery({
+        queryKey: ['parent', 'course-handouts', selectedChild?.id],
+        queryFn: () => api.get(`/parent/course-handouts/${selectedChild.id}`),
+        enabled: Boolean(selectedChild?.id),
+        staleTime: 1000 * 60,
+    });
 
-    const fetchHandouts = async () => {
-        try {
-            setLoading(true);
-            const response = await api.get(`/parent/course-handouts/${selectedChild.id}`);
-            setHandouts(response.data);
-        } catch (error) {
-            console.error('Error fetching handouts:', error);
-            toast({ title: 'Failed to load course handouts', variant: 'destructive' });
-        } finally {
-            setLoading(false);
-        }
-    };
+    useEffect(() => {
+        if (!handoutsQuery.data) return;
+        setHandouts(handoutsQuery.data.data || []);
+    }, [handoutsQuery.data]);
+
+    useEffect(() => {
+        if (!handoutsQuery.error) return;
+        console.error('Error fetching handouts:', handoutsQuery.error);
+        toast({ title: 'Failed to load course handouts', variant: 'destructive' });
+    }, [handoutsQuery.error, toast]);
+
+    const loading = handoutsQuery.isLoading || handoutsQuery.isFetching;
 
     const getProgressColor = (percentage) => {
         if (percentage >= 80) return 'bg-green-500';

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users,
@@ -25,9 +26,9 @@ import Pagination from '../common/Pagination';
 
 const AdminManagement = ({ currentUser }) => {
     const { toast } = useToast();
+    const queryClient = useQueryClient();
     const [admins, setAdmins] = useState([]);
     const [schools, setSchools] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     
@@ -46,40 +47,47 @@ const AdminManagement = ({ currentUser }) => {
     const [confirmAction, setConfirmAction] = useState(null);
     const [activeDropdown, setActiveDropdown] = useState(null);
 
-    useEffect(() => {
-        fetchData();
-    }, [page, pageSize]);
-
-    const fetchData = async () => {
-        try {
-            setIsLoading(true);
+    const adminDataQuery = useQuery({
+        queryKey: ['superadmin', 'admins-management', page, pageSize],
+        queryFn: async () => {
             const params = { page, size: pageSize };
             const [adminsRes, schoolsRes] = await Promise.all([
                 SuperAdminService.getAllAdmins(params),
-                SuperAdminService.getAllSchools({ page: 0, size: 1000 }) // Get all schools for dropdowns
+                SuperAdminService.getAllSchools({ page: 0, size: 1000 })
             ]);
-            
-            const adminsData = adminsRes.data;
-            setAdmins(adminsData.content || []);
-            setTotalPages(adminsData.totalPages || 0);
-            setTotalElements(adminsData.totalElements || 0);
-            
-            // For schools, check if it's a page or list
-            const schoolsData = schoolsRes.data;
-            setSchools(schoolsData.content || schoolsData || []);
-        } catch (error) {
-            console.error("Failed to load admin data:", error);
-            setAdmins([]);
-            setSchools([]);
-            toast({
-                title: 'Error',
-                description: 'Failed to load admins and schools',
-                variant: 'destructive'
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    };
+            return {
+                adminsData: adminsRes.data,
+                schoolsData: schoolsRes.data,
+            };
+        },
+        staleTime: 1000 * 60,
+        placeholderData: (previousData) => previousData,
+    });
+
+    useEffect(() => {
+        if (!adminDataQuery.data) return;
+
+        const { adminsData, schoolsData } = adminDataQuery.data;
+        setAdmins(adminsData.content || []);
+        setTotalPages(adminsData.totalPages || 0);
+        setTotalElements(adminsData.totalElements || 0);
+        setSchools(schoolsData.content || schoolsData || []);
+    }, [adminDataQuery.data]);
+
+    useEffect(() => {
+        if (!adminDataQuery.error) return;
+
+        console.error('Failed to load admin data:', adminDataQuery.error);
+        setAdmins([]);
+        setSchools([]);
+        toast({
+            title: 'Error',
+            description: 'Failed to load admins and schools',
+            variant: 'destructive'
+        });
+    }, [adminDataQuery.error, toast]);
+
+    const isLoading = adminDataQuery.isLoading || adminDataQuery.isFetching;
 
     // Get schools without admins (for creating new admin)
     const availableSchools = useMemo(() => {
@@ -108,7 +116,7 @@ const AdminManagement = ({ currentUser }) => {
             await SuperAdminService.createAdmin(adminData);
             toast({ title: 'Success', description: `Admin ${adminData.name} created successfully.` });
             setShowCreateModal(false);
-            fetchData(); // Refresh list
+            queryClient.invalidateQueries({ queryKey: ['superadmin', 'admins-management'] });
         } catch (error) {
             console.error("Create admin error:", error);
             const message = error.response?.data?.message || 'Failed to create admin';
@@ -156,7 +164,7 @@ const AdminManagement = ({ currentUser }) => {
                     toast({ title: 'Info', description: 'Force logout logic pending backend implementation' });
                     break;
             }
-            fetchData();
+            queryClient.invalidateQueries({ queryKey: ['superadmin', 'admins-management'] });
         } catch (error) {
             console.error("Action error:", error);
             toast({ title: 'Error', description: 'Action failed', variant: 'destructive' });

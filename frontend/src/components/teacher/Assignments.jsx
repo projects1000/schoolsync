@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, FileText, Calendar, Download, Trash2, Paperclip } from 'lucide-react';
 import api from '@/services/api';
 import { useToast } from '@/components/ui/use-toast';
@@ -25,10 +26,10 @@ import { Badge } from '@/components/ui/badge';
 
 const Assignments = ({ currentUser }) => {
     const { toast } = useToast();
+    const queryClient = useQueryClient();
     const [classes, setClasses] = useState([]);
     const [selectedClassId, setSelectedClassId] = useState('');
     const [assignments, setAssignments] = useState([]);
-    const [loading, setLoading] = useState(false);
 
     // Create Modal State
     const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -40,47 +41,48 @@ const Assignments = ({ currentUser }) => {
         file: null
     });
 
-    useEffect(() => {
-        fetchClasses();
-    }, []);
+    const classesQuery = useQuery({
+        queryKey: ['teacher', 'assignments', 'classes'],
+        queryFn: () => api.get('/teacher/classes'),
+        staleTime: 1000 * 60,
+    });
+
+    const assignmentsQuery = useQuery({
+        queryKey: ['teacher', 'assignments', 'list', selectedClassId],
+        queryFn: () => api.get(`/teacher/assignments/class/${selectedClassId}`),
+        enabled: Boolean(selectedClassId) && selectedClassId !== 'all',
+        staleTime: 1000 * 30,
+    });
 
     useEffect(() => {
-        if (selectedClassId && selectedClassId !== 'all') {
-            fetchAssignments();
-        } else {
-            setAssignments([]);
+        if (!classesQuery.data) return;
+        const classesData = classesQuery.data.data || [];
+        setClasses(classesData);
+        if (!selectedClassId && classesData.length > 0) {
+            setSelectedClassId(classesData[0].id);
         }
-    }, [selectedClassId]);
+    }, [classesQuery.data, selectedClassId]);
 
-    const fetchClasses = async () => {
-        try {
-            // Use /teacher/classes which returns ALL assigned classes (subject teacher + class teacher)
-            // instead of /teacher/attendance/classes which only returns class teacher classes
-            const res = await api.get('/teacher/classes');
-            setClasses(res.data);
-            if (res.data.length > 0) {
-                setSelectedClassId(res.data[0].id);
-                // Pre-select first class for create form too if needed, but we handle that in modal
+    useEffect(() => {
+        if (!assignmentsQuery.data) {
+            if (!selectedClassId || selectedClassId === 'all') {
+                setAssignments([]);
             }
-        } catch (err) {
-            console.error(err);
+            return;
         }
-    };
+        const data = assignmentsQuery.data.data;
+        const items = Array.isArray(data) ? data : (Array.isArray(data?.content) ? data.content : []);
+        setAssignments(items);
+    }, [assignmentsQuery.data, selectedClassId]);
 
-    const fetchAssignments = async () => {
-        setLoading(true);
-        try {
-            const res = await api.get(`/teacher/assignments/class/${selectedClassId}`);
-            const data = res.data;
-            const items = Array.isArray(data) ? data : (Array.isArray(data?.content) ? data.content : []);
-            setAssignments(items);
-        } catch (err) {
-            console.error(err);
-            toast({ title: "Error", description: "Failed to fetch assignments", variant: "destructive" });
-        } finally {
-            setLoading(false);
+    useEffect(() => {
+        if (assignmentsQuery.error) {
+            console.error(assignmentsQuery.error);
+            toast({ title: 'Error', description: 'Failed to fetch assignments', variant: 'destructive' });
         }
-    };
+    }, [assignmentsQuery.error, toast]);
+
+    const loading = assignmentsQuery.isLoading || assignmentsQuery.isFetching;
 
     const handleFileChange = (e) => {
         if (e.target.files && e.target.files[0]) {
@@ -110,8 +112,8 @@ const Assignments = ({ currentUser }) => {
             toast({ title: "Success", description: "Assignment created" });
             setIsCreateOpen(false);
             setFormData({ title: '', description: '', dueDate: '', classId: '', file: null });
-            if (selectedClassId === formData.classId) {
-                fetchAssignments();
+            if (formData.classId) {
+                queryClient.invalidateQueries({ queryKey: ['teacher', 'assignments', 'list', formData.classId] });
             }
         } catch (err) {
             console.error(err);

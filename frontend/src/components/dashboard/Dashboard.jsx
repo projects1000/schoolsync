@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   Users,
@@ -18,37 +19,34 @@ import { useToast } from '@/components/ui/use-toast';
 
 const Dashboard = ({ currentUser }) => {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState({
+  const canLoadDashboard = currentUser?.role === 'admin' || currentUser?.role === 'superadmin';
+
+  const dashboardQuery = useQuery({
+    queryKey: ['admin', 'dashboard-stats'],
+    queryFn: adminService.getDashboardStats,
+    enabled: canLoadDashboard,
+    staleTime: 1000 * 60,
+  });
+
+  useEffect(() => {
+    if (!dashboardQuery.error) return;
+
+    console.error('Failed to fetch dashboard stats', dashboardQuery.error);
+    toast({
+      title: 'Error',
+      description: 'Failed to load dashboard data. Please try again.',
+      variant: 'destructive'
+    });
+  }, [dashboardQuery.error, toast]);
+
+  const loading = canLoadDashboard ? (dashboardQuery.isLoading || dashboardQuery.isFetching) : false;
+  const dashboardData = dashboardQuery.data || {
     totalStudents: 0,
     totalTeachers: 0,
     attendancePercentage: 0,
     pendingFees: 0,
     recentActivities: []
-  });
-
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (currentUser?.role !== 'admin' && currentUser?.role !== 'superadmin') return;
-
-      try {
-        setLoading(true);
-        const data = await adminService.getDashboardStats();
-        setDashboardData(data);
-      } catch (error) {
-        console.error("Failed to fetch dashboard stats", error);
-        toast({
-          title: "Error",
-          description: "Failed to load dashboard data. Please try again.",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, [currentUser, toast]);
+  };
 
   const stats = [
     { title: 'Total Students', value: (dashboardData.totalStudents || 0).toString(), change: '', trend: 'neutral', icon: Users, color: 'from-blue-500 to-blue-600' },
