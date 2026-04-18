@@ -89,8 +89,8 @@ const FeatureCard = ({ icon: Icon, title, description, index }) => {
 
       <div className="relative z-10">
         <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-110"
-          style={{ background: 'linear-gradient(135deg, #e2dfff 0%, #eaddff 100%)' }}>
-          <Icon className="w-7 h-7" style={{ color: '#4f46e5' }} />
+          style={{ background: 'linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)' }}>
+          <Icon className="w-7 h-7" style={{ color: '#059669' }} />
         </div>
         <h3 className="text-lg font-bold mb-2" style={{ color: '#191c1e', fontFamily: "'Space Grotesk', sans-serif" }}>
           {title}
@@ -102,7 +102,7 @@ const FeatureCard = ({ icon: Icon, title, description, index }) => {
 
       {/* Bottom accent on hover */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 group-hover:w-3/4 h-0.5 rounded-full transition-all duration-500"
-        style={{ background: 'linear-gradient(90deg, #4f46e5, #712ae2)' }} />
+        style={{ background: 'linear-gradient(90deg, #059669, #059669)' }} />
     </motion.div>
   );
 };
@@ -124,7 +124,7 @@ const TestimonialCard = ({ quote, name, role, avatar, index }) => {
       }}
     >
       {/* Quote mark */}
-      <div className="text-5xl font-serif leading-none mb-4" style={{ color: '#c3c0ff' }}>"</div>
+      <div className="text-5xl font-serif leading-none mb-4" style={{ color: '#6EE7B7' }}>"</div>
       <p className="text-sm leading-relaxed flex-1 mb-6" style={{ color: '#464555', lineHeight: 1.8 }}>
         {quote}
       </p>
@@ -246,10 +246,10 @@ const LandingPage = () => {
   ];
 
   const services = [
-    { icon: Shield, title: 'Multi-Role Access', description: 'Dedicated dashboards for Super Admins, School Admins, Teachers, and Parents — each tailored for their unique workflow.', color: '#4f46e5' },
-    { icon: BarChart3, title: 'Real-Time Analytics', description: 'Live dashboards with actionable insights on attendance, fees, academic performance, and school-wide metrics.', color: '#712ae2' },
-    { icon: Globe, title: 'Cloud-Based SaaS', description: 'Access your school data anywhere, anytime. Secure cloud infrastructure with automatic backups and 99.9% uptime.', color: '#4c3f7e' },
-    { icon: Smartphone, title: 'Mobile Responsive', description: 'Fully optimized for all devices. Manage your school on the go from any smartphone, tablet, or desktop.', color: '#3525cd' },
+    { icon: Shield, title: 'Multi-Role Access', description: 'Dedicated dashboards for Super Admins, School Admins, Teachers, and Parents — each tailored for their unique workflow.', color: '#059669' },
+    { icon: BarChart3, title: 'Real-Time Analytics', description: 'Live dashboards with actionable insights on attendance, fees, academic performance, and school-wide metrics.', color: '#059669' },
+    { icon: Globe, title: 'Cloud-Based SaaS', description: 'Access your school data anywhere, anytime. Secure cloud infrastructure with automatic backups and 99.9% uptime.', color: '#064E3B' },
+    { icon: Smartphone, title: 'Mobile Responsive', description: 'Fully optimized for all devices. Manage your school on the go from any smartphone, tablet, or desktop.', color: '#064E3B' },
   ];
 
   const testimonials = [
@@ -257,19 +257,19 @@ const LandingPage = () => {
       quote: 'SchoolSync has completely transformed how we handle our administrative tasks. The interface is intuitive and the analytics are groundbreaking. We saved 20 hours per week.',
       name: 'Dr. Priya Sharma',
       role: 'Principal, Little Steps Academy',
-      avatar: { color1: '#4f46e5', color2: '#712ae2' },
+      avatar: { color1: '#059669', color2: '#059669' },
     },
     {
       quote: 'The parent engagement portal alone makes this worth every penny. Communication has never been this streamlined. Parents love the real-time updates on their children.',
       name: 'Rajesh Kumar',
       role: 'School Administrator, Bright Future School',
-      avatar: { color1: '#712ae2', color2: '#8a4cfc' },
+      avatar: { color1: '#059669', color2: '#10B981' },
     },
     {
       quote: 'As a teacher, having automated attendance and grade management has freed me to focus on what matters most — teaching. Course handouts and resources are brilliantly organized.',
       name: 'Ananya Mehta',
       role: 'Senior Teacher, Sunrise Playschool',
-      avatar: { color1: '#4c3f7e', color2: '#645797' },
+      avatar: { color1: '#064E3B', color2: '#645797' },
     },
   ];
 
@@ -331,7 +331,7 @@ const LandingPage = () => {
                     whileHover={{ scale: 1.03, boxShadow: '0 8px 30px rgba(255,255,255,0.15)' }}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => navigate('/login')}
-                    className="px-6 py-2.5 rounded-full text-sm font-semibold text-indigo-700 transition-all duration-300"
+                    className="px-6 py-2.5 rounded-full text-sm font-semibold text-emerald-700 transition-all duration-300"
                     style={{ background: 'rgba(255,255,255,0.95)' }}
                   >
                     Login
@@ -381,7 +381,7 @@ const LandingPage = () => {
                     <button
                       onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}
                       className="mt-2 block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold text-white"
-                      style={{ background: 'linear-gradient(135deg, #3525cd, #712ae2)' }}
+                      style={{ background: 'linear-gradient(135deg, #064E3B, #059669)' }}
                     >
                       Login
                     </button>
@@ -407,11 +407,11 @@ const LandingPage = () => {
               <div
                 className="flex w-auto items-center justify-end gap-1 rounded-full px-2 py-2 md:w-auto md:justify-start"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(53,37,205,0.3), rgba(79,70,229,0.18))',
+                  background: 'linear-gradient(135deg, rgba(248,250,252,0.86), rgba(241,245,249,0.9))',
                   backdropFilter: 'blur(24px)',
                   WebkitBackdropFilter: 'blur(24px)',
-                  border: '1px solid rgba(229, 224, 255, 0.35)',
-                  boxShadow: '0 10px 26px rgba(28, 21, 92, 0.28), inset 0 1px 0 rgba(255,255,255,0.16)',
+                  border: '1px solid rgba(6, 95, 70, 0.14)',
+                  boxShadow: '0 10px 26px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255,255,255,0.5)',
                 }}
               >
                 {/* Logo icon in pill */}
@@ -419,13 +419,13 @@ const LandingPage = () => {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => scrollToSection('hero')}
-                  className="hidden flex-shrink-0 rounded-full p-2.5 transition-colors duration-200 hover:bg-white/10 md:inline-flex"
+                  className="hidden flex-shrink-0 rounded-full p-2.5 transition-colors duration-200 hover:bg-emerald-900/10 md:inline-flex"
                 >
-                  <GraduationCap className="w-[18px] h-[18px] text-indigo-300" />
+                  <GraduationCap className="w-[18px] h-[18px] text-emerald-700" />
                 </motion.button>
 
                 {/* Separator */}
-                <div className="w-px h-5 bg-white/10 mx-1 hidden md:block" />
+                <div className="w-px h-5 bg-emerald-900/15 mx-1 hidden md:block" />
 
                 {/* Nav Links */}
                 <div className="hidden md:flex items-center">
@@ -435,7 +435,7 @@ const LandingPage = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => scrollToSection(link.id)}
-                      className="px-4 py-2 text-[13px] font-medium rounded-full transition-all duration-200 text-white/65 hover:text-white hover:bg-white/10"
+                      className="px-4 py-2 text-[13px] font-medium rounded-full transition-all duration-200 text-emerald-900/80 hover:text-emerald-950 hover:bg-emerald-900/10"
                     >
                       {link.label}
                     </motion.button>
@@ -443,7 +443,7 @@ const LandingPage = () => {
                 </div>
 
                 {/* Separator */}
-                <div className="w-px h-5 bg-white/10 mx-1 hidden md:block" />
+                <div className="w-px h-5 bg-emerald-900/15 mx-1 hidden md:block" />
 
                 {/* Login Button */}
                 <motion.button
@@ -451,14 +451,14 @@ const LandingPage = () => {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => navigate('/login')}
                   className="hidden flex-shrink-0 rounded-full px-5 py-2 text-[13px] font-semibold text-white transition-all duration-300 md:block"
-                  style={{ background: 'linear-gradient(135deg, #4f46e5, #712ae2)' }}
+                  style={{ background: 'linear-gradient(135deg, #059669, #059669)' }}
                 >
                   Login
                 </motion.button>
 
                 {/* Mobile menu in pill */}
                 <button
-                  className="md:hidden inline-flex h-9 min-w-[44px] items-center justify-center rounded-full border border-white/70 bg-white/30 px-3 text-white shadow-[0_8px_20px_rgba(17,15,61,0.38)] transition-colors duration-200 hover:bg-white/40"
+                  className="md:hidden inline-flex h-9 min-w-[44px] items-center justify-center rounded-full border border-emerald-900/20 bg-white/70 px-3 text-emerald-900 shadow-[0_8px_20px_rgba(15,23,42,0.2)] transition-colors duration-200 hover:bg-white/90"
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   aria-label="Toggle mobile menu"
                 >
@@ -498,7 +498,7 @@ const LandingPage = () => {
                     <button
                       onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}
                       className="mt-2 block w-full rounded-xl px-4 py-2.5 text-center text-sm font-semibold text-white"
-                      style={{ background: 'linear-gradient(135deg, #4f46e5, #712ae2)' }}
+                      style={{ background: 'linear-gradient(135deg, #059669, #059669)' }}
                     >
                       Login
                     </button>
@@ -515,22 +515,22 @@ const LandingPage = () => {
         {/* Background */}
         <div className="absolute inset-0">
           <div className="absolute inset-0" style={{
-            background: 'linear-gradient(160deg, #3525cd 0%, #4f46e5 25%, #712ae2 55%, #8a4cfc 80%, #4f46e5 100%)',
+            background: 'linear-gradient(160deg, #022c22 0%, #064E3B 28%, #065F46 58%, #047857 82%, #065F46 100%)',
           }} />
           {/* Geometric accents */}
           <div className="absolute top-0 right-0 w-[800px] h-[800px] rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(138,76,252,0.3) 0%, transparent 60%)', transform: 'translate(30%, -30%)' }} />
+            style={{ background: 'radial-gradient(circle, rgba(5,150,105,0.3) 0%, transparent 60%)', transform: 'translate(30%, -30%)' }} />
           <div className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(53,37,205,0.4) 0%, transparent 60%)', transform: 'translate(-30%, 30%)' }} />
+            style={{ background: 'radial-gradient(circle, rgba(6,95,70,0.4) 0%, transparent 60%)', transform: 'translate(-30%, 30%)' }} />
           {/* Grid overlay */}
           <div className="absolute inset-0 opacity-[0.04]"
             style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.3) 1px, transparent 1px)', backgroundSize: '80px 80px' }} />
           {/* Floating orbs */}
-          <FloatingOrb size={120} x={10} y={20} color="rgba(195,192,255,0.15)" delay={0} duration={10} />
-          <FloatingOrb size={80} x={80} y={15} color="rgba(138,76,252,0.12)" delay={2} duration={8} />
-          <FloatingOrb size={60} x={70} y={70} color="rgba(226,223,255,0.1)" delay={1} duration={12} />
-          <FloatingOrb size={100} x={15} y={75} color="rgba(113,42,226,0.1)" delay={3} duration={9} />
-          <FloatingOrb size={40} x={50} y={10} color="rgba(195,192,255,0.2)" delay={1.5} duration={7} />
+          <FloatingOrb size={120} x={10} y={20} color="rgba(110,231,183,0.15)" delay={0} duration={10} />
+          <FloatingOrb size={80} x={80} y={15} color="rgba(5,150,105,0.12)" delay={2} duration={8} />
+          <FloatingOrb size={60} x={70} y={70} color="rgba(167,243,208,0.1)" delay={1} duration={12} />
+          <FloatingOrb size={100} x={15} y={75} color="rgba(5,150,105,0.1)" delay={3} duration={9} />
+          <FloatingOrb size={40} x={50} y={10} color="rgba(110,231,183,0.2)" delay={1.5} duration={7} />
         </div>
 
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
@@ -559,22 +559,13 @@ const LandingPage = () => {
                 </span>
 
                 <span className="relative block mt-2 min-h-[2.3em] sm:min-h-[1.2em]">
-                  <span
-                    className="invisible"
-                    style={{
-                      background: 'linear-gradient(135deg, #c3c0ff 0%, #eaddff 50%, #e2dfff 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }}
-                  >
+                  <span className="invisible select-none pointer-events-none" aria-hidden="true">
                     {longestHeadlinePhrase}
                   </span>
                   <span
                     className="absolute left-0 top-0"
                     style={{
-                      background: 'linear-gradient(135deg, #c3c0ff 0%, #eaddff 50%, #e2dfff 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
+                      color: '#A7F3D0',
                     }}
                   >
                     {typedHeadline}
@@ -590,7 +581,7 @@ const LandingPage = () => {
                 </span>
               </h1>
 
-              <p className="text-lg text-indigo-100/70 leading-relaxed mb-6 max-w-lg">
+              <p className="text-lg text-emerald-100/70 leading-relaxed mb-6 max-w-lg">
                 The all-in-one platform for administrators, teachers, and parents to streamline school operations, enhance learning, and build stronger communities.
               </p>
 
@@ -600,7 +591,7 @@ const LandingPage = () => {
                   whileTap={{ scale: 0.97 }}
                   onClick={() => navigate('/login')}
                   className="px-8 py-4 rounded-full text-sm font-bold tracking-wide flex items-center gap-2 transition-all duration-300"
-                  style={{ background: '#fff', color: '#3525cd' }}
+                  style={{ background: '#fff', color: '#064E3B' }}
                 >
                   Get Started <ArrowRight className="w-4 h-4" />
                 </motion.button>
@@ -639,13 +630,13 @@ const LandingPage = () => {
               <div className="relative">
                 {/* Glow */}
                 <div className="absolute -inset-4 rounded-3xl"
-                  style={{ background: 'radial-gradient(ellipse, rgba(195,192,255,0.15) 0%, transparent 70%)' }} />
+                  style={{ background: 'radial-gradient(ellipse, rgba(110,231,183,0.15) 0%, transparent 70%)' }} />
 
                 {/* Main card */}
                 <div className="relative rounded-3xl overflow-hidden p-5"
                   style={{
-                    background: 'rgba(255,255,255,0.08)',
-                    border: '1px solid rgba(255,255,255,0.12)',
+                    background: 'rgba(255,255,255,0.16)',
+                    border: '1px solid rgba(255,255,255,0.2)',
                     backdropFilter: 'blur(20px)',
                   }}
                 >
@@ -665,9 +656,9 @@ const LandingPage = () => {
                   {/* Stats Row */}
                   <div className="grid grid-cols-3 gap-3 mb-4">
                     {[
-                      { label: 'Students', value: '1,247', change: '+12%', color: '#c3c0ff' },
-                      { label: 'Attendance', value: '94.8%', change: '+3%', color: '#34d399' },
-                      { label: 'Revenue', value: '₹12.4L', change: '+8%', color: '#eaddff' },
+                      { label: 'Students', value: '1,247', change: '+12%', color: '#6EE7B7' },
+                      { label: 'Attendance', value: '94.8%', change: '+3%', color: '#10b981' },
+                      { label: 'Revenue', value: '₹12.4L', change: '+8%', color: '#A7F3D0' },
                     ].map((stat, i) => (
                       <motion.div
                         key={i}
@@ -677,8 +668,8 @@ const LandingPage = () => {
                         className="rounded-xl p-3"
                         style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
                       >
-                        <p className="text-[10px] text-indigo-200/50 uppercase tracking-wider mb-1">{stat.label}</p>
-                        <p className="text-xl font-bold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{stat.value}</p>
+                        <p className="text-[10px] text-emerald-200/50 uppercase tracking-wider mb-1">{stat.label}</p>
+                        <p className="text-xl font-bold text-emerald-950" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{stat.value}</p>
                         <p className="text-[10px] text-emerald-300 font-semibold mt-1">{stat.change}</p>
                       </motion.div>
                     ))}
@@ -700,18 +691,18 @@ const LandingPage = () => {
                         className="flex items-start gap-4"
                       >
                         <div className="p-2.5 rounded-xl flex-shrink-0" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                          {React.createElement(spotlightFeatures[activeFeatureSpotlight].icon, { className: 'w-5 h-5 text-indigo-200' })}
+                          {React.createElement(spotlightFeatures[activeFeatureSpotlight].icon, { className: 'w-5 h-5 text-emerald-200' })}
                         </div>
                         <div>
-                          <h4 className="text-white font-semibold text-sm mb-1">{spotlightFeatures[activeFeatureSpotlight].title}</h4>
-                          <p className="text-indigo-200/50 text-xs">{spotlightFeatures[activeFeatureSpotlight].desc}</p>
+                          <h4 className="text-emerald-950 font-semibold text-sm mb-1">{spotlightFeatures[activeFeatureSpotlight].title}</h4>
+                          <p className="text-emerald-900/70 text-xs">{spotlightFeatures[activeFeatureSpotlight].desc}</p>
                         </div>
                       </motion.div>
                     </AnimatePresence>
                     <div className="flex gap-1.5 mt-4">
                       {spotlightFeatures.map((_, i) => (
                         <motion.div key={i} className="h-1 rounded-full"
-                          style={{ background: i === activeFeatureSpotlight ? '#c3c0ff' : 'rgba(255,255,255,0.1)' }}
+                          style={{ background: i === activeFeatureSpotlight ? '#6EE7B7' : 'rgba(255,255,255,0.1)' }}
                           animate={{ width: i === activeFeatureSpotlight ? 20 : 6 }}
                           transition={{ duration: 0.3 }} />
                       ))}
@@ -736,19 +727,16 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimatedSection className="text-center max-w-3xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-              style={{ background: '#e2dfff', border: '1px solid #c7c4d8' }}>
-              <Zap className="w-4 h-4" style={{ color: '#4f46e5' }} />
-              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#4f46e5' }}>
+              style={{ background: '#D1FAE5', border: '1px solid #6EE7B7' }}>
+              <Zap className="w-4 h-4" style={{ color: '#059669' }} />
+              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#059669' }}>
                 Powerful Features
               </span>
             </div>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-5 tracking-tight"
               style={{ color: '#191c1e', fontFamily: "'Space Grotesk', sans-serif", letterSpacing: '-0.02em' }}>
               Designed for{' '}
-              <span style={{
-                background: 'linear-gradient(135deg, #3525cd, #712ae2)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-              }}>
+              <span style={{ color: '#047857' }}>
                 Excellence
               </span>
             </h2>
@@ -769,24 +757,21 @@ const LandingPage = () => {
       <section id="services" className="py-24 lg:py-32 relative" style={{ background: '#f2f4f6' }}>
         {/* Geometric accent */}
         <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full opacity-30 pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(138,76,252,0.06) 0%, transparent 60%)', transform: 'translate(40%, -40%)' }} />
+          style={{ background: 'radial-gradient(circle, rgba(5,150,105,0.06) 0%, transparent 60%)', transform: 'translate(40%, -40%)' }} />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimatedSection className="text-center max-w-3xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-              style={{ background: '#eaddff', border: '1px solid #d2bbff' }}>
-              <HeartHandshake className="w-4 h-4" style={{ color: '#712ae2' }} />
-              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#712ae2' }}>
+              style={{ background: '#A7F3D0', border: '1px solid #86efac' }}>
+              <HeartHandshake className="w-4 h-4" style={{ color: '#059669' }} />
+              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#059669' }}>
                 Our Services
               </span>
             </div>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-5 tracking-tight"
               style={{ color: '#191c1e', fontFamily: "'Space Grotesk', sans-serif", letterSpacing: '-0.02em' }}>
               What We{' '}
-              <span style={{
-                background: 'linear-gradient(135deg, #712ae2, #8a4cfc)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-              }}>
+              <span style={{ color: '#047857' }}>
                 Offer
               </span>
             </h2>
@@ -835,13 +820,13 @@ const LandingPage = () => {
       {/* ═══════ STATS / ABOUT SECTION ═══════ */}
       <section id="about" className="py-24 lg:py-32 relative overflow-hidden">
         <div className="absolute inset-0" style={{
-          background: 'linear-gradient(135deg, #3525cd 0%, #4f46e5 30%, #712ae2 70%, #8a4cfc 100%)',
+          background: 'linear-gradient(135deg, #064E3B 0%, #059669 30%, #059669 70%, #10B981 100%)',
         }} />
         {/* Geometric shapes */}
         <div className="absolute top-0 left-0 w-[600px] h-[600px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(195,192,255,0.08) 0%, transparent 60%)', transform: 'translate(-30%, -30%)' }} />
+          style={{ background: 'radial-gradient(circle, rgba(110,231,183,0.08) 0%, transparent 60%)', transform: 'translate(-30%, -30%)' }} />
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(138,76,252,0.15) 0%, transparent 60%)', transform: 'translate(30%, 30%)' }} />
+          style={{ background: 'radial-gradient(circle, rgba(5,150,105,0.15) 0%, transparent 60%)', transform: 'translate(30%, 30%)' }} />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimatedSection className="text-center max-w-3xl mx-auto mb-16">
@@ -855,14 +840,11 @@ const LandingPage = () => {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-5 tracking-tight"
               style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: '-0.02em' }}>
               Trusted by Educators{' '}
-              <span style={{
-                background: 'linear-gradient(135deg, #c3c0ff, #eaddff)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-              }}>
+              <span style={{ color: '#A7F3D0' }}>
                 Worldwide
               </span>
             </h2>
-            <p className="text-base text-indigo-100/60 leading-relaxed">
+            <p className="text-base text-emerald-100/60 leading-relaxed">
               Join hundreds of schools that have already transformed their operations with SchoolSync's intelligent platform.
             </p>
           </AnimatedSection>
@@ -885,7 +867,7 @@ const LandingPage = () => {
                     style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                     <AnimatedCounter end={stat.value} suffix={stat.suffix} />
                   </p>
-                  <p className="text-sm text-indigo-200/50 font-medium">{stat.label}</p>
+                  <p className="text-sm text-emerald-200/50 font-medium">{stat.label}</p>
                 </motion.div>
               );
             })}
@@ -898,19 +880,16 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimatedSection className="text-center max-w-3xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-              style={{ background: '#e2dfff', border: '1px solid #c7c4d8' }}>
-              <Star className="w-4 h-4" style={{ color: '#4f46e5' }} />
-              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#4f46e5' }}>
+              style={{ background: '#D1FAE5', border: '1px solid #6EE7B7' }}>
+              <Star className="w-4 h-4" style={{ color: '#059669' }} />
+              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#059669' }}>
                 Testimonials
               </span>
             </div>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-5 tracking-tight"
               style={{ color: '#191c1e', fontFamily: "'Space Grotesk', sans-serif", letterSpacing: '-0.02em' }}>
               Loved by{' '}
-              <span style={{
-                background: 'linear-gradient(135deg, #3525cd, #712ae2)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-              }}>
+              <span style={{ color: '#047857' }}>
                 Educators
               </span>
             </h2>
@@ -930,11 +909,11 @@ const LandingPage = () => {
       {/* ═══════ CTA SECTION ═══════ */}
       <section className="py-24 lg:py-32 relative overflow-hidden">
         <div className="absolute inset-0" style={{
-          background: 'linear-gradient(135deg, #3525cd 0%, #4f46e5 40%, #712ae2 100%)',
+          background: 'linear-gradient(135deg, #064E3B 0%, #059669 40%, #059669 100%)',
         }} />
         {/* Floating accents */}
-        <FloatingOrb size={200} x={5} y={10} color="rgba(195,192,255,0.08)" delay={0} duration={12} />
-        <FloatingOrb size={150} x={85} y={60} color="rgba(138,76,252,0.1)" delay={2} duration={10} />
+        <FloatingOrb size={200} x={5} y={10} color="rgba(110,231,183,0.08)" delay={0} duration={12} />
+        <FloatingOrb size={150} x={85} y={60} color="rgba(5,150,105,0.1)" delay={2} duration={10} />
         <div className="absolute inset-0 opacity-[0.03]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.3) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
 
@@ -943,14 +922,11 @@ const LandingPage = () => {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-6 tracking-tight"
               style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: '-0.02em' }}>
               Ready to{' '}
-              <span style={{
-                background: 'linear-gradient(135deg, #c3c0ff, #eaddff)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-              }}>
+              <span style={{ color: '#A7F3D0' }}>
                 Sync Your School?
               </span>
             </h2>
-            <p className="text-lg text-indigo-100/60 leading-relaxed mb-10 max-w-2xl mx-auto">
+            <p className="text-lg text-emerald-100/60 leading-relaxed mb-10 max-w-2xl mx-auto">
               Join thousands of schools already using SchoolSync to transform their management experience. Start your free trial today.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
@@ -959,7 +935,7 @@ const LandingPage = () => {
                 whileTap={{ scale: 0.97 }}
                 onClick={() => navigate('/login')}
                 className="px-10 py-4 rounded-full text-sm font-bold tracking-wide flex items-center gap-2 transition-all duration-300"
-                style={{ background: '#fff', color: '#3525cd' }}
+                style={{ background: '#fff', color: '#064E3B' }}
               >
                 Start Free Trial <ArrowRight className="w-4 h-4" />
               </motion.button>
@@ -983,7 +959,7 @@ const LandingPage = () => {
             {/* Brand */}
             <div className="lg:col-span-1">
               <div className="flex items-center gap-3 mb-5">
-                <div className="p-2 rounded-xl" style={{ background: 'linear-gradient(135deg, #4f46e5, #712ae2)' }}>
+                <div className="p-2 rounded-xl" style={{ background: 'linear-gradient(135deg, #059669, #059669)' }}>
                   <GraduationCap className="w-5 h-5 text-white" />
                 </div>
                 <span className="text-lg font-bold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>

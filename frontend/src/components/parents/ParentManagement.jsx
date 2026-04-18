@@ -304,7 +304,7 @@ const ParentManagement = () => {
           <h1 className="text-2xl font-bold text-gray-800">Parent Management</h1>
           <p className="text-gray-500">Manage parents and link them to students</p>
         </div>
-        <Button onClick={handleAddClick} className="bg-pink-600 hover:bg-pink-700">
+        <Button onClick={handleAddClick} className="bg-amber-600 hover:bg-amber-700">
           <Plus className="w-4 h-4 mr-2" />
           Add Parent
         </Button>
@@ -494,7 +494,7 @@ const ParentManagement = () => {
                         checked={selectedStudentIds.includes(student.id) || isMapped}
                         onChange={() => !isMapped && handleStudentToggle(student.id)}
                         disabled={isMapped}
-                        className="h-4 w-4 text-pink-600 rounded border-gray-300 focus:ring-pink-500 disabled:cursor-not-allowed"
+                        className="h-4 w-4 text-amber-600 rounded border-gray-300 focus:ring-amber-500 disabled:cursor-not-allowed"
                       />
                       <label htmlFor={`student-${student.id}`} className={`flex-1 text-sm cursor-pointer select-none ${isMapped ? 'cursor-not-allowed' : ''}`}>
                         <div className="font-medium">{student.name}</div>

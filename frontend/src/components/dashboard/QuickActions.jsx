@@ -22,25 +22,25 @@ const QuickActions = ({ currentUser }) => {
   };
 
   const superAdminActions = [
-    { icon: Shield, label: 'Super Admin Panel', color: 'from-purple-600 to-indigo-600', module: 'super-admin' },
+    { icon: Shield, label: 'Super Admin Panel', color: 'from-emerald-600 to-emerald-600', module: 'super-admin' },
     { icon: UserPlus, label: 'Add Student', color: 'from-blue-500 to-blue-600', module: 'students' },
     { icon: Plus, label: 'Add Teacher', color: 'from-green-500 to-green-600', module: 'teachers' },
-    { icon: Calendar, label: 'Mark Attendance', color: 'from-purple-500 to-purple-600', module: 'attendance' },
+    { icon: Calendar, label: 'Mark Attendance', color: 'from-emerald-500 to-emerald-600', module: 'attendance' },
     { icon: CreditCard, label: 'Generate Invoice', color: 'from-orange-500 to-orange-600', module: 'fees' },
-    { icon: MessageSquare, label: 'Send Notice', color: 'from-pink-500 to-pink-600', module: null }
+    { icon: MessageSquare, label: 'Send Notice', color: 'from-amber-500 to-amber-600', module: null }
   ];
 
   const adminActions = [
     { icon: UserPlus, label: 'Add Student', color: 'from-blue-500 to-blue-600', module: 'students' },
     { icon: Plus, label: 'Add Teacher', color: 'from-green-500 to-green-600', module: 'teachers' },
-    { icon: Calendar, label: 'Mark Attendance', color: 'from-purple-500 to-purple-600', module: 'attendance' },
+    { icon: Calendar, label: 'Mark Attendance', color: 'from-emerald-500 to-emerald-600', module: 'attendance' },
     { icon: CreditCard, label: 'Generate Invoice', color: 'from-orange-500 to-orange-600', module: 'fees' },
-    { icon: FileText, label: 'View Reports', color: 'from-indigo-500 to-indigo-600', module: null },
-    { icon: MessageSquare, label: 'Send Notice', color: 'from-pink-500 to-pink-600', module: null }
+    { icon: FileText, label: 'View Reports', color: 'from-emerald-500 to-emerald-600', module: null },
+    { icon: MessageSquare, label: 'Send Notice', color: 'from-amber-500 to-amber-600', module: null }
   ];
 
   const teacherActions = [
-    { icon: Calendar, label: 'Mark Attendance', color: 'from-purple-500 to-purple-600', module: 'attendance' },
+    { icon: Calendar, label: 'Mark Attendance', color: 'from-emerald-500 to-emerald-600', module: 'attendance' },
     { icon: FileText, label: 'View Students', color: 'from-blue-500 to-blue-600', module: 'students' },
     { icon: MessageSquare, label: 'Message Parents', color: 'from-green-500 to-green-600', module: null },
     { icon: Plus, label: 'Add Activity', color: 'from-orange-500 to-orange-600', module: null }
@@ -49,7 +49,7 @@ const QuickActions = ({ currentUser }) => {
   const parentActions = [
     { icon: FileText, label: 'View Progress', color: 'from-blue-500 to-blue-600', module: 'parent-portal' },
     { icon: CreditCard, label: 'Pay Fees', color: 'from-green-500 to-green-600', module: 'parent-portal' },
-    { icon: MessageSquare, label: 'Message Teacher', color: 'from-purple-500 to-purple-600', module: 'parent-portal' },
+    { icon: MessageSquare, label: 'Message Teacher', color: 'from-emerald-500 to-emerald-600', module: 'parent-portal' },
     { icon: Calendar, label: 'View Schedule', color: 'from-orange-500 to-orange-600', module: 'parent-portal' }
   ];
 

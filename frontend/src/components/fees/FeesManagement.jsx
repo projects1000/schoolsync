@@ -51,7 +51,7 @@ const InvoiceForm = ({ students, onSave, onCancel }) => {
           <input name="feeType" value={formData.feeType} onChange={handleChange} placeholder="Fee Type" className="w-full p-2 border rounded-lg" />
           <div className="flex justify-end space-x-3 pt-4">
             <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-            <Button type="submit" className="bg-gradient-to-r from-blue-600 to-indigo-600">Generate</Button>
+            <Button type="submit" className="bg-gradient-to-r from-blue-600 to-emerald-600">Generate</Button>
           </div>
         </form>
       </motion.div>
@@ -73,7 +73,7 @@ const ViewInvoiceModal = ({ invoice, onClose, onPrint }) => {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b flex justify-between items-center bg-gradient-to-r from-blue-600 to-indigo-600 rounded-t-xl">
+        <div className="p-6 border-b flex justify-between items-center bg-gradient-to-r from-blue-600 to-emerald-600 rounded-t-xl">
           <div>
             <h2 className="text-xl font-bold text-white">Invoice Details</h2>
             <p className="text-blue-100 text-sm">{invoice.invoiceNo}</p>
@@ -146,7 +146,7 @@ const ViewInvoiceModal = ({ invoice, onClose, onPrint }) => {
 
         <div className="p-6 border-t flex justify-end space-x-3 bg-gray-50 rounded-b-xl">
           <Button variant="outline" onClick={onClose}>Close</Button>
-          <Button onClick={onPrint} className="bg-gradient-to-r from-blue-600 to-indigo-600">
+          <Button onClick={onPrint} className="bg-gradient-to-r from-blue-600 to-emerald-600">
             <Printer className="w-4 h-4 mr-2" /> Print Receipt
           </Button>
         </div>
@@ -337,7 +337,7 @@ const FeesManagement = ({ currentUser }) => {
           </div>
           <div className="flex items-center space-x-3">
             <Button onClick={handleExport} variant="outline" className="flex items-center space-x-2"><Download className="w-4 h-4" /><span>Export</span></Button>
-            <Button onClick={() => setIsFormOpen(true)} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 flex items-center space-x-2"><Plus className="w-4 h-4" /><span>Generate Invoice</span></Button>
+            <Button onClick={() => setIsFormOpen(true)} className="bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700 flex items-center space-x-2"><Plus className="w-4 h-4" /><span>Generate Invoice</span></Button>
           </div>
         </div>
       </motion.div>
@@ -385,7 +385,7 @@ const FeesManagement = ({ currentUser }) => {
           )}
           {activeTab === 'fee-structure' && (
             <div className="space-y-4">
-              <div className="flex justify-between items-center"><h3 className="text-lg font-semibold text-gray-800">Fee Structure</h3><Button onClick={() => handleAction('edit-structure')} className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">Edit Structure</Button></div>
+              <div className="flex justify-between items-center"><h3 className="text-lg font-semibold text-gray-800">Fee Structure</h3><Button onClick={() => handleAction('edit-structure')} className="bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700">Edit Structure</Button></div>
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead><tr className="border-b border-gray-200"><th className="text-left py-3 px-4 font-semibold text-gray-800">Class</th><th className="text-left py-3 px-4 font-semibold text-gray-800">Monthly Fee</th><th className="text-left py-3 px-4 font-semibold text-gray-800">Admission Fee</th><th className="text-left py-3 px-4 font-semibold text-gray-800">Activity Fee</th><th className="text-left py-3 px-4 font-semibold text-gray-800">Total</th></tr></thead>

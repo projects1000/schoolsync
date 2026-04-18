@@ -113,7 +113,7 @@ const ParentAssignments = ({ currentUser }) => {
                 </div>
                 <div className="text-right">
                     <p className="text-sm text-gray-500">Total Assignments</p>
-                    <p className="text-3xl font-bold text-purple-600">{assignments.length}</p>
+                    <p className="text-3xl font-bold text-emerald-600">{assignments.length}</p>
                 </div>
             </motion.div>
 
@@ -145,8 +145,8 @@ const ParentAssignments = ({ currentUser }) => {
                                 >
                                     <div className="flex justify-between items-start">
                                         <div className="flex items-start space-x-4">
-                                            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                <FileText className="w-5 h-5 text-purple-600" />
+                                            <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                <FileText className="w-5 h-5 text-emerald-600" />
                                             </div>
                                             <div>
                                                 <h3 className="font-semibold text-gray-900">{assignment.title}</h3>
@@ -182,7 +182,7 @@ const ParentAssignments = ({ currentUser }) => {
                                                 href={assignment.attachmentUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="flex items-center text-sm text-purple-600 hover:text-purple-700"
+                                                className="flex items-center text-sm text-emerald-600 hover:text-emerald-700"
                                             >
                                                 <Paperclip className="w-4 h-4 mr-1" />
                                                 View Attachment

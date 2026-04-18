@@ -255,7 +255,7 @@ const MaterialList = ({ materials, loading, type }) => {
                                 Uploaded: {new Date(item.createdAt).toLocaleDateString()}
                             </CardDescription>
                         </div>
-                        <div className={`p-2 rounded-lg ${item.type === 'MATERIAL' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'}`}>
+                        <div className={`p-2 rounded-lg ${item.type === 'MATERIAL' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'}`}>
                             {item.type === 'MATERIAL' ? <BookOpen className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
                         </div>
                     </CardHeader>

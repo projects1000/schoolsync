@@ -104,7 +104,7 @@ const TeacherDashboard = () => {
                         <span className="bg-blue-50 text-blue-700 px-4 py-2 rounded-full text-sm font-medium border border-blue-100">
                             Department: {dashboardData.department || 'General'}
                         </span>
-                        <span className="bg-purple-50 text-purple-700 px-4 py-2 rounded-full text-sm font-medium border border-purple-100">
+                        <span className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium border border-emerald-100">
                             {dashboardData.assignedClassesCount || 0} Classes Assigned
                         </span>
                         {isClassTeacher && (
@@ -145,7 +145,7 @@ const TeacherDashboard = () => {
                     icon={BookOpen}
                     title="Communications"
                     count="Inbox"
-                    color="purple"
+                    color="teal"
                     onClick={() => navigate(MODULE_TO_PATH['teacher-communications'])}
                 />
             </div>
@@ -162,14 +162,14 @@ const TeacherDashboard = () => {
                         <div key={index} className="p-4 border border-gray-200 rounded-xl bg-gray-50 hover:bg-white hover:shadow-md transition-all group">
                             <div className="flex justify-between items-start mb-2">
                                 <p className="font-bold text-gray-800 text-lg">{cls.name}</p>
-                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${cls.role === 'Class Teacher' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'
+                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${cls.role === 'Class Teacher' ? 'bg-green-100 text-green-700' : 'bg-emerald-100 text-emerald-700'
                                     }`}>
                                     {cls.role}
                                 </span>
                             </div>
                             <p className="text-sm text-gray-500">{cls.grade} • Section {cls.section}</p>
                             {cls.subject && (
-                                <p className="text-sm text-purple-600 mt-1 font-medium">📚 {cls.subject}</p>
+                                <p className="text-sm text-emerald-600 mt-1 font-medium">📚 {cls.subject}</p>
                             )}
                         </div>
                     ))}
@@ -189,7 +189,7 @@ const QuickLinkCard = ({ icon: Icon, title, count, color, onClick }) => {
         blue: "bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100",
         green: "bg-green-50 text-green-600 border-green-100 hover:bg-green-100",
         orange: "bg-orange-50 text-orange-600 border-orange-100 hover:bg-orange-100",
-        purple: "bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100"
+        teal: "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100"
     };
 
     return (

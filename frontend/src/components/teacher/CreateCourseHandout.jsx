@@ -274,7 +274,7 @@ const CreateCourseHandout = ({ currentUser }) => {
                         <Button
                             type="submit"
                             disabled={loading}
-                            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                            className="bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700"
                         >
                             {loading ? (
                                 <>

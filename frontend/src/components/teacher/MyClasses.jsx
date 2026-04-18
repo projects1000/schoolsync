@@ -174,7 +174,7 @@ const MyClasses = () => {
                                 <CardTitle className="text-xl font-bold text-gray-800 group-hover:text-blue-700 transition-colors">
                                     {cls.name}
                                 </CardTitle>
-                                <span className={`text-xs px-2 py-1 rounded-full font-medium ${cls.role === 'Class Teacher' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'
+                                <span className={`text-xs px-2 py-1 rounded-full font-medium ${cls.role === 'Class Teacher' ? 'bg-green-100 text-green-700' : 'bg-emerald-100 text-emerald-700'
                                     }`}>
                                     {cls.role}
                                 </span>
@@ -191,9 +191,9 @@ const MyClasses = () => {
                                     <span className="font-semibold text-gray-700">{cls.section || 'N/A'}</span>
                                 </div>
                                 {cls.subject && (
-                                    <div className="flex justify-between items-center bg-purple-50 p-2 rounded">
-                                        <span className="text-sm text-purple-600">Subject</span>
-                                        <span className="font-semibold text-purple-700">{cls.subject}</span>
+                                    <div className="flex justify-between items-center bg-emerald-50 p-2 rounded">
+                                        <span className="text-sm text-emerald-600">Subject</span>
+                                        <span className="font-semibold text-emerald-700">{cls.subject}</span>
                                     </div>
                                 )}
                                 <div className="pt-2 flex items-center justify-end text-blue-600 text-sm font-medium">

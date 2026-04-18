@@ -442,14 +442,14 @@ const AcademicsManagement = () => {
     <div className="space-y-8 pb-12">
       {/* Header Section */}
       <div className="relative overflow-hidden bg-white rounded-3xl p-8 border border-gray-100 shadow-sm transition-all hover:shadow-md">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-50 rounded-full -mr-20 -mt-20 opacity-50 blur-3xl"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full -mr-20 -mt-20 opacity-50 blur-3xl"></div>
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 bg-purple-100 rounded-2xl">
-                <GraduationCap className="h-6 w-6 text-purple-600" />
+              <div className="p-3 bg-emerald-100 rounded-2xl">
+                <GraduationCap className="h-6 w-6 text-emerald-600" />
               </div>
-              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-purple-900 to-indigo-900">
+              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-emerald-900 to-emerald-900">
                 Academics Management
               </h1>
             </div>
@@ -473,13 +473,13 @@ const AcademicsManagement = () => {
         <TabsList className="bg-white/50 backdrop-blur-sm p-1.5 rounded-2xl border border-gray-100 shadow-sm w-auto mb-2">
           <TabsTrigger
             value="assignments"
-            className="rounded-xl px-8 py-2.5 text-base font-semibold data-[state=active]:bg-purple-600 data-[state=active]:text-white transition-all"
+            className="rounded-xl px-8 py-2.5 text-base font-semibold data-[state=active]:bg-emerald-600 data-[state=active]:text-white transition-all"
           >
             Academic Assignments
           </TabsTrigger>
           <TabsTrigger
             value="subjects"
-            className="rounded-xl px-8 py-2.5 text-base font-semibold data-[state=active]:bg-purple-600 data-[state=active]:text-white transition-all"
+            className="rounded-xl px-8 py-2.5 text-base font-semibold data-[state=active]:bg-emerald-600 data-[state=active]:text-white transition-all"
           >
             Subject Master
           </TabsTrigger>
@@ -492,7 +492,7 @@ const AcademicsManagement = () => {
             <Card className="lg:col-span-4 rounded-3xl border-gray-100 shadow-sm overflow-hidden h-fit">
               <CardHeader className="bg-gray-50/50 border-b border-gray-100 py-6">
                 <CardTitle className="text-xl flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-purple-600" />
+                  <BookOpen className="h-5 w-5 text-emerald-600" />
                   Select Target Class
                 </CardTitle>
                 <CardDescription>
@@ -513,8 +513,8 @@ const AcademicsManagement = () => {
                           onClick={() => handleGradeSelect(grade)}
                           className={`px-4 py-3 rounded-xl border-2 transition-all flex items-center justify-center font-bold text-sm ${
                             selectedGrade === grade
-                              ? "bg-purple-50 border-purple-600 text-purple-700 shadow-sm"
-                              : "bg-white border-gray-100 text-gray-500 hover:border-purple-200 hover:bg-purple-50/30"
+                              ? "bg-emerald-50 border-emerald-600 text-emerald-700 shadow-sm"
+                              : "bg-white border-gray-100 text-gray-500 hover:border-emerald-200 hover:bg-emerald-50/30"
                           }`}
                         >
                           {grade}
@@ -544,8 +544,8 @@ const AcademicsManagement = () => {
                             onClick={() => handleClassSelect(cls.id)}
                             className={`px-3 py-4 rounded-xl border-2 transition-all flex flex-col items-center gap-1 font-bold ${
                               selectedClassId === cls.id
-                                ? "bg-purple-600 border-purple-600 text-white shadow-lg scale-105"
-                                : "bg-white border-gray-100 text-gray-600 hover:border-purple-200"
+                                ? "bg-emerald-600 border-emerald-600 text-white shadow-lg scale-105"
+                                : "bg-white border-gray-100 text-gray-600 hover:border-emerald-200"
                             }`}
                           >
                             <span className="text-xs opacity-70">Sec</span>
@@ -584,7 +584,7 @@ const AcademicsManagement = () => {
                   {/* Action Bar */}
                   {hasChanges && (
                     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-                      <div className="flex items-center gap-4 bg-purple-900 text-white px-6 py-4 rounded-2xl shadow-2xl">
+                      <div className="flex items-center gap-4 bg-emerald-900 text-white px-6 py-4 rounded-2xl shadow-2xl">
                         <div className="flex items-center gap-2">
                           <div className="h-2 w-2 bg-yellow-400 rounded-full animate-pulse"></div>
                           <span className="text-sm font-medium">
@@ -595,7 +595,7 @@ const AcademicsManagement = () => {
                         <Button
                           onClick={handleSave}
                           disabled={saving}
-                          className="bg-white text-purple-900 hover:bg-purple-50 font-bold rounded-xl px-5 h-10"
+                          className="bg-white text-emerald-900 hover:bg-emerald-50 font-bold rounded-xl px-5 h-10"
                         >
                           {saving ? "Saving..." : "Save"}
                         </Button>
@@ -604,8 +604,8 @@ const AcademicsManagement = () => {
                   )}
 
                   {/* Class Teacher Card */}
-                  <Card className="rounded-[32px] border-none shadow-xl shadow-purple-900/[0.03] overflow-hidden">
-                    <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50/30 p-8">
+                  <Card className="rounded-[32px] border-none shadow-xl shadow-emerald-900/[0.03] overflow-hidden">
+                    <CardHeader className="bg-gradient-to-r from-emerald-50 to-emerald-50/30 p-8">
                       <div className="flex items-center justify-between mb-2">
                         <CardTitle className="text-2xl flex items-center gap-3">
                           <div className="p-2 bg-white rounded-xl shadow-sm">
@@ -613,13 +613,13 @@ const AcademicsManagement = () => {
                           </div>
                           Class Teacher
                         </CardTitle>
-                        <div className="px-4 py-1.5 bg-white/80 rounded-full text-xs font-bold text-purple-700 border border-purple-100">
+                        <div className="px-4 py-1.5 bg-white/80 rounded-full text-xs font-bold text-emerald-700 border border-emerald-100">
                           PRIMARY MENTOR
                         </div>
                       </div>
                       <CardDescription className="text-lg">
                         The dedicated mentor for class{" "}
-                        <span className="font-bold text-purple-900">
+                        <span className="font-bold text-emerald-900">
                           {selectedClass.name}
                         </span>
                       </CardDescription>
@@ -628,7 +628,7 @@ const AcademicsManagement = () => {
                       <div className="max-w-md space-y-4">
                         <div className="relative group">
                           <div className="absolute left-4 top-4 z-10">
-                            <Search className="h-5 w-5 text-gray-400 group-focus-within:text-purple-500 transition-colors" />
+                            <Search className="h-5 w-5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" />
                           </div>
                           <Input
                             placeholder="Search all teachers..."
@@ -636,7 +636,7 @@ const AcademicsManagement = () => {
                             onChange={(e) =>
                               setClassTeacherSearch(e.target.value)
                             }
-                            className="pl-12 h-14 rounded-2xl border-gray-100 bg-gray-50/30 text-lg transition-all focus:ring-purple-200 focus:bg-white"
+                            className="pl-12 h-14 rounded-2xl border-gray-100 bg-gray-50/30 text-lg transition-all focus:ring-emerald-200 focus:bg-white"
                           />
                         </div>
                         <Select
@@ -660,7 +660,7 @@ const AcademicsManagement = () => {
                                 className="rounded-xl py-4 cursor-pointer"
                               >
                                 <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-xs">
+                                  <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs">
                                     {getInitials(teacher.name)}
                                   </div>
                                   <div className="flex flex-col">
@@ -706,10 +706,10 @@ const AcademicsManagement = () => {
 
                     {/* Available Subjects Pool (Premium Chip Cloud) */}
                     {availableSubjects.length > 0 && (
-                      <Card className="rounded-[32px] border-2 border-dashed border-purple-100 bg-purple-50/10 p-2 overflow-hidden">
+                      <Card className="rounded-[32px] border-2 border-dashed border-emerald-100 bg-emerald-50/10 p-2 overflow-hidden">
                         <div className="p-6">
                           <div className="flex flex-col gap-1 mb-6">
-                            <h4 className="font-bold text-purple-900 flex items-center gap-2">
+                            <h4 className="font-bold text-emerald-900 flex items-center gap-2">
                               <Plus className="h-4 w-4" />
                               Assign New Subjects
                             </h4>
@@ -727,22 +727,22 @@ const AcademicsManagement = () => {
                                 }
                                 className={`group flex items-center gap-2 px-5 py-3 rounded-2xl border-2 transition-all font-bold text-sm ${
                                   selectedSubjectsToAdd.includes(subject.id)
-                                    ? "bg-purple-600 border-purple-600 text-white shadow-lg"
-                                    : "bg-white border-gray-100 text-gray-600 hover:border-purple-300"
+                                    ? "bg-emerald-600 border-emerald-600 text-white shadow-lg"
+                                    : "bg-white border-gray-100 text-gray-600 hover:border-emerald-300"
                                 }`}
                               >
                                 <div
                                   className={`p-1 rounded-md transition-colors ${
                                     selectedSubjectsToAdd.includes(subject.id)
                                       ? "bg-white/20"
-                                      : "bg-gray-100 group-hover:bg-purple-100"
+                                      : "bg-gray-100 group-hover:bg-emerald-100"
                                   }`}
                                 >
                                   <BookOpen
                                     className={`h-3 w-3 ${
                                       selectedSubjectsToAdd.includes(subject.id)
                                         ? "text-white"
-                                        : "text-gray-400 group-hover:text-purple-600"
+                                        : "text-gray-400 group-hover:text-emerald-600"
                                     }`}
                                   />
                                 </div>
@@ -758,7 +758,7 @@ const AcademicsManagement = () => {
                             <Button
                               onClick={handleAddSubjects}
                               disabled={saving}
-                              className="w-full h-14 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-2xl shadow-lg transition-transform hover:scale-[1.01] active:scale-[0.99]"
+                              className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg transition-transform hover:scale-[1.01] active:scale-[0.99]"
                             >
                               {saving
                                 ? "Processing..."
@@ -791,12 +791,12 @@ const AcademicsManagement = () => {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: idx * 0.05 }}
-                            className="group bg-white rounded-3xl border border-gray-100 p-6 shadow-sm transition-all hover:shadow-xl hover:shadow-purple-900/[0.04] hover:-translate-y-1"
+                            className="group bg-white rounded-3xl border border-gray-100 p-6 shadow-sm transition-all hover:shadow-xl hover:shadow-emerald-900/[0.04] hover:-translate-y-1"
                           >
                             <div className="flex flex-col gap-6">
                               <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-4">
-                                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-inner">
+                                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white flex items-center justify-center font-bold text-lg shadow-inner">
                                     {cs.subjectName.charAt(0)}
                                   </div>
                                   <div>
@@ -837,7 +837,7 @@ const AcademicsManagement = () => {
                                     )
                                   }
                                 >
-                                  <SelectTrigger className="h-14 rounded-2xl border-gray-100 bg-gray-50/50 group-hover:bg-white group-hover:border-purple-100 shadow-none font-bold transition-all">
+                                  <SelectTrigger className="h-14 rounded-2xl border-gray-100 bg-gray-50/50 group-hover:bg-white group-hover:border-emerald-100 shadow-none font-bold transition-all">
                                     <SelectValue placeholder="Assign teacher..." />
                                   </SelectTrigger>
                                   <SelectContent className="rounded-2xl">
@@ -879,11 +879,11 @@ const AcademicsManagement = () => {
         >
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Creation Panel */}
-            <Card className="lg:col-span-4 rounded-[32px] border-none shadow-xl shadow-purple-900/[0.04]">
+            <Card className="lg:col-span-4 rounded-[32px] border-none shadow-xl shadow-emerald-900/[0.04]">
               <CardHeader className="p-8">
                 <CardTitle className="text-2xl font-bold flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-xl">
-                    <Plus className="h-6 w-6 text-purple-600" />
+                  <div className="p-2 bg-emerald-100 rounded-xl">
+                    <Plus className="h-6 w-6 text-emerald-600" />
                   </div>
                   Define Subject
                 </CardTitle>
@@ -915,7 +915,7 @@ const AcademicsManagement = () => {
                         className="h-14 rounded-2xl border-gray-100 bg-gray-50/70 font-mono text-gray-400 cursor-not-allowed italic pr-20"
                       />
                       <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                        <div className="px-2 py-1 bg-purple-100 rounded text-[10px] font-black tracking-widest text-purple-600">
+                        <div className="px-2 py-1 bg-emerald-100 rounded text-[10px] font-black tracking-widest text-emerald-600">
                           SYSTEM
                         </div>
                       </div>
@@ -983,7 +983,7 @@ const AcademicsManagement = () => {
                   )}
                 </div>
                 <Button
-                  className="w-full h-16 bg-purple-600 hover:bg-purple-700 text-white text-lg font-bold rounded-2xl shadow-lg transition-all active:scale-95"
+                  className="w-full h-16 bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-bold rounded-2xl shadow-lg transition-all active:scale-95"
                   onClick={handleCreateSubject}
                   disabled={isCreatingSubject}
                 >
@@ -995,7 +995,7 @@ const AcademicsManagement = () => {
             </Card>
 
             {/* Master List */}
-            <Card className="lg:col-span-8 rounded-[32px] border-none shadow-xl shadow-purple-900/[0.03]">
+            <Card className="lg:col-span-8 rounded-[32px] border-none shadow-xl shadow-emerald-900/[0.03]">
               <CardHeader className="p-8 flex flex-row items-center justify-between border-b border-gray-50">
                 <div>
                   <CardTitle className="text-2xl font-bold">
@@ -1025,10 +1025,10 @@ const AcademicsManagement = () => {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.03 }}
-                        className="flex items-center justify-between p-5 bg-gray-50/30 rounded-3xl border border-gray-100 group transition-all hover:bg-white hover:shadow-lg hover:shadow-purple-900/[0.03]"
+                        className="flex items-center justify-between p-5 bg-gray-50/30 rounded-3xl border border-gray-100 group transition-all hover:bg-white hover:shadow-lg hover:shadow-emerald-900/[0.03]"
                       >
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-purple-600 font-black text-lg transition-transform group-hover:rotate-6">
+                          <div className="w-12 h-12 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-emerald-600 font-black text-lg transition-transform group-hover:rotate-6">
                             {subject.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
@@ -1037,8 +1037,8 @@ const AcademicsManagement = () => {
                             </p>
                             {subject.code && (
                               <div className="flex items-center gap-1.5 mt-0.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
-                                <span className="text-[10px] font-black text-purple-300 uppercase tracking-widest">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                <span className="text-[10px] font-black text-emerald-300 uppercase tracking-widest">
                                   {subject.code}
                                 </span>
                               </div>

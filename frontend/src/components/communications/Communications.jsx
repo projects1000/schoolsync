@@ -296,7 +296,7 @@ const Communications = ({ currentUser }) => {
               </div>
 
               <div className="flex justify-end pt-2">
-                <Button onClick={handleSendDirect} className="bg-gradient-to-r from-blue-600 to-purple-600">
+                <Button onClick={handleSendDirect} className="bg-gradient-to-r from-blue-600 to-emerald-600">
                   <Send className="w-4 h-4 mr-2" />
                   Send Direct Message
                 </Button>
@@ -465,13 +465,13 @@ const Communications = ({ currentUser }) => {
                     >
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-full ${comm.senderRole === 'SUPERADMIN' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
+                          <div className={`p-2 rounded-full ${comm.senderRole === 'SUPERADMIN' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'}`}>
                             {comm.senderRole === 'SUPERADMIN' ? <Users className="w-5 h-5" /> : <User className="w-5 h-5" />}
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
                               <h4 className="font-semibold text-gray-800 text-lg">{comm.subject}</h4>
-                              <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${comm.senderRole === 'SUPERADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                              <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${comm.senderRole === 'SUPERADMIN' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'}`}>
                                 {comm.senderRole === 'SUPERADMIN' ? 'Super Admin' : comm.senderRole}
                               </span>
                             </div>

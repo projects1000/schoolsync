@@ -122,10 +122,10 @@ const SuperAdminCommunications = ({ currentUser }) => {
 
   return (
     <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-gradient-to-r from-slate-800 via-slate-900 to-indigo-900 rounded-xl shadow-xl p-6 text-white relative overflow-hidden">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-gradient-to-r from-slate-800 via-slate-900 to-emerald-900 rounded-xl shadow-xl p-6 text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-400 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-400 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
         </div>
         <div className="relative z-10 flex items-center gap-4">
           <div className="p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
@@ -178,7 +178,7 @@ const SuperAdminCommunications = ({ currentUser }) => {
                   value={dmSubject}
                   onChange={(e) => setDmSubject(e.target.value)}
                   placeholder="Message Subject"
-                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
@@ -193,7 +193,7 @@ const SuperAdminCommunications = ({ currentUser }) => {
               </div>
 
               <div className="flex justify-end pt-2">
-                <Button onClick={handleSendDirect} className="bg-gradient-to-r from-indigo-600 to-purple-600">
+                <Button onClick={handleSendDirect} className="bg-gradient-to-r from-emerald-600 to-emerald-600">
                   <Send className="w-4 h-4 mr-2" />
                   Send Direct Message
                 </Button>
@@ -210,9 +210,9 @@ const SuperAdminCommunications = ({ currentUser }) => {
               <CardDescription>Send an announcement or notification to all school administrators at once.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
-              <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 flex items-center gap-3">
-                <Users className="w-5 h-5 text-indigo-600" />
-                <p className="text-sm text-indigo-700">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-center gap-3">
+                <Users className="w-5 h-5 text-emerald-600" />
+                <p className="text-sm text-emerald-700">
                   This message will be sent to <span className="font-semibold">{admins.length} admin{admins.length !== 1 ? 's' : ''}</span> across all schools.
                 </p>
               </div>
@@ -223,7 +223,7 @@ const SuperAdminCommunications = ({ currentUser }) => {
                   value={bcSubject}
                   onChange={(e) => setBcSubject(e.target.value)}
                   placeholder="Announcement Subject"
-                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
@@ -238,7 +238,7 @@ const SuperAdminCommunications = ({ currentUser }) => {
               </div>
 
               <div className="flex justify-end pt-2">
-                <Button onClick={handleSendBroadcast} className="bg-gradient-to-r from-emerald-600 to-teal-600">
+                <Button onClick={handleSendBroadcast} className="bg-gradient-to-r from-emerald-600 to-emerald-600">
                   <Bell className="w-4 h-4 mr-2" />
                   Send Broadcast to All Admins
                 </Button>
@@ -279,13 +279,13 @@ const SuperAdminCommunications = ({ currentUser }) => {
                     >
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-full ${comm.type === 'BROADCAST' ? 'bg-amber-100 text-amber-600' : 'bg-indigo-100 text-indigo-600'}`}>
+                          <div className={`p-2 rounded-full ${comm.type === 'BROADCAST' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>
                             {comm.type === 'BROADCAST' ? <Bell className="w-5 h-5" /> : <Send className="w-5 h-5" />}
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
                               <h4 className="font-semibold text-gray-800 text-lg">{comm.subject}</h4>
-                              <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${comm.type === 'BROADCAST' ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'}`}>
+                              <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${comm.type === 'BROADCAST' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
                                 {comm.type}
                               </span>
                             </div>

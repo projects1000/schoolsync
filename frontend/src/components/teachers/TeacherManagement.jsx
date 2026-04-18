@@ -307,7 +307,7 @@ const TeacherManagement = () => {
         </div>
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-purple-600 hover:bg-purple-700">
+            <Button className="bg-emerald-600 hover:bg-emerald-700">
               <Plus className="w-4 h-4 mr-2" />
               Add Teacher
             </Button>
@@ -431,7 +431,7 @@ const TeacherManagement = () => {
                       {roles.classTeacherOf.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {roles.classTeacherOf.map((cls, idx) => (
-                            <Badge key={idx} className="bg-purple-100 text-purple-800 text-xs">
+                            <Badge key={idx} className="bg-emerald-100 text-emerald-800 text-xs">
                               <GraduationCap className="w-3 h-3 mr-1" />
                               {cls}
                             </Badge>

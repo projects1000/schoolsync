@@ -465,7 +465,7 @@ const ClassManagement = () => {
           }}
         >
           <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-200 border-none px-6 py-6 h-auto rounded-xl transition-all active:scale-95 group">
+            <Button className="bg-gradient-to-r from-emerald-600 to-emerald-600 hover:from-emerald-700 hover:to-emerald-700 text-white shadow-lg shadow-emerald-200 border-none px-6 py-6 h-auto rounded-xl transition-all active:scale-95 group">
               <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
               <span className="font-semibold text-lg">Create New Grade</span>
             </Button>
@@ -475,11 +475,11 @@ const ClassManagement = () => {
             onPointerDownOutside={(e) => e.preventDefault()}
             onInteractOutside={(e) => e.preventDefault()}
           >
-            <div className="bg-gradient-to-br from-purple-600 to-indigo-700 p-8 text-white">
+            <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 p-8 text-white">
               <h2 className="text-2xl font-black tracking-tight">
                 Class Architect Wizard
               </h2>
-              <p className="text-purple-100/80 font-medium mt-1">
+              <p className="text-emerald-100/80 font-medium mt-1">
                 {wizardStep === 1 &&
                   "Define the structural vitals of the new grade"}
                 {wizardStep === 2 && "Appoint leadership for this section"}
@@ -517,7 +517,7 @@ const ClassManagement = () => {
                           value={formData.grade}
                           onChange={handleInputChange}
                           placeholder="1"
-                          className="h-12 pl-20 rounded-2xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-purple-500/10 text-lg font-bold"
+                          className="h-12 pl-20 rounded-2xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 text-lg font-bold"
                         />
                       </div>
                     </div>
@@ -536,7 +536,7 @@ const ClassManagement = () => {
                           value={formData.section}
                           onChange={handleInputChange}
                           placeholder="A"
-                          className="h-12 pl-24 rounded-2xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-purple-500/10 text-lg font-bold"
+                          className="h-12 pl-24 rounded-2xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 text-lg font-bold"
                         />
                       </div>
                     </div>
@@ -551,7 +551,7 @@ const ClassManagement = () => {
                         type="number"
                         value={formData.capacity}
                         onChange={handleInputChange}
-                        className="h-12 rounded-2xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-purple-500/10 text-lg font-bold"
+                        className="h-12 rounded-2xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 text-lg font-bold"
                       />
                     </div>
                     <div className="space-y-2">
@@ -563,7 +563,7 @@ const ClassManagement = () => {
                         value={formData.room}
                         onChange={handleInputChange}
                         placeholder="e.g. S-102"
-                        className="h-12 rounded-2xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-purple-500/10 text-lg font-bold"
+                        className="h-12 rounded-2xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 text-lg font-bold"
                       />
                     </div>
                   </div>
@@ -572,9 +572,9 @@ const ClassManagement = () => {
 
               {wizardStep === 2 && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-                  <div className="bg-purple-50 p-6 rounded-3xl border border-purple-100 flex items-center gap-4">
+                  <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 flex items-center gap-4">
                     <div className="h-14 w-14 rounded-2xl bg-white shadow-sm flex items-center justify-center">
-                      <User className="w-7 h-7 text-purple-600" />
+                      <User className="w-7 h-7 text-emerald-600" />
                     </div>
                     <div>
                       <h3 className="font-bold text-gray-900">
@@ -598,13 +598,13 @@ const ClassManagement = () => {
                             classTeacherId: null,
                           }))
                         }
-                        className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${!wizardData.classTeacherId ? "border-purple-600 bg-purple-50" : "border-gray-50 hover:border-gray-200 bg-white"}`}
+                        className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${!wizardData.classTeacherId ? "border-emerald-600 bg-emerald-50" : "border-gray-50 hover:border-gray-200 bg-white"}`}
                       >
                         <span className="font-bold text-gray-700">
                           Assign Later
                         </span>
                         {!wizardData.classTeacherId && (
-                          <CheckCircle2 className="w-5 h-5 text-purple-600" />
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                         )}
                       </button>
                       {availableClassTeachers.length === 0 && (
@@ -623,10 +623,10 @@ const ClassManagement = () => {
                               classTeacherId: teacher.id,
                             }))
                           }
-                          className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${wizardData.classTeacherId === teacher.id ? "border-purple-600 bg-purple-50" : "border-gray-50 hover:border-gray-200 bg-white"}`}
+                          className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${wizardData.classTeacherId === teacher.id ? "border-emerald-600 bg-emerald-50" : "border-gray-50 hover:border-gray-200 bg-white"}`}
                         >
                           <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-black text-xs">
+                            <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-black text-xs">
                               {(teacher.name || "")
                                 .split(" ")
                                 .map((n) => n[0])
@@ -637,7 +637,7 @@ const ClassManagement = () => {
                             </span>
                           </div>
                           {wizardData.classTeacherId === teacher.id && (
-                            <CheckCircle2 className="w-5 h-5 text-purple-600" />
+                            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                           )}
                         </button>
                       ))}
@@ -648,9 +648,9 @@ const ClassManagement = () => {
 
               {wizardStep === 3 && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-                  <div className="bg-indigo-50 p-6 rounded-3xl border border-indigo-100 flex items-center gap-4">
+                  <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 flex items-center gap-4">
                     <div className="h-14 w-14 rounded-2xl bg-white shadow-sm flex items-center justify-center">
-                      <BookOpen className="w-7 h-7 text-indigo-600" />
+                      <BookOpen className="w-7 h-7 text-emerald-600" />
                     </div>
                     <div>
                       <h3 className="font-bold text-gray-900">
@@ -677,7 +677,7 @@ const ClassManagement = () => {
                               if (e.key === "Enter") handleCreateSubject(e);
                             }}
                             disabled={isCreatingSubject}
-                            className="h-10 border-gray-200 rounded-xl focus:ring-indigo-500 bg-white disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="h-10 border-gray-200 rounded-xl focus:ring-emerald-500 bg-white disabled:opacity-60 disabled:cursor-not-allowed"
                           />
                         </div>
                         <div className="space-y-1.5">
@@ -691,7 +691,7 @@ const ClassManagement = () => {
                               className="h-10 border-gray-200 rounded-xl bg-gray-100/50 font-mono text-gray-400 cursor-not-allowed italic text-sm pr-14"
                             />
                             <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                              <div className="px-1.5 py-0.5 bg-indigo-100 rounded text-[9px] font-black tracking-widest text-indigo-600">
+                              <div className="px-1.5 py-0.5 bg-emerald-100 rounded text-[9px] font-black tracking-widest text-emerald-600">
                                 SYS
                               </div>
                             </div>
@@ -701,7 +701,7 @@ const ClassManagement = () => {
                       <Button
                         onClick={handleCreateSubject}
                         disabled={!newSubjectName.trim() || isCreatingSubject}
-                        className="h-10 px-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-md font-bold shrink-0 flex items-center justify-center gap-2"
+                        className="h-10 px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md font-bold shrink-0 flex items-center justify-center gap-2"
                       >
                         {isCreatingSubject ? (
                           <>
@@ -739,7 +739,7 @@ const ClassManagement = () => {
                           return (
                             <div
                               key={subject.id}
-                              className={`p-4 rounded-2xl border-2 transition-all ${isSelected ? "border-indigo-600 bg-indigo-50/50" : "border-gray-50 bg-white"}`}
+                              className={`p-4 rounded-2xl border-2 transition-all ${isSelected ? "border-emerald-600 bg-emerald-50/50" : "border-gray-50 bg-white"}`}
                             >
                               <div className="flex items-center justify-between">
                                 <div
@@ -747,7 +747,7 @@ const ClassManagement = () => {
                                   onClick={() => toggleWizardSubject(subject)}
                                 >
                                   <div
-                                    className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${isSelected ? "bg-indigo-600 border-indigo-600" : "border-gray-200 bg-white"}`}
+                                    className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${isSelected ? "bg-emerald-600 border-emerald-600" : "border-gray-200 bg-white"}`}
                                   >
                                     {isSelected && (
                                       <CheckCircle2 className="w-4 h-4 text-white" />
@@ -759,7 +759,7 @@ const ClassManagement = () => {
                                 </div>
                                 {isSelected && (
                                   <select
-                                    className="bg-white border-none rounded-xl text-xs font-bold px-3 py-1.5 shadow-sm focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                                    className="bg-white border-none rounded-xl text-xs font-bold px-3 py-1.5 shadow-sm focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                                     value={selectedSub.teacherId || "none"}
                                     onChange={(e) =>
                                       setWizardSubjectTeacher(
@@ -809,7 +809,7 @@ const ClassManagement = () => {
                 <div className="flex items-center gap-3">
                   {wizardStep < 3 ? (
                     <Button
-                      className="bg-purple-600 hover:bg-purple-700 text-white rounded-2xl h-12 px-10 font-bold shadow-lg shadow-purple-100 transition-all active:scale-95 group"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl h-12 px-10 font-bold shadow-lg shadow-emerald-100 transition-all active:scale-95 group"
                       onClick={() => setWizardStep((prev) => prev + 1)}
                       disabled={!formData.grade || !formData.section}
                     >
@@ -843,7 +843,7 @@ const ClassManagement = () => {
       {/* Quick Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-start space-x-4">
-          <div className="p-3 bg-purple-50 rounded-2xl text-purple-600">
+          <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600">
             <Box className="w-6 h-6" />
           </div>
           <div>
@@ -854,7 +854,7 @@ const ClassManagement = () => {
           </div>
         </div>
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-start space-x-4">
-          <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600">
+          <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600">
             <Users className="w-6 h-6" />
           </div>
           <div>
@@ -893,19 +893,19 @@ const ClassManagement = () => {
         {/* Search Header */}
         <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="relative w-full md:w-96 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-purple-500 transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" />
             <Input
               placeholder="Find a specific grade or section..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 h-12 rounded-2xl border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-4 focus:ring-purple-500/10 transition-all text-base"
+              className="pl-12 h-12 rounded-2xl border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all text-base"
             />
           </div>
         </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-32 space-y-4">
-            <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+            <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
             <p className="text-gray-500 font-medium">
               Synchronizing structures...
             </p>
@@ -924,7 +924,7 @@ const ClassManagement = () => {
             </p>
             <Button
               onClick={() => setIsAddModalOpen(true)}
-              className="mt-8 bg-purple-600 hover:bg-purple-700 text-white rounded-xl"
+              className="mt-8 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl"
             >
               Get Started
             </Button>
@@ -935,7 +935,7 @@ const ClassManagement = () => {
               {sortedGrades.map((grade) => (
                 <div
                   key={grade}
-                  className="group bg-white rounded-3xl border border-gray-100 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-500/5 transition-all duration-300 overflow-hidden"
+                  className="group bg-white rounded-3xl border border-gray-100 hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300 overflow-hidden"
                 >
                   {/* Grade Header */}
                   <div
@@ -943,7 +943,7 @@ const ClassManagement = () => {
                     onClick={() => toggleGrade(grade)}
                   >
                     <div className="flex items-center gap-5">
-                      <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl group-hover:bg-purple-100 transition-colors">
+                      <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:bg-emerald-100 transition-colors">
                         {expandedGrades[grade] ? (
                           <ChevronDown className="w-6 h-6" />
                         ) : (
@@ -962,7 +962,7 @@ const ClassManagement = () => {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-10 px-4 rounded-xl text-purple-600 hover:bg-purple-50 font-semibold"
+                      className="h-10 px-4 rounded-xl text-emerald-600 hover:bg-emerald-50 font-semibold"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleAddSectionClick(grade);
@@ -1013,7 +1013,7 @@ const ClassManagement = () => {
                                 </div>
 
                                 {cls.locked && (
-                                  <div className="inline-flex items-center px-4 py-2 rounded-2xl text-xs font-bold bg-rose-50 text-rose-600 border border-rose-100">
+                                  <div className="inline-flex items-center px-4 py-2 rounded-2xl text-xs font-bold bg-orange-50 text-orange-600 border border-orange-100">
                                     <Lock className="w-3.5 h-3.5 mr-2 animate-pulse" />
                                     LOCKED
                                   </div>
@@ -1025,7 +1025,7 @@ const ClassManagement = () => {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-10 w-10 rounded-xl hover:bg-purple-50 hover:text-purple-600 mr-2 z-10 relative"
+                                className="h-10 w-10 rounded-xl hover:bg-emerald-50 hover:text-emerald-600 mr-2 z-10 relative"
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
@@ -1038,7 +1038,7 @@ const ClassManagement = () => {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-10 w-10 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 mr-2 z-10 relative"
+                                className="h-10 w-10 rounded-xl hover:bg-emerald-50 hover:text-emerald-600 mr-2 z-10 relative"
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
@@ -1063,7 +1063,7 @@ const ClassManagement = () => {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-10 w-10 rounded-xl hover:bg-rose-50 hover:text-rose-600"
+                                className="h-10 w-10 rounded-xl hover:bg-orange-50 hover:text-orange-600"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleDeleteClick(cls);
@@ -1124,7 +1124,7 @@ const ClassManagement = () => {
                 value={formData.section}
                 onChange={handleInputChange}
                 placeholder="e.g. B, Rose"
-                className="rounded-xl h-12 text-lg font-bold border-gray-200 focus:ring-purple-500"
+                className="rounded-xl h-12 text-lg font-bold border-gray-200 focus:ring-emerald-500"
                 required
                 autoFocus
               />
@@ -1170,7 +1170,7 @@ const ClassManagement = () => {
               </Button>
               <Button
                 type="submit"
-                className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-8 h-12 font-bold shadow-lg shadow-purple-200"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-8 h-12 font-bold shadow-lg shadow-emerald-200"
               >
                 Append Section
               </Button>
@@ -1272,7 +1272,7 @@ const ClassManagement = () => {
                 id="locked"
                 checked={formData.locked}
                 onCheckedChange={handleSwitchChange}
-                className="data-[state=checked]:bg-rose-500"
+                className="data-[state=checked]:bg-orange-500"
               />
             </div>
 
@@ -1287,7 +1287,7 @@ const ClassManagement = () => {
               </Button>
               <Button
                 type="submit"
-                className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-10 h-12 font-bold shadow-lg shadow-purple-100 transition-all active:scale-95"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-10 h-12 font-bold shadow-lg shadow-emerald-100 transition-all active:scale-95"
               >
                 Save Changes
               </Button>
@@ -1306,20 +1306,20 @@ const ClassManagement = () => {
           onPointerDownOutside={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
         >
-          <div className="bg-gradient-to-br from-rose-500 to-rose-600 p-6 flex flex-col items-center justify-center text-center">
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-6 flex flex-col items-center justify-center text-center">
             <div className="bg-white/20 p-4 rounded-full mb-3 backdrop-blur-sm">
               <Trash2 className="w-8 h-8 text-white" />
             </div>
             <AlertDialogTitle className="text-2xl font-bold text-white mb-1">
               Delete Section?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-rose-50 font-medium">
+            <AlertDialogDescription className="text-orange-50 font-medium">
               Move {classToDelete?.grade} - {classToDelete?.section} to trash
             </AlertDialogDescription>
           </div>
 
           <div className="p-6 bg-white space-y-4">
-            <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 text-sm text-rose-800 leading-relaxed font-medium text-center">
+            <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 text-sm text-orange-800 leading-relaxed font-medium text-center">
               Are you sure you want to delete{" "}
               <span className="font-bold">
                 Section "{classToDelete?.section}"
@@ -1328,7 +1328,7 @@ const ClassManagement = () => {
               <br />
               <br />
               This will automatically{" "}
-              <span className="font-bold bg-rose-100 px-1 rounded text-rose-900 border border-rose-200">
+              <span className="font-bold bg-orange-100 px-1 rounded text-orange-900 border border-orange-200">
                 un-assign {classToDelete?.studentCount || 0} enrolled students
               </span>{" "}
               and move the class structure to the Trash. You can restore it
@@ -1341,7 +1341,7 @@ const ClassManagement = () => {
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={confirmDelete}
-                className="w-full sm:w-auto h-12 rounded-xl font-bold bg-rose-500 hover:bg-rose-600 shadow-lg shadow-rose-200 px-8 flex-1 border-0"
+                className="w-full sm:w-auto h-12 rounded-xl font-bold bg-orange-500 hover:bg-orange-600 shadow-lg shadow-orange-200 px-8 flex-1 border-0"
               >
                 Move to Trash
               </AlertDialogAction>

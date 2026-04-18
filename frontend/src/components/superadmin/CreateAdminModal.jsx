@@ -152,13 +152,13 @@ const CreateAdminModal = ({ isOpen, onClose, onSave, schools }) => {
                                                     key={school.id}
                                                     type="button"
                                                     onClick={() => handleSchoolSelect(school)}
-                                                    className="w-full px-4 py-2 text-left hover:bg-indigo-50 flex items-center justify-between text-sm"
+                                                    className="w-full px-4 py-2 text-left hover:bg-emerald-50 flex items-center justify-between text-sm"
                                                 >
                                                     <div>
                                                         <p className="font-medium text-gray-800">{school.name}</p>
                                                         <p className="text-xs text-gray-500">{school.city}, {school.state}</p>
                                                     </div>
-                                                    {formData.schoolId === school.id && <CheckCircle className="w-4 h-4 text-indigo-600" />}
+                                                    {formData.schoolId === school.id && <CheckCircle className="w-4 h-4 text-emerald-600" />}
                                                 </button>
                                             ))
                                         ) : (
@@ -246,7 +246,7 @@ const CreateAdminModal = ({ isOpen, onClose, onSave, schools }) => {
                             <Button type="button" variant="outline" onClick={onClose} className="flex-1">
                                 Cancel
                             </Button>
-                            <Button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-700" disabled={isSubmitting}>
+                            <Button type="submit" className="flex-1 bg-emerald-600 hover:bg-emerald-700" disabled={isSubmitting}>
                                 {isSubmitting ? (
                                     <>
                                         <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating...

@@ -10,10 +10,10 @@ const SystemAlertsWidget = ({ alerts }) => {
             case 'error':
                 return {
                     icon: AlertCircle,
-                    bg: 'bg-rose-50',
-                    border: 'border-rose-200',
-                    iconColor: 'text-rose-500',
-                    titleColor: 'text-rose-800'
+                    bg: 'bg-orange-50',
+                    border: 'border-orange-200',
+                    iconColor: 'text-orange-500',
+                    titleColor: 'text-orange-800'
                 };
             case 'warning':
                 return {
@@ -48,15 +48,15 @@ const SystemAlertsWidget = ({ alerts }) => {
             <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-slate-50 to-gray-50">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <div className="p-2 bg-rose-100 rounded-lg">
-                            <Bell className="w-4 h-4 text-rose-600" />
+                        <div className="p-2 bg-orange-100 rounded-lg">
+                            <Bell className="w-4 h-4 text-orange-600" />
                         </div>
                         <div>
                             <h3 className="font-semibold text-gray-800">System Alerts</h3>
                             <p className="text-xs text-gray-500">Notifications & warnings</p>
                         </div>
                     </div>
-                    <span className="px-2 py-1 bg-rose-100 text-rose-700 text-xs font-semibold rounded-full">
+                    <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
                         {alerts.filter(a => a.type === 'error' || a.type === 'warning').length}
                     </span>
                 </div>
@@ -91,7 +91,7 @@ const SystemAlertsWidget = ({ alerts }) => {
             <div className="p-3 bg-gray-50 border-t border-gray-100">
                 <button
                     onClick={() => navigate('/superadmin/security')}
-                    className="w-full text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                    className="w-full text-sm text-emerald-600 hover:text-emerald-700 font-medium"
                 >
                     View All Alerts →
                 </button>

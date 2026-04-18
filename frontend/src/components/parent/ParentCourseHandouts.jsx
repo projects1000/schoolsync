@@ -88,7 +88,7 @@ const ParentCourseHandouts = ({ currentUser, onBack }) => {
                     <select
                         value={filterSubject}
                         onChange={(e) => setFilterSubject(e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     >
                         <option value="">All Subjects</option>
                         {uniqueSubjects.map(subj => (
@@ -160,7 +160,7 @@ const ParentCourseHandouts = ({ currentUser, onBack }) => {
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 flex-wrap">
                                             <h3 className="font-semibold text-gray-800 text-lg">{handout.subject}</h3>
-                                            <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-700 rounded-full">
+                                            <span className="px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-full">
                                                 {handout.section ? `Section ${handout.section}` : 'All Sections'}
                                             </span>
                                             <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">

@@ -153,15 +153,15 @@ const StudentPromotions = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 border border-indigo-100">
+            <div className="bg-gradient-to-r from-emerald-50 to-emerald-50 rounded-xl p-6 border border-emerald-100">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                            <ArrowUpCircle className="w-6 h-6 text-indigo-600" />
+                            <ArrowUpCircle className="w-6 h-6 text-emerald-600" />
                             Student Promotions
                         </h2>
                         <p className="text-gray-500 mt-1 text-sm">
-                            Promote students from <span className="font-semibold text-indigo-700">{currentClass?.name}</span> to another class
+                            Promote students from <span className="font-semibold text-emerald-700">{currentClass?.name}</span> to another class
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -169,7 +169,7 @@ const StudentPromotions = () => {
                             <Users className="w-4 h-4 inline mr-1 text-gray-500" />
                             <span className="font-semibold">{students.length}</span> Students
                         </span>
-                        <span className="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg text-sm font-medium">
+                        <span className="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg text-sm font-medium">
                             {selectedStudents.size} Selected
                         </span>
                     </div>
@@ -198,7 +198,7 @@ const StudentPromotions = () => {
                         <select
                             value={targetClassId}
                             onChange={(e) => setTargetClassId(e.target.value)}
-                            className="flex-1 sm:w-64 p-2.5 border border-gray-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                            className="flex-1 sm:w-64 p-2.5 border border-gray-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
                         >
                             <option value="">Select target class...</option>
                             {availableClasses.map(cls => (
@@ -210,7 +210,7 @@ const StudentPromotions = () => {
                         <Button
                             onClick={handlePromote}
                             disabled={selectedStudents.size === 0 || !targetClassId || promoting}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2"
                         >
                             {promoting ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -239,7 +239,7 @@ const StudentPromotions = () => {
                                     <th className="px-4 py-3 text-left w-12">
                                         <button onClick={toggleSelectAll} className="hover:opacity-70 transition-opacity">
                                             {allSelected ? (
-                                                <CheckSquare className="w-5 h-5 text-indigo-600" />
+                                                <CheckSquare className="w-5 h-5 text-emerald-600" />
                                             ) : (
                                                 <Square className="w-5 h-5 text-gray-400" />
                                             )}
@@ -263,13 +263,13 @@ const StudentPromotions = () => {
                                             transition={{ delay: index * 0.03 }}
                                             onClick={() => toggleStudent(student.id)}
                                             className={`cursor-pointer transition-all ${isSelected
-                                                ? 'bg-indigo-50 hover:bg-indigo-100'
+                                                ? 'bg-emerald-50 hover:bg-emerald-100'
                                                 : 'hover:bg-gray-50'
                                                 }`}
                                         >
                                             <td className="px-4 py-3">
                                                 {isSelected ? (
-                                                    <CheckSquare className="w-5 h-5 text-indigo-600" />
+                                                    <CheckSquare className="w-5 h-5 text-emerald-600" />
                                                 ) : (
                                                     <Square className="w-5 h-5 text-gray-300" />
                                                 )}
@@ -279,7 +279,7 @@ const StudentPromotions = () => {
                                             </td>
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-500 flex items-center justify-center text-white text-xs font-bold">
                                                         {student.name?.charAt(0)?.toUpperCase() || '?'}
                                                     </div>
                                                     <span className="text-sm font-medium text-gray-800">{student.name}</span>
@@ -320,14 +320,14 @@ const StudentPromotions = () => {
                             className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6"
                         >
                             <div className="text-center">
-                                <div className="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <ArrowUpCircle className="w-7 h-7 text-indigo-600" />
+                                <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <ArrowUpCircle className="w-7 h-7 text-emerald-600" />
                                 </div>
                                 <h3 className="text-lg font-bold text-gray-800 mb-2">Confirm Promotion</h3>
                                 <p className="text-sm text-gray-600">
-                                    Are you sure you want to promote <span className="font-semibold text-indigo-700">{selectedStudents.size} student(s)</span> from{' '}
+                                    Are you sure you want to promote <span className="font-semibold text-emerald-700">{selectedStudents.size} student(s)</span> from{' '}
                                     <span className="font-semibold">{currentClass?.name}</span> to{' '}
-                                    <span className="font-semibold text-indigo-700">{targetClassName}</span>?
+                                    <span className="font-semibold text-emerald-700">{targetClassName}</span>?
                                 </p>
                                 <p className="text-xs text-amber-600 mt-2 bg-amber-50 px-3 py-2 rounded-lg">
                                     ⚠️ This action cannot be easily undone.
@@ -342,7 +342,7 @@ const StudentPromotions = () => {
                                     Cancel
                                 </Button>
                                 <Button
-                                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white"
+                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
                                     onClick={confirmPromote}
                                 >
                                     Yes, Promote

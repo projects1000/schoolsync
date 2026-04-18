@@ -383,20 +383,20 @@ const SuperAdminManagement = ({ currentUser }) => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl shadow-sm p-6 text-white"
+        className="bg-gradient-to-r from-emerald-600 to-blue-600 rounded-xl shadow-sm p-6 text-white"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Crown className="w-8 h-8" />
             <div>
               <h1 className="text-2xl font-bold">Super Admin Dashboard</h1>
-              <p className="text-purple-100">Manage administrators and system permissions</p>
+              <p className="text-emerald-100">Manage administrators and system permissions</p>
             </div>
           </div>
           <div className="flex space-x-2">
             <Button
               onClick={() => setShowCreateForm(true)}
-              className="bg-white text-purple-600 hover:bg-purple-50"
+              className="bg-white text-emerald-600 hover:bg-emerald-50"
             >
               <UserPlus className="w-4 h-4 mr-2" />
               Create Admin
@@ -492,7 +492,7 @@ const SuperAdminManagement = ({ currentUser }) => {
                   type="text"
                   value={newAdminForm.name}
                   onChange={(e) => setNewAdminForm({...newAdminForm, name: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   required
                 />
               </div>
@@ -502,7 +502,7 @@ const SuperAdminManagement = ({ currentUser }) => {
                   type="email"
                   value={newAdminForm.email}
                   onChange={(e) => setNewAdminForm({...newAdminForm, email: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   required
                 />
               </div>
@@ -514,7 +514,7 @@ const SuperAdminManagement = ({ currentUser }) => {
                     type="tel"
                     value={newAdminForm.phone.replace(/^\+91\s?/, '')}
                     onChange={(e) => { const digits = e.target.value.replace(/\D/g, '').slice(0, 10); setNewAdminForm({...newAdminForm, phone: '+91 ' + digits}); }}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-r-lg rounded-l-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-r-lg rounded-l-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                     placeholder="9876543210"
                   />
                 </div>
@@ -525,13 +525,13 @@ const SuperAdminManagement = ({ currentUser }) => {
                   type="password"
                   value={newAdminForm.password}
                   onChange={(e) => setNewAdminForm({...newAdminForm, password: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   required
                 />
               </div>
             </div>
             <div className="flex space-x-3">
-              <Button type="submit" disabled={isLoading} className="bg-purple-600 hover:bg-purple-700">
+              <Button type="submit" disabled={isLoading} className="bg-emerald-600 hover:bg-emerald-700">
                 {isLoading ? 'Creating...' : 'Create Admin'}
               </Button>
               <Button 
@@ -615,7 +615,7 @@ const SuperAdminManagement = ({ currentUser }) => {
             <div key={admin.id} className="p-6 hover:bg-gray-50 transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                  <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center">
                     <span className="text-white font-semibold">
                       {admin.name?.charAt(0)}
                     </span>

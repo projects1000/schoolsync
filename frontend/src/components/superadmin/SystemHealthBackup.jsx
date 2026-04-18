@@ -54,8 +54,8 @@ const SystemHealthBackup = ({ currentUser }) => {
             healthy: 'text-emerald-500',
             running: 'text-emerald-500',
             warning: 'text-amber-500',
-            critical: 'text-rose-500',
-            failed: 'text-rose-500',
+            critical: 'text-orange-500',
+            failed: 'text-orange-500',
             completed: 'text-emerald-500'
         };
         return colors[status] || 'text-gray-500';
@@ -66,8 +66,8 @@ const SystemHealthBackup = ({ currentUser }) => {
             healthy: 'bg-emerald-100',
             running: 'bg-emerald-100',
             warning: 'bg-amber-100',
-            critical: 'bg-rose-100',
-            failed: 'bg-rose-100',
+            critical: 'bg-orange-100',
+            failed: 'bg-orange-100',
             completed: 'bg-emerald-100'
         };
         return colors[status] || 'bg-gray-100';
@@ -117,7 +117,7 @@ const SystemHealthBackup = ({ currentUser }) => {
 
     const HealthGauge = ({ value, label, max = 100, warning = 70, critical = 90 }) => {
         const status = value >= critical ? 'critical' : value >= warning ? 'warning' : 'healthy';
-        const color = status === 'critical' ? 'bg-rose-500' : status === 'warning' ? 'bg-amber-500' : 'bg-emerald-500';
+        const color = status === 'critical' ? 'bg-orange-500' : status === 'warning' ? 'bg-amber-500' : 'bg-emerald-500';
 
         return (
             <div className="p-4 bg-gray-50 rounded-lg">
@@ -153,7 +153,7 @@ const SystemHealthBackup = ({ currentUser }) => {
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-r from-cyan-600 to-blue-700 rounded-xl shadow-lg p-6 text-white"
+                className="bg-gradient-to-r from-green-600 to-blue-700 rounded-xl shadow-lg p-6 text-white"
             >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
@@ -162,7 +162,7 @@ const SystemHealthBackup = ({ currentUser }) => {
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold">System Health & Backup</h1>
-                            <p className="text-cyan-100 text-sm mt-1">
+                            <p className="text-green-100 text-sm mt-1">
                                 Monitor infrastructure and manage backups
                             </p>
                         </div>
@@ -170,7 +170,7 @@ const SystemHealthBackup = ({ currentUser }) => {
                     <div className="flex items-center gap-3">
                         <Button
                             onClick={() => setShowBackupModal(true)}
-                            className="bg-white text-cyan-700 hover:bg-cyan-50"
+                            className="bg-white text-green-700 hover:bg-green-50"
                         >
                             <Archive className="w-4 h-4 mr-2" />
                             Create Backup
@@ -185,19 +185,19 @@ const SystemHealthBackup = ({ currentUser }) => {
                             <div className={`w-3 h-3 rounded-full ${serverHealth.status === 'healthy' ? 'bg-emerald-400' : 'bg-amber-400'}`} />
                             <p className="text-lg font-bold capitalize">{serverHealth.status}</p>
                         </div>
-                        <p className="text-sm text-cyan-100">Server Status</p>
+                        <p className="text-sm text-green-100">Server Status</p>
                     </div>
                     <div className="text-center p-2 bg-white/5 rounded-lg md:bg-transparent">
                         <p className="text-lg font-bold">{serverHealth.uptime}</p>
-                        <p className="text-sm text-cyan-100">Uptime</p>
+                        <p className="text-sm text-green-100">Uptime</p>
                     </div>
                     <div className="text-center p-2 bg-white/5 rounded-lg md:bg-transparent">
                         <p className="text-lg font-bold">{serverHealth.responseTime}ms</p>
-                        <p className="text-sm text-cyan-100">Response Time</p>
+                        <p className="text-sm text-green-100">Response Time</p>
                     </div>
                     <div className="text-center p-2 bg-white/5 rounded-lg md:bg-transparent">
                         <p className="text-lg font-bold">{errorMetrics.errorRate}%</p>
-                        <p className="text-sm text-cyan-100">Error Rate</p>
+                        <p className="text-sm text-green-100">Error Rate</p>
                     </div>
                 </div>
             </motion.div>
@@ -213,7 +213,7 @@ const SystemHealthBackup = ({ currentUser }) => {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id
-                            ? 'border-cyan-600 text-cyan-700'
+                            ? 'border-green-600 text-green-700'
                             : 'border-transparent text-gray-500 hover:text-gray-700'
                             }`}
                     >
@@ -234,7 +234,7 @@ const SystemHealthBackup = ({ currentUser }) => {
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                                <Server className="w-5 h-5 text-cyan-600" />
+                                <Server className="w-5 h-5 text-green-600" />
                                 Server Health
                             </h3>
                             <StatusIndicator status={serverHealth.status} />
@@ -260,7 +260,7 @@ const SystemHealthBackup = ({ currentUser }) => {
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                                <Database className="w-5 h-5 text-purple-600" />
+                                <Database className="w-5 h-5 text-emerald-600" />
                                 Database Health
                             </h3>
                             <StatusIndicator status={databaseHealth.status} />
@@ -310,7 +310,7 @@ const SystemHealthBackup = ({ currentUser }) => {
                             </h3>
                             <div className="flex gap-4">
                                 <div className="text-center">
-                                    <p className="text-2xl font-bold text-rose-600">{errorMetrics.last24h.critical}</p>
+                                    <p className="text-2xl font-bold text-orange-600">{errorMetrics.last24h.critical}</p>
                                     <p className="text-xs text-gray-500">Critical (24h)</p>
                                 </div>
                                 <div className="text-center">
@@ -336,7 +336,7 @@ const SystemHealthBackup = ({ currentUser }) => {
                                 <tbody className="divide-y">
                                     {errorMetrics.topErrors.map((err, i) => (
                                         <tr key={i} className="hover:bg-gray-50">
-                                            <td className="px-4 py-3 font-mono text-sm text-rose-600">{err.code}</td>
+                                            <td className="px-4 py-3 font-mono text-sm text-orange-600">{err.code}</td>
                                             <td className="px-4 py-3 text-sm text-gray-700">{err.message}</td>
                                             <td className="px-4 py-3 font-bold text-gray-800">{err.count}</td>
                                             <td className="px-4 py-3 text-sm text-gray-500">{new Date(err.lastOccurred).toLocaleString()}</td>
@@ -399,7 +399,7 @@ const SystemHealthBackup = ({ currentUser }) => {
                                     {backups.map((backup) => (
                                         <tr key={backup.id} className="hover:bg-gray-50">
                                             <td className="px-4 py-3">
-                                                <span className={`px-2 py-1 text-xs font-medium rounded ${backup.type === 'automated' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                                                <span className={`px-2 py-1 text-xs font-medium rounded ${backup.type === 'automated' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'
                                                     }`}>
                                                     {backup.type}
                                                 </span>
@@ -421,7 +421,7 @@ const SystemHealthBackup = ({ currentUser }) => {
                                                     {backup.status}
                                                 </span>
                                                 {backup.error && (
-                                                    <p className="text-xs text-rose-500 mt-1">{backup.error}</p>
+                                                    <p className="text-xs text-orange-500 mt-1">{backup.error}</p>
                                                 )}
                                             </td>
                                             <td className="px-4 py-3">
@@ -519,7 +519,7 @@ const SystemHealthBackup = ({ currentUser }) => {
                                                 name="scope"
                                                 checked={backupScope === 'full'}
                                                 onChange={() => setBackupScope('full')}
-                                                className="text-cyan-600"
+                                                className="text-green-600"
                                             />
                                             Full System
                                         </label>
@@ -529,7 +529,7 @@ const SystemHealthBackup = ({ currentUser }) => {
                                                 name="scope"
                                                 checked={backupScope === 'school'}
                                                 onChange={() => setBackupScope('school')}
-                                                className="text-cyan-600"
+                                                className="text-green-600"
                                             />
                                             Single School
                                         </label>
@@ -561,7 +561,7 @@ const SystemHealthBackup = ({ currentUser }) => {
                                 <Button onClick={() => setShowBackupModal(false)} variant="outline" className="flex-1">
                                     Cancel
                                 </Button>
-                                <Button onClick={handleManualBackup} disabled={isBackingUp} className="flex-1 bg-cyan-600 hover:bg-cyan-700">
+                                <Button onClick={handleManualBackup} disabled={isBackingUp} className="flex-1 bg-green-600 hover:bg-green-700">
                                     {isBackingUp ? (
                                         <>
                                             <RefreshCcw className="w-4 h-4 mr-2 animate-spin" />
@@ -598,8 +598,8 @@ const SystemHealthBackup = ({ currentUser }) => {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="text-center mb-4">
-                                <div className="w-16 h-16 mx-auto bg-rose-100 rounded-full flex items-center justify-center mb-4">
-                                    <AlertTriangle className="w-8 h-8 text-rose-600" />
+                                <div className="w-16 h-16 mx-auto bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                                    <AlertTriangle className="w-8 h-8 text-orange-600" />
                                 </div>
                                 <h3 className="text-lg font-bold text-gray-800">⚠️ Destructive Action</h3>
                                 <p className="text-sm text-gray-500 mt-2">
@@ -607,8 +607,8 @@ const SystemHealthBackup = ({ currentUser }) => {
                                 </p>
                             </div>
 
-                            <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg mb-4">
-                                <p className="text-sm text-rose-700">
+                            <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg mb-4">
+                                <p className="text-sm text-orange-700">
                                     <strong>Warning:</strong> This will overwrite current data. This action cannot be undone. All changes made after this backup will be lost.
                                 </p>
                             </div>
@@ -633,7 +633,7 @@ const SystemHealthBackup = ({ currentUser }) => {
                                 <Button
                                     onClick={handleRestore}
                                     disabled={restoreConfirmText !== 'RESTORE'}
-                                    className="flex-1 bg-rose-600 hover:bg-rose-700 disabled:bg-gray-300"
+                                    className="flex-1 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-300"
                                 >
                                     <RotateCcw className="w-4 h-4 mr-2" />
                                     Restore Now

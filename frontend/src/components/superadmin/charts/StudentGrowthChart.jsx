@@ -46,7 +46,7 @@ const StudentGrowthChart = ({ data }) => {
                     <p className="text-sm text-gray-500">Year-over-year trend</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full" />
+                    <div className="w-3 h-3 bg-gradient-to-r from-emerald-500 to-emerald-500 rounded-full" />
                     <span className="text-xs text-gray-500">Total Students</span>
                 </div>
             </div>

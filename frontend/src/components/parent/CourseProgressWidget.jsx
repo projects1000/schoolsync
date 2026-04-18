@@ -43,7 +43,7 @@ const CourseProgressWidget = ({ studentId, onViewAll }) => {
         return (
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
                 <div className="flex items-center justify-center h-32">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
                 </div>
             </div>
         );
@@ -53,7 +53,7 @@ const CourseProgressWidget = ({ studentId, onViewAll }) => {
         return (
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
                 <div className="flex items-center gap-3 mb-4">
-                    <BookOpen className="w-5 h-5 text-indigo-600" />
+                    <BookOpen className="w-5 h-5 text-emerald-600" />
                     <h3 className="font-semibold text-gray-800">Course Progress</h3>
                 </div>
                 <p className="text-gray-500 text-sm text-center py-4">No course handouts available yet.</p>
@@ -74,8 +74,8 @@ const CourseProgressWidget = ({ studentId, onViewAll }) => {
         >
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-indigo-100 rounded-lg">
-                        <TrendingUp className="w-5 h-5 text-indigo-600" />
+                    <div className="p-2 bg-emerald-100 rounded-lg">
+                        <TrendingUp className="w-5 h-5 text-emerald-600" />
                     </div>
                     <div>
                         <h3 className="font-semibold text-gray-800">Course Progress</h3>
@@ -85,7 +85,7 @@ const CourseProgressWidget = ({ studentId, onViewAll }) => {
                 {onViewAll && (
                     <button
                         onClick={onViewAll}
-                        className="text-sm text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                        className="text-sm text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
                     >
                         View All <ChevronRight className="w-4 h-4" />
                     </button>

@@ -162,7 +162,7 @@ const SuperAdminDashboard = ({ currentUser }) => {
                     <p className="text-gray-500 mb-4">{error}</p>
                     <button
                         onClick={handleRefresh}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                        className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
                     >
                         Try Again
                     </button>
@@ -180,7 +180,7 @@ const SuperAdminDashboard = ({ currentUser }) => {
             change: '+2', // You might want to calculate this from historical data if available
             trend: 'up',
             icon: Building2,
-            color: 'from-indigo-500 to-purple-600',
+            color: 'from-emerald-500 to-emerald-600',
             subtitle: 'Registered on platform'
         },
         {
@@ -189,7 +189,7 @@ const SuperAdminDashboard = ({ currentUser }) => {
             change: '+1',
             trend: 'up',
             icon: School,
-            color: 'from-emerald-500 to-teal-500',
+            color: 'from-emerald-500 to-emerald-500',
             subtitle: 'Currently operational'
         },
         {
@@ -198,7 +198,7 @@ const SuperAdminDashboard = ({ currentUser }) => {
             change: '-1',
             trend: 'down',
             icon: AlertTriangle,
-            color: 'from-rose-500 to-orange-500',
+            color: 'from-orange-500 to-orange-500',
             subtitle: 'Require attention'
         },
         {
@@ -207,7 +207,7 @@ const SuperAdminDashboard = ({ currentUser }) => {
             change: '+12%',
             trend: 'up',
             icon: Users,
-            color: 'from-blue-500 to-cyan-500',
+            color: 'from-blue-500 to-green-500',
             subtitle: 'Across all schools'
         },
         {
@@ -227,12 +227,12 @@ const SuperAdminDashboard = ({ currentUser }) => {
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-r from-slate-800 via-slate-900 to-indigo-900 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden"
+                className="bg-gradient-to-r from-slate-800 via-slate-900 to-emerald-900 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden"
             >
                 {/* Background pattern */}
                 <div className="absolute inset-0 opacity-10">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
-                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-400 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
+                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-400 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
                 </div>
 
                 <div className="relative z-10 flex items-center justify-between">

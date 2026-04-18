@@ -53,7 +53,7 @@ const TeacherProfile = () => {
 
     return (
         <div className="space-y-6">
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 rounded-xl shadow-lg text-white">
+            <div className="bg-gradient-to-r from-blue-600 to-emerald-600 p-8 rounded-xl shadow-lg text-white">
                 <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6">
                     <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
                         <User className="w-12 h-12 text-white" />
@@ -110,7 +110,7 @@ const TeacherProfile = () => {
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-lg flex items-center gap-2">
-                            <GraduationCap className="w-5 h-5 text-purple-600" /> Professional Details
+                            <GraduationCap className="w-5 h-5 text-emerald-600" /> Professional Details
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">

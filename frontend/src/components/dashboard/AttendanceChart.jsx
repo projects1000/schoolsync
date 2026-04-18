@@ -21,7 +21,7 @@ const AttendanceChart = () => {
         <h3 className="text-lg font-semibold text-gray-800">Weekly Attendance</h3>
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full"></div>
             <span className="text-sm text-gray-600">Attendance %</span>
           </div>
         </div>
@@ -38,7 +38,7 @@ const AttendanceChart = () => {
           >
             <div className="w-full flex flex-col items-center">
               <motion.div
-                className="w-full bg-gradient-to-t from-purple-500 to-blue-500 rounded-t-lg relative"
+                className="w-full bg-gradient-to-t from-emerald-500 to-blue-500 rounded-t-lg relative"
                 initial={{ height: 0 }}
                 animate={{ height: `${(data.attendance / maxAttendance) * 160}px` }}
                 transition={{ delay: index * 0.1, duration: 0.8, ease: "easeOut" }}

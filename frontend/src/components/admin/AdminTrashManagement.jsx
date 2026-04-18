@@ -199,7 +199,7 @@ const AdminTrashManagement = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                            <Trash2 className="w-7 h-7 text-rose-600" />
+                            <Trash2 className="w-7 h-7 text-orange-600" />
                             Trash Management
                         </h1>
                         <p className="text-gray-500 text-sm mt-1">View and restore soft-deleted users</p>
@@ -218,7 +218,7 @@ const AdminTrashManagement = () => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === tab.id
-                                ? 'bg-white text-rose-600 shadow-sm'
+                                ? 'bg-white text-orange-600 shadow-sm'
                                 : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
                                 }`}
                         >

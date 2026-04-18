@@ -216,7 +216,7 @@ const SchoolManagement = ({ currentUser }) => {
         const styles = {
             ACTIVE: 'bg-emerald-100 text-emerald-700 border-emerald-200',
             INACTIVE: 'bg-gray-100 text-gray-600 border-gray-200',
-            SUSPENDED: 'bg-rose-100 text-rose-700 border-rose-200',
+            SUSPENDED: 'bg-orange-100 text-orange-700 border-orange-200',
             TRIAL: 'bg-blue-100 text-blue-700 border-blue-200',
             DELETED: 'bg-slate-100 text-slate-500 border-slate-200'
         };
@@ -247,12 +247,12 @@ const SchoolManagement = ({ currentUser }) => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                            <Building2 className="w-7 h-7 text-indigo-600" />
+                            <Building2 className="w-7 h-7 text-emerald-600" />
                             School Management
                         </h1>
                         <p className="text-gray-500 text-sm mt-1">Manage all schools on the platform</p>
                     </div>
-                    <Button onClick={handleAddSchool} className="bg-indigo-600 hover:bg-indigo-700">
+                    <Button onClick={handleAddSchool} className="bg-emerald-600 hover:bg-emerald-700">
                         <Plus className="w-4 h-4 mr-2" />
                         Add School
                     </Button>
@@ -275,7 +275,7 @@ const SchoolManagement = ({ currentUser }) => {
                             placeholder="Search schools..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                         />
                     </div>
 
@@ -284,7 +284,7 @@ const SchoolManagement = ({ currentUser }) => {
                         <select
                             value={filters.city}
                             onChange={(e) => setFilters({ ...filters, city: e.target.value })}
-                            className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                            className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 text-sm"
                         >
                             <option value="">All Cities</option>
                             {cities.map(city => <option key={city} value={city}>{city}</option>)}
@@ -292,7 +292,7 @@ const SchoolManagement = ({ currentUser }) => {
                         <select
                             value={filters.status}
                             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                            className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                            className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 text-sm"
                         >
                             {statusOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                         </select>
@@ -301,13 +301,13 @@ const SchoolManagement = ({ currentUser }) => {
                         <div className="hidden md:flex border border-gray-200 rounded-lg overflow-hidden">
                             <button
                                 onClick={() => setViewMode('table')}
-                                className={`p-2 ${viewMode === 'table' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`p-2 ${viewMode === 'table' ? 'bg-emerald-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
                             >
                                 <List className="w-4 h-4" />
                             </button>
                             <button
                                 onClick={() => setViewMode('card')}
-                                className={`p-2 ${viewMode === 'card' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`p-2 ${viewMode === 'card' ? 'bg-emerald-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
                             >
                                 <Grid3X3 className="w-4 h-4" />
                             </button>
@@ -401,7 +401,7 @@ const SchoolManagement = ({ currentUser }) => {
                         <Building2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                         <h3 className="text-xl font-semibold text-gray-600 mb-2">No Schools Found</h3>
                         <p className="text-gray-400 mb-6">Get started by adding your first school</p>
-                        <Button onClick={handleAddSchool} className="bg-indigo-600 hover:bg-indigo-700">
+                        <Button onClick={handleAddSchool} className="bg-emerald-600 hover:bg-emerald-700">
                             <Plus className="w-4 h-4 mr-2" /> Add School
                         </Button>
                     </div>
@@ -428,7 +428,7 @@ const SchoolManagement = ({ currentUser }) => {
                                                 <tr key={school.id} className="hover:bg-gray-50 transition-colors">
                                                     <td className="px-6 py-4">
                                                         <div 
-                                                            className="font-medium text-indigo-600 hover:text-indigo-800 cursor-pointer transition-colors"
+                                                            className="font-medium text-emerald-600 hover:text-emerald-800 cursor-pointer transition-colors"
                                                             onClick={() => handleViewDetails(school)}
                                                         >
                                                             {school.name}
@@ -466,7 +466,7 @@ const SchoolManagement = ({ currentUser }) => {
                                                                 className={`p-2 rounded-lg ${school.admin ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-100'}`}
                                                                 title={school.admin ? "Admin already assigned" : "Assign Admin"}
                                                             >
-                                                                <UserPlus className={`w-4 h-4 ${school.admin ? 'text-gray-400' : 'text-purple-500'}`} />
+                                                                <UserPlus className={`w-4 h-4 ${school.admin ? 'text-gray-400' : 'text-emerald-500'}`} />
                                                             </button>
                                                             {school.status === 'active' && (
                                                                 <button onClick={() => handleConfirmAction(school, 'suspend')} className="p-2 hover:bg-gray-100 rounded-lg" title="Suspend">
@@ -479,7 +479,7 @@ const SchoolManagement = ({ currentUser }) => {
                                                                 </button>
                                                             )}
                                                             <button onClick={() => handleConfirmAction(school, 'softDelete')} className="p-2 hover:bg-gray-100 rounded-lg" title="Delete">
-                                                                <Trash2 className="w-4 h-4 text-rose-500" />
+                                                                <Trash2 className="w-4 h-4 text-orange-500" />
                                                             </button>
                                                         </div>
                                                     </td>
@@ -505,7 +505,7 @@ const SchoolManagement = ({ currentUser }) => {
                                         <div className="flex items-start justify-between mb-3">
                                             <div>
                                                 <h3 
-                                                    className="font-medium text-indigo-600 hover:text-indigo-800 cursor-pointer transition-colors"
+                                                    className="font-medium text-emerald-600 hover:text-emerald-800 cursor-pointer transition-colors"
                                                     onClick={() => handleViewDetails(school)}
                                                 >
                                                     {school.name}
@@ -539,7 +539,7 @@ const SchoolManagement = ({ currentUser }) => {
                                             <button
                                                 onClick={() => !school.admin && handleAssignAdmin(school)}
                                                 disabled={!!school.admin}
-                                                className={`flex-1 py-2 text-sm rounded-lg transition-colors ${school.admin ? 'text-gray-400 cursor-not-allowed' : 'text-purple-600 hover:bg-purple-50'}`}
+                                                className={`flex-1 py-2 text-sm rounded-lg transition-colors ${school.admin ? 'text-gray-400 cursor-not-allowed' : 'text-emerald-600 hover:bg-emerald-50'}`}
                                             >
                                                 {school.admin ? 'Assigned' : 'Admin'}
                                             </button>
@@ -618,10 +618,10 @@ const SchoolManagement = ({ currentUser }) => {
                                         <button
                                             key={admin.id}
                                             onClick={() => handleAssignAdminSubmit(admin)}
-                                            className="w-full p-3 flex items-center gap-3 hover:bg-indigo-50 rounded-lg border border-gray-200 transition-colors"
+                                            className="w-full p-3 flex items-center gap-3 hover:bg-emerald-50 rounded-lg border border-gray-200 transition-colors"
                                         >
-                                            <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                                                <span className="font-semibold text-indigo-600">{admin.name.charAt(0)}</span>
+                                            <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                                                <span className="font-semibold text-emerald-600">{admin.name.charAt(0)}</span>
                                             </div>
                                             <div className="text-left flex-1">
                                                 <p className="font-medium text-gray-800">{admin.name}</p>
@@ -655,10 +655,10 @@ const SchoolManagement = ({ currentUser }) => {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="text-center">
-                                <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${confirmAction === 'hardDelete' ? 'bg-rose-100' :
+                                <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${confirmAction === 'hardDelete' ? 'bg-orange-100' :
                                     confirmAction === 'suspend' ? 'bg-amber-100' : 'bg-blue-100'
                                     }`}>
-                                    {confirmAction === 'hardDelete' ? <Trash2 className="w-8 h-8 text-rose-600" /> :
+                                    {confirmAction === 'hardDelete' ? <Trash2 className="w-8 h-8 text-orange-600" /> :
                                         confirmAction === 'suspend' ? <PauseCircle className="w-8 h-8 text-amber-600" /> :
                                             confirmAction === 'activate' ? <PlayCircle className="w-8 h-8 text-emerald-600" /> :
                                                 <Power className="w-8 h-8 text-blue-600" />}
@@ -686,7 +686,7 @@ const SchoolManagement = ({ currentUser }) => {
                                                 type="text"
                                                 value={confirmationInput}
                                                 onChange={(e) => setConfirmationInput(e.target.value)}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                                                 placeholder="delete"
                                             />
                                         </div>
@@ -700,7 +700,7 @@ const SchoolManagement = ({ currentUser }) => {
                                 <Button
                                     onClick={executeConfirmAction}
                                     disabled={(confirmAction === 'softDelete' || confirmAction === 'hardDelete') && confirmationInput !== 'delete'}
-                                    className={`flex-1 ${(confirmAction === 'hardDelete' || confirmAction === 'softDelete') ? 'bg-rose-600 hover:bg-rose-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+                                    className={`flex-1 ${(confirmAction === 'hardDelete' || confirmAction === 'softDelete') ? 'bg-orange-600 hover:bg-orange-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}
                                 >
                                     Confirm
                                 </Button>
@@ -736,8 +736,8 @@ const SchoolManagement = ({ currentUser }) => {
 
                             <div className="space-y-4">
                                 <div className="flex items-start gap-4">
-                                    <div className="w-14 h-14 bg-indigo-100 rounded-xl flex items-center justify-center">
-                                        <Building2 className="w-7 h-7 text-indigo-600" />
+                                    <div className="w-14 h-14 bg-emerald-100 rounded-xl flex items-center justify-center">
+                                        <Building2 className="w-7 h-7 text-emerald-600" />
                                     </div>
                                     <div className="flex-1">
                                         <h3 className="font-semibold text-gray-800 text-lg">{selectedSchool.name}</h3>
@@ -788,8 +788,8 @@ const SchoolManagement = ({ currentUser }) => {
                                     <p className="text-sm text-gray-500 mb-2">School Admin</p>
                                     {selectedSchool.admin ? (
                                         <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                                                <span className="font-semibold text-purple-600">{selectedSchool.admin.name.charAt(0)}</span>
+                                            <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                                                <span className="font-semibold text-emerald-600">{selectedSchool.admin.name.charAt(0)}</span>
                                             </div>
                                             <div>
                                                 <p className="font-medium text-gray-800">{selectedSchool.admin.name}</p>

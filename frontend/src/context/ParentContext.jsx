@@ -120,10 +120,10 @@ export const ParentProvider = ({ children: routeChildren, currentUser }) => {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => handleChildSelect(child)}
-                            className="bg-white rounded-2xl shadow-lg p-8 cursor-pointer border-2 border-transparent hover:border-purple-500 transition-all flex flex-col items-center text-center space-y-6"
+                            className="bg-white rounded-2xl shadow-lg p-8 cursor-pointer border-2 border-transparent hover:border-emerald-500 transition-all flex flex-col items-center text-center space-y-6"
                         >
-                            <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-full flex items-center justify-center shadow-inner">
-                                <User className="w-12 h-12 text-purple-600" />
+                            <div className="w-24 h-24 bg-gradient-to-br from-emerald-100 to-emerald-100 rounded-full flex items-center justify-center shadow-inner">
+                                <User className="w-12 h-12 text-emerald-600" />
                             </div>
                             <div>
                                 <h3 className="text-2xl font-bold text-gray-900">{child.name}</h3>
@@ -132,7 +132,7 @@ export const ParentProvider = ({ children: routeChildren, currentUser }) => {
                                     <p className="text-gray-400 text-sm">Roll No: {child.rollNo}</p>
                                 </div>
                             </div>
-                            <Button className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-lg py-6 shadow-md rounded-xl">
+                            <Button className="w-full bg-gradient-to-r from-emerald-600 to-emerald-600 hover:from-emerald-700 hover:to-emerald-700 text-lg py-6 shadow-md rounded-xl">
                                 View Profile
                             </Button>
                         </motion.div>
@@ -146,7 +146,7 @@ export const ParentProvider = ({ children: routeChildren, currentUser }) => {
     if (isLoading) {
         return (
             <div className="flex justify-center items-center h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
             </div>
         );
     }

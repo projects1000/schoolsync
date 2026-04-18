@@ -139,7 +139,7 @@ const GlobalFeeSettings = ({ currentUser }) => {
             </div>
             <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
                 <div className="text-right">
-                    <span className={`text-lg font-bold ${type === 'late' ? 'text-rose-600' :
+                    <span className={`text-lg font-bold ${type === 'late' ? 'text-orange-600' :
                         type === 'discount' ? 'text-emerald-600' : 'text-blue-600'
                         }`}>
                         {rule.value}{rule.type === 'Percentage' || type === 'refund' ? '%' : rule.unit ? ` ${rule.unit}` : ''}
@@ -156,7 +156,7 @@ const GlobalFeeSettings = ({ currentUser }) => {
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl shadow-lg p-6 text-white"
+                className="bg-gradient-to-r from-emerald-600 to-emerald-600 rounded-xl shadow-lg p-6 text-white"
             >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
@@ -379,7 +379,7 @@ const GlobalFeeSettings = ({ currentUser }) => {
                                                     <td className="py-3 text-gray-500">{rule.condition}</td>
                                                     <td className="py-3">
                                                         <span className={`font-semibold ${rule.refundPercent === 100 ? 'text-emerald-600' :
-                                                            rule.refundPercent === 0 ? 'text-rose-600' : 'text-blue-600'
+                                                            rule.refundPercent === 0 ? 'text-orange-600' : 'text-blue-600'
                                                             }`}>
                                                             {rule.refundPercent}%
                                                         </span>
@@ -510,7 +510,7 @@ const GlobalFeeSettings = ({ currentUser }) => {
                                     {/* Invoice Header */}
                                     <div className="flex justify-between items-start mb-6 pb-4 border-b">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center">
+                                            <div className="w-12 h-12 bg-emerald-600 rounded-lg flex items-center justify-center">
                                                 <span className="text-white font-bold text-xl">LS</span>
                                             </div>
                                             <div>
@@ -539,7 +539,7 @@ const GlobalFeeSettings = ({ currentUser }) => {
                                             </div>
                                             <div>
                                                 <p className="text-xs text-gray-500">Due Date</p>
-                                                <p className="text-sm font-medium text-rose-600">January 25, 2026</p>
+                                                <p className="text-sm font-medium text-orange-600">January 25, 2026</p>
                                             </div>
                                         </div>
                                     </div>

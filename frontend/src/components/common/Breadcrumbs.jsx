@@ -204,7 +204,7 @@ const Breadcrumbs = () => {
         <li className="flex items-center shrink-0">
           <Link
             to={getRoleHome(location.pathname)}
-            className="flex items-center gap-1 sm:gap-1.5 text-gray-400 hover:text-purple-600 transition-colors duration-200 group"
+            className="flex items-center gap-1 sm:gap-1.5 text-gray-400 hover:text-emerald-600 transition-colors duration-200 group"
             title={`${roleSection} Home`}
           >
             <Home className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
@@ -222,7 +222,7 @@ const Breadcrumbs = () => {
             ) : (
               <Link
                 to={crumb.path}
-                className="text-xs font-medium text-gray-400 hover:text-purple-600 transition-colors duration-200 truncate max-w-[140px] sm:max-w-[160px]"
+                className="text-xs font-medium text-gray-400 hover:text-emerald-600 transition-colors duration-200 truncate max-w-[140px] sm:max-w-[160px]"
               >
                 {crumb.label}
               </Link>
