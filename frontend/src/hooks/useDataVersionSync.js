@@ -37,20 +37,29 @@ export default function useDataVersionSync(enabled) {
 
   useEffect(() => {
     if (!enabled) {
-      sessionStorage.removeItem(STORAGE_KEY);
       return;
     }
 
     const currentVersion = parseVersion(versionQuery.data);
     if (currentVersion <= 0) return;
 
-    const lastVersion = parseVersion(sessionStorage.getItem(STORAGE_KEY));
-    if (lastVersion > 0 && currentVersion > lastVersion) {
+    const lastVersion = parseVersion(localStorage.getItem(STORAGE_KEY));
+
+    // On first run with persisted query data, force one consistency refresh.
+    if (lastVersion === 0) {
+      queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey?.[0] !== 'meta',
+      });
+      localStorage.setItem(STORAGE_KEY, String(currentVersion));
+      return;
+    }
+
+    if (currentVersion > lastVersion) {
       queryClient.invalidateQueries({
         predicate: (query) => query.queryKey?.[0] !== 'meta',
       });
     }
 
-    sessionStorage.setItem(STORAGE_KEY, String(currentVersion));
+    localStorage.setItem(STORAGE_KEY, String(currentVersion));
   }, [enabled, queryClient, versionQuery.data]);
 }
