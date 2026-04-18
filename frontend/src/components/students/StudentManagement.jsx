@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import {
   Plus,
@@ -52,7 +53,7 @@ import {
 const StudentManagement = () => {
   const { toast } = useToast();
   const location = useLocation();
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [students, setStudents] = useState([]);
   const [classes, setClasses] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -89,47 +90,61 @@ const StudentManagement = () => {
     classId: "",
   });
 
-  useEffect(() => {
-    fetchInitialData();
-
-    // Check for passed filter from navigation state
-    if (location.state?.filterClass) {
-      setFilterClass(location.state.filterClass);
-    }
-  }, [page, pageSize]);
-
-  const fetchInitialData = async () => {
-    try {
-      setLoading(true);
+  const studentsDataQuery = useQuery({
+    queryKey: ["admin", "students-management", page, pageSize],
+    queryFn: async () => {
       const params = { page, size: pageSize };
       const [studentsRes, classesData] = await Promise.all([
         adminService.getStudents(params),
         adminService.getClasses(),
       ]);
 
-      // Handle Page object
-      if (studentsRes && studentsRes.content) {
-        setStudents(studentsRes.content);
-        setTotalPages(studentsRes.totalPages);
-        setTotalElements(studentsRes.totalElements);
-      } else {
-        setStudents(studentsRes || []);
-        setTotalPages(1);
-        setTotalElements(studentsRes?.length || 0);
-      }
+      return {
+        studentsRes,
+        classesData,
+      };
+    },
+    staleTime: 1000 * 60,
+    placeholderData: (previousData) => previousData,
+  });
 
-      setClasses(classesData.content || classesData || []);
-    } catch (error) {
-      console.error("Failed to fetch data", error);
-      toast({
-        title: "Error",
-        description: "Failed to load data",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    // Check for passed filter from navigation state
+    if (location.state?.filterClass) {
+      setFilterClass(location.state.filterClass);
     }
-  };
+  }, [location.state?.filterClass]);
+
+  useEffect(() => {
+    if (!studentsDataQuery.data) return;
+
+    const { studentsRes, classesData } = studentsDataQuery.data;
+
+    if (studentsRes && studentsRes.content) {
+      setStudents(studentsRes.content);
+      setTotalPages(studentsRes.totalPages);
+      setTotalElements(studentsRes.totalElements);
+    } else {
+      setStudents(studentsRes || []);
+      setTotalPages(1);
+      setTotalElements(studentsRes?.length || 0);
+    }
+
+    setClasses(classesData.content || classesData || []);
+  }, [studentsDataQuery.data]);
+
+  useEffect(() => {
+    if (!studentsDataQuery.error) return;
+
+    console.error("Failed to fetch data", studentsDataQuery.error);
+    toast({
+      title: "Error",
+      description: "Failed to load data",
+      variant: "destructive",
+    });
+  }, [studentsDataQuery.error, toast]);
+
+  const loading = studentsDataQuery.isLoading || studentsDataQuery.isFetching;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -146,7 +161,7 @@ const StudentManagement = () => {
       await adminService.createStudent(formData);
       toast({ title: "Success", description: "Student admitted successfully" });
       setIsAddModalOpen(false);
-      fetchInitialData();
+      queryClient.invalidateQueries({ queryKey: ["admin", "students-management"] });
       setFormData({
         name: "",
         classId: "",
@@ -182,7 +197,7 @@ const StudentManagement = () => {
       await adminService.updateStudent(currentStudent.id, payload);
       toast({ title: "Success", description: "Student updated successfully" });
       setIsEditModalOpen(false);
-      fetchInitialData();
+      queryClient.invalidateQueries({ queryKey: ["admin", "students-management"] });
     } catch (error) {
       toast({
         title: "Error",
@@ -203,7 +218,7 @@ const StudentManagement = () => {
       await adminService.promoteStudent(currentStudent.id, promoteData);
       toast({ title: "Success", description: "Student promoted successfully" });
       setIsPromoteModalOpen(false);
-      fetchInitialData();
+      queryClient.invalidateQueries({ queryKey: ["admin", "students-management"] });
     } catch (error) {
       toast({
         title: "Error",
@@ -236,7 +251,7 @@ const StudentManagement = () => {
 
       setIsConfirmModalOpen(false);
       setConfirmAction(null);
-      fetchInitialData();
+      queryClient.invalidateQueries({ queryKey: ["admin", "students-management"] });
     } catch (error) {
       console.error(error);
 

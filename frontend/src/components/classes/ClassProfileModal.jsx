@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import adminService from '../../services/adminService';
 import {
     X, Users, BookOpen, User, GraduationCap, MapPin, Loader2, AlertCircle,
@@ -27,43 +28,37 @@ const subjectIconMap = {
 };
 
 const ClassProfileModal = ({ isOpen, onClose, selectedClass, globalSubjects, teachers }) => {
-    const [students, setStudents] = useState([]);
-    const [classSubjects, setClassSubjects] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const {
+        data: profileData,
+        isLoading: loading,
+        isError,
+    } = useQuery({
+        queryKey: ['class-profile', selectedClass?.id],
+        enabled: Boolean(isOpen && selectedClass?.id),
+        queryFn: async () => {
+            const [studentsData, subjectsData] = await Promise.all([
+                adminService.getClassStudents(selectedClass.id),
+                adminService.getClassSubjects(selectedClass.id)
+            ]);
 
-    useEffect(() => {
-        if (!isOpen || !selectedClass) return;
+            return {
+                students: studentsData?.content || [],
+                classSubjectsRaw: subjectsData || [],
+            };
+        },
+        staleTime: 1000 * 60 * 2,
+    });
 
-        const fetchProfileData = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                // Fetch students and subjects in parallel
-                const [studentsData, subjectsData] = await Promise.all([
-                    adminService.getClassStudents(selectedClass.id),
-                    adminService.getClassSubjects(selectedClass.id)
-                ]);
-
-                // Map assigned subjects to actual subject names
-                const mappedSubjects = (subjectsData || []).map(cs => ({
-                    ...cs,
-                    subjectName: globalSubjects.find(s => s.id === cs.subjectId)?.name || 'Unknown Subject',
-                    teacherName: teachers.find(t => t.id === cs.teacherId)?.name || 'Unassigned'
-                }));
-
-                setStudents(studentsData.content || []);
-                setClassSubjects(mappedSubjects);
-            } catch (err) {
-                console.error("Failed to fetch class profile:", err);
-                setError("Failed to load class details.");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchProfileData();
-    }, [isOpen, selectedClass, globalSubjects, teachers]);
+    const students = profileData?.students || [];
+    const classSubjects = useMemo(() => {
+        const classSubjectsRaw = profileData?.classSubjectsRaw || [];
+        return classSubjectsRaw.map(cs => ({
+            ...cs,
+            subjectName: globalSubjects.find(s => s.id === cs.subjectId)?.name || 'Unknown Subject',
+            teacherName: teachers.find(t => t.id === cs.teacherId)?.name || 'Unassigned'
+        }));
+    }, [profileData?.classSubjectsRaw, globalSubjects, teachers]);
+    const error = isError ? 'Failed to load class details.' : null;
 
     if (!selectedClass) return null;
 

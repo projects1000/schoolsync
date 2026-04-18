@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Save, Building, Phone, Mail, Clock, MapPin } from 'lucide-react';
 import adminService from '@/services/adminService';
@@ -9,7 +10,7 @@ import { Label } from '@/components/ui/label';
 
 const SchoolProfile = () => {
     const { toast } = useToast();
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
     const [saving, setSaving] = useState(false);
     const [school, setSchool] = useState({
         name: '',
@@ -23,25 +24,28 @@ const SchoolProfile = () => {
         pincode: ''
     });
 
-    useEffect(() => {
-        const fetchSchool = async () => {
-            try {
-                const data = await adminService.getSchoolProfile();
-                setSchool(data);
-            } catch (error) {
-                console.error("Failed to fetch school profile", error);
-                toast({
-                    title: "Error",
-                    description: "Failed to load school profile.",
-                    variant: "destructive"
-                });
-            } finally {
-                setLoading(false);
-            }
-        };
+    const schoolProfileQuery = useQuery({
+        queryKey: ['admin', 'school-profile'],
+        queryFn: () => adminService.getSchoolProfile(),
+        staleTime: 1000 * 60,
+    });
 
-        fetchSchool();
-    }, [toast]);
+    useEffect(() => {
+        if (!schoolProfileQuery.data) return;
+        setSchool(schoolProfileQuery.data);
+    }, [schoolProfileQuery.data]);
+
+    useEffect(() => {
+        if (!schoolProfileQuery.error) return;
+        console.error('Failed to fetch school profile', schoolProfileQuery.error);
+        toast({
+            title: 'Error',
+            description: 'Failed to load school profile.',
+            variant: 'destructive'
+        });
+    }, [schoolProfileQuery.error, toast]);
+
+    const loading = schoolProfileQuery.isLoading || schoolProfileQuery.isFetching;
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -56,6 +60,7 @@ const SchoolProfile = () => {
         try {
             setSaving(true);
             await adminService.updateSchoolProfile(school);
+            queryClient.invalidateQueries({ queryKey: ['admin', 'school-profile'] });
             toast({
                 title: "Success",
                 description: "School profile updated successfully!"

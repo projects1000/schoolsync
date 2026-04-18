@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import api from '@/services/api';
 import { Loader2, Users, Calendar, BookOpen, FileText, Shield } from 'lucide-react';
@@ -6,39 +7,36 @@ import { MODULE_TO_PATH } from '@/routeConfig';
 
 const TeacherDashboard = () => {
     const navigate = useNavigate();
-    const [dashboardData, setDashboardData] = useState(null);
-    const [roleInfo, setRoleInfo] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const authToken = localStorage.getItem('authToken');
+
+    const dashboardQuery = useQuery({
+        queryKey: ['teacher', 'dashboard'],
+        queryFn: async () => {
+            const [dashboardResponse, roleInfoResponse] = await Promise.all([
+                api.get('/teacher/dashboard'),
+                api.get('/teacher/role-info')
+            ]);
+            return {
+                dashboardData: dashboardResponse.data,
+                roleInfo: roleInfoResponse.data,
+            };
+        },
+        enabled: Boolean(authToken),
+        staleTime: 1000 * 60,
+    });
 
     useEffect(() => {
-        const fetchDashboard = async () => {
-            try {
-                const token = localStorage.getItem('authToken');
-                // Ensure we handle the case where token might be missing or expired
-                if (!token) {
-                    setError("Not authenticated");
-                    setLoading(false);
-                    return;
-                }
+        if (dashboardQuery.error) {
+            console.error('Error fetching dashboard:', dashboardQuery.error);
+        }
+    }, [dashboardQuery.error]);
 
-                // Fetch dashboard data and role info in parallel
-                const [dashboardResponse, roleInfoResponse] = await Promise.all([
-                    api.get('/teacher/dashboard'),
-                    api.get('/teacher/role-info')
-                ]);
-                setDashboardData(dashboardResponse.data);
-                setRoleInfo(roleInfoResponse.data);
-            } catch (err) {
-                console.error("Error fetching dashboard:", err);
-                // Fallback for demo if backend is not reachable immediately
-                setError("Failed to load dashboard data. Please check your connection.");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchDashboard();
-    }, []);
+    const dashboardData = dashboardQuery.data?.dashboardData || null;
+    const roleInfo = dashboardQuery.data?.roleInfo || null;
+    const loading = !authToken || dashboardQuery.isLoading || dashboardQuery.isFetching;
+    const error = !authToken
+        ? 'Not authenticated'
+        : (dashboardQuery.error ? 'Failed to load dashboard data. Please check your connection.' : null);
 
     if (loading) return (
         <div className="space-y-6 animate-pulse">

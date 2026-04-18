@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Folder, FileText, Download, Trash2, Paperclip, BookOpen } from 'lucide-react';
 import api from '@/services/api';
 import { useToast } from '@/components/ui/use-toast';
@@ -26,10 +27,10 @@ import { Badge } from '@/components/ui/badge';
 
 const LearningResources = () => {
     const { toast } = useToast();
+    const queryClient = useQueryClient();
     const [classes, setClasses] = useState([]);
     const [selectedClassId, setSelectedClassId] = useState('');
     const [materials, setMaterials] = useState([]);
-    const [loading, setLoading] = useState(false);
 
     // Upload Modal State
     const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -41,43 +42,46 @@ const LearningResources = () => {
         file: null
     });
 
-    useEffect(() => {
-        fetchClasses();
-    }, []);
+    const classesQuery = useQuery({
+        queryKey: ['teacher', 'learning-resources', 'classes'],
+        queryFn: () => api.get('/teacher/classes'),
+        staleTime: 1000 * 60,
+    });
+
+    const materialsQuery = useQuery({
+        queryKey: ['teacher', 'learning-resources', 'materials', selectedClassId],
+        queryFn: () => api.get(`/teacher/study-materials/class/${selectedClassId}`),
+        enabled: Boolean(selectedClassId) && selectedClassId !== 'all',
+        staleTime: 1000 * 30,
+        placeholderData: (previousData) => previousData,
+    });
 
     useEffect(() => {
-        if (selectedClassId && selectedClassId !== 'all') {
-            fetchMaterials();
-        } else {
-            setMaterials([]);
+        if (!classesQuery.data) return;
+        const classesData = classesQuery.data.data || [];
+        setClasses(classesData);
+        if (!selectedClassId && classesData.length > 0) {
+            setSelectedClassId(classesData[0].id);
         }
-    }, [selectedClassId]);
+    }, [classesQuery.data, selectedClassId]);
 
-    const fetchClasses = async () => {
-        try {
-            // Use /teacher/classes which returns ALL assigned classes (subject teacher + class teacher)
-            const res = await api.get('/teacher/classes');
-            setClasses(res.data);
-            if (res.data.length > 0) {
-                setSelectedClassId(res.data[0].id);
+    useEffect(() => {
+        if (!materialsQuery.data) {
+            if (!selectedClassId || selectedClassId === 'all') {
+                setMaterials([]);
             }
-        } catch (err) {
-            console.error(err);
+            return;
         }
-    };
+        setMaterials(materialsQuery.data.data || []);
+    }, [materialsQuery.data, selectedClassId]);
 
-    const fetchMaterials = async () => {
-        setLoading(true);
-        try {
-            const res = await api.get(`/teacher/study-materials/class/${selectedClassId}`);
-            setMaterials(res.data);
-        } catch (err) {
-            console.error(err);
-            toast({ title: "Error", description: "Failed to fetch materials", variant: "destructive" });
-        } finally {
-            setLoading(false);
-        }
-    };
+    useEffect(() => {
+        if (!materialsQuery.error) return;
+        console.error(materialsQuery.error);
+        toast({ title: 'Error', description: 'Failed to fetch materials', variant: 'destructive' });
+    }, [materialsQuery.error, toast]);
+
+    const loading = materialsQuery.isLoading || materialsQuery.isFetching;
 
     const handleFileChange = (e) => {
         if (e.target.files && e.target.files[0]) {
@@ -105,8 +109,8 @@ const LearningResources = () => {
             toast({ title: "Success", description: "Material uploaded successfully" });
             setIsUploadOpen(false);
             setFormData({ title: '', description: '', type: 'MATERIAL', classId: '', file: null });
-            if (selectedClassId === formData.classId) {
-                fetchMaterials();
+            if (formData.classId) {
+                queryClient.invalidateQueries({ queryKey: ['teacher', 'learning-resources', 'materials', formData.classId] });
             }
         } catch (err) {
             console.error(err);

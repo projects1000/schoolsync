@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -23,23 +24,27 @@ const SchoolDetails = ({ currentUser }) => {
     const { schoolId } = useParams();
     const navigate = useNavigate();
     
-    const [isLoading, setIsLoading] = useState(true);
     const [schoolData, setSchoolData] = useState(null);
     const [activeTab, setActiveTab] = useState('overview');
 
+    const schoolDetailsQuery = useQuery({
+        queryKey: ['superadmin', 'school-details', schoolId],
+        queryFn: () => SuperAdminService.getSchoolDetails(schoolId),
+        enabled: Boolean(schoolId),
+        staleTime: 1000 * 60,
+    });
+
     useEffect(() => {
-        const fetchDetails = async () => {
-            try {
-                const response = await SuperAdminService.getSchoolDetails(schoolId);
-                setSchoolData(response.data);
-            } catch (error) {
-                console.error("Failed to fetch school details:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchDetails();
-    }, [schoolId]);
+        if (!schoolDetailsQuery.data) return;
+        setSchoolData(schoolDetailsQuery.data.data || null);
+    }, [schoolDetailsQuery.data]);
+
+    useEffect(() => {
+        if (!schoolDetailsQuery.error) return;
+        console.error('Failed to fetch school details:', schoolDetailsQuery.error);
+    }, [schoolDetailsQuery.error]);
+
+    const isLoading = schoolDetailsQuery.isLoading || schoolDetailsQuery.isFetching;
 
     if (isLoading) {
         return (

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Calendar } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -9,33 +10,31 @@ const ParentAttendance = ({ currentUser }) => {
     const { toast } = useToast();
     const { selectedChild } = useParent();
     const [attendance, setAttendance] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+
+    const attendanceQuery = useQuery({
+        queryKey: ['parent', 'attendance', selectedChild?.id],
+        queryFn: () => api.get(`/parent/children/${selectedChild.id}/attendance`),
+        enabled: Boolean(selectedChild?.id),
+        staleTime: 1000 * 60,
+    });
 
     useEffect(() => {
-        if (selectedChild) {
-            fetchAttendance();
-        }
-    }, [selectedChild]);
+        if (!attendanceQuery.data) return;
+        setAttendance(attendanceQuery.data.data || []);
+    }, [attendanceQuery.data]);
 
-    const fetchAttendance = async () => {
-        if (!selectedChild) return;
+    useEffect(() => {
+        if (!attendanceQuery.error) return;
+        console.error('Error fetching attendance:', attendanceQuery.error);
+        toast({
+            title: 'Error',
+            description: 'Failed to load attendance data',
+            variant: 'destructive'
+        });
+        setAttendance([]);
+    }, [attendanceQuery.error, toast]);
 
-        try {
-            setIsLoading(true);
-            const response = await api.get(`/parent/children/${selectedChild.id}/attendance`);
-            setAttendance(response.data || []);
-        } catch (error) {
-            console.error('Error fetching attendance:', error);
-            toast({
-                title: "Error",
-                description: "Failed to load attendance data",
-                variant: "destructive"
-            });
-            setAttendance([]);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const isLoading = attendanceQuery.isLoading || attendanceQuery.isFetching;
 
     const attendancePercentage = attendance.length > 0
         ? Math.round((attendance.filter(a => a.status === 'PRESENT' || a.status === 'present').length / attendance.length) * 100)

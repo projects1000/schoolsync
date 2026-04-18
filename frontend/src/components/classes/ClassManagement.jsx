@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
   Search,
@@ -46,7 +47,7 @@ import Pagination from "../common/Pagination";
 const ClassManagement = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [classes, setClasses] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -90,66 +91,85 @@ const ClassManagement = () => {
     locked: false,
   });
 
-  const fetchClasses = async (page = 0) => {
-    try {
-      setLoading(true);
-      const response = await adminService.getClasses({
-        page,
+  const classesQuery = useQuery({
+    queryKey: ["admin", "classes", pagination.currentPage, pagination.pageSize],
+    queryFn: () =>
+      adminService.getClasses({
+        page: pagination.currentPage,
         size: pagination.pageSize,
         sort: "createdAt,desc",
-      });
+      }),
+    staleTime: 1000 * 60,
+    placeholderData: (previousData) => previousData,
+  });
 
-      // Handle both array (legacy) and Page object (new)
-      if (response && response.content) {
-        setClasses(response.content);
-        setPagination((prev) => ({
-          ...prev,
-          currentPage: response.number,
-          totalPages: response.totalPages,
-          totalElements: response.totalElements,
-        }));
-      } else {
-        setClasses(response || []);
-        setPagination((prev) => ({
-          ...prev,
-          totalPages: 1,
-          totalElements: (response || []).length,
-        }));
-      }
-      // Initial state: grades are collapsed by default
-      setExpandedGrades({});
-    } catch (error) {
-      console.error("Failed to fetch classes", error);
+  const wizardDataQuery = useQuery({
+    queryKey: ["admin", "class-management-wizard-data"],
+    queryFn: async () => {
+      const [teacherData, subjectData] = await Promise.all([
+        adminService.getTeachers({ size: 1000 }),
+        adminService.getSubjects({ size: 1000 }),
+      ]);
+
+      return {
+        teachers: teacherData?.content || [],
+        subjects: subjectData?.content || [],
+      };
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const loading = classesQuery.isLoading || classesQuery.isFetching;
+
+  useEffect(() => {
+    if (!classesQuery.data) return;
+
+    const response = classesQuery.data;
+    if (response && response.content) {
+      setClasses(response.content);
+      setPagination((prev) => ({
+        ...prev,
+        currentPage: response.number,
+        totalPages: response.totalPages,
+        totalElements: response.totalElements,
+      }));
+    } else {
+      setClasses(response || []);
+      setPagination((prev) => ({
+        ...prev,
+        totalPages: 1,
+        totalElements: (response || []).length,
+      }));
+    }
+    setExpandedGrades({});
+  }, [classesQuery.data]);
+
+  useEffect(() => {
+    if (classesQuery.error) {
+      console.error("Failed to fetch classes", classesQuery.error);
       toast({
         title: "Error",
         description: "Failed to load classes.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
-  };
-
-  const handlePageChange = (newPage) => {
-    fetchClasses(newPage);
-  };
+  }, [classesQuery.error, toast]);
 
   useEffect(() => {
-    fetchClasses();
-    fetchTeachersAndSubjects();
-  }, []);
+    if (!wizardDataQuery.data) return;
 
-  const fetchTeachersAndSubjects = async () => {
-    try {
-      const [teacherData, subjectData] = await Promise.all([
-        adminService.getTeachers({ size: 1000 }),
-        adminService.getSubjects({ size: 1000 }),
-      ]);
-      setTeachers(teacherData.content || []);
-      setGlobalSubjects(subjectData.content || []);
-    } catch (error) {
-      console.error("Failed to fetch wizard data", error);
+    setTeachers(wizardDataQuery.data.teachers || []);
+    setGlobalSubjects(wizardDataQuery.data.subjects || []);
+  }, [wizardDataQuery.data]);
+
+  useEffect(() => {
+    if (wizardDataQuery.error) {
+      console.error("Failed to fetch wizard data", wizardDataQuery.error);
     }
+  }, [wizardDataQuery.error]);
+
+  const handlePageChange = (newPage) => {
+    setPagination((prev) => ({ ...prev, currentPage: newPage }));
   };
 
   // Group classes by grade
@@ -235,7 +255,7 @@ const ClassManagement = () => {
       });
 
       resetWizard();
-      fetchClasses();
+      queryClient.invalidateQueries({ queryKey: ["admin", "classes"] });
     } catch (error) {
       console.error(error);
       toast({
@@ -364,7 +384,7 @@ const ClassManagement = () => {
         description: `Section "${formData.section}" added to ${formData.grade}`,
       });
       setIsAddSectionModalOpen(false);
-      fetchClasses();
+      queryClient.invalidateQueries({ queryKey: ["admin", "classes"] });
       setFormData({
         grade: "",
         section: "",
@@ -405,7 +425,7 @@ const ClassManagement = () => {
       await adminService.updateClass(currentClass.id, formData);
       toast({ title: "Success", description: "Section updated successfully" });
       setIsEditModalOpen(false);
-      fetchClasses();
+      queryClient.invalidateQueries({ queryKey: ["admin", "classes"] });
     } catch (error) {
       console.error(error);
       toast({
@@ -430,7 +450,7 @@ const ClassManagement = () => {
         description: `Section ${classToDelete.section} has been moved to trash.`,
       });
       setClassToDelete(null);
-      fetchClasses();
+      queryClient.invalidateQueries({ queryKey: ["admin", "classes"] });
     } catch (error) {
       console.error(error);
       toast({

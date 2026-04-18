@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { User, Calendar, MessageSquare, Download, AlertCircle } from 'lucide-react';
@@ -26,7 +27,6 @@ const ParentOverview = ({ currentUser }) => {
     const [attendance, setAttendance] = useState([]);
     const [messages, setMessages] = useState([]);
     const [attendancePercentage, setAttendancePercentage] = useState(100);
-    const [isLoading, setIsLoading] = useState(true);
     const [showProfileReminder, setShowProfileReminder] = useState(false);
 
     // Show profile reminder popup if child's profile is incomplete
@@ -38,41 +38,47 @@ const ParentOverview = ({ currentUser }) => {
         }
     }, [selectedChild]);
 
+    const attendanceQuery = useQuery({
+        queryKey: ['parent', 'overview', 'attendance', selectedChild?.id],
+        queryFn: () => api.get(`/parent/children/${selectedChild.id}/attendance`),
+        enabled: Boolean(selectedChild?.id),
+        staleTime: 1000 * 60,
+    });
+
+    const messagesQuery = useQuery({
+        queryKey: ['parent', 'overview', 'messages', selectedChild?.id],
+        queryFn: () => api.get(`/parent/messages/${selectedChild.id}`),
+        enabled: Boolean(selectedChild?.id),
+        staleTime: 1000 * 60,
+    });
+
     useEffect(() => {
-        if (selectedChild) {
-            fetchChildData(selectedChild.id);
+        if (!attendanceQuery.data) return;
+        const attendanceData = attendanceQuery.data.data || [];
+        setAttendance(attendanceData);
+
+        if (attendanceData.length > 0) {
+            const presentCount = attendanceData.filter(
+                a => a.status === 'PRESENT' || a.status === 'present'
+            ).length;
+            const percentage = Math.round((presentCount / attendanceData.length) * 100);
+            setAttendancePercentage(percentage);
+        } else {
+            setAttendancePercentage(100);
         }
-    }, [selectedChild]);
+    }, [attendanceQuery.data]);
 
-    const fetchChildData = async (childId) => {
-        try {
-            setIsLoading(true);
-            // Fetch attendance
-            const attendanceResponse = await api.get(`/parent/children/${childId}/attendance`);
-            const attendanceData = attendanceResponse.data || [];
-            setAttendance(attendanceData);
+    useEffect(() => {
+        if (!messagesQuery.data) return;
+        setMessages(messagesQuery.data.data || []);
+    }, [messagesQuery.data]);
 
-            // Calculate attendance percentage
-            if (attendanceData.length > 0) {
-                const presentCount = attendanceData.filter(
-                    a => a.status === 'PRESENT' || a.status === 'present'
-                ).length;
-                const percentage = Math.round((presentCount / attendanceData.length) * 100);
-                setAttendancePercentage(percentage);
-            } else {
-                setAttendancePercentage(100);
-            }
+    useEffect(() => {
+        if (!attendanceQuery.error && !messagesQuery.error) return;
+        console.error('Error fetching child data:', attendanceQuery.error || messagesQuery.error);
+    }, [attendanceQuery.error, messagesQuery.error]);
 
-            // Fetch messages for specific child
-            const messagesResponse = await api.get(`/parent/messages/${childId}`);
-            setMessages(messagesResponse.data || []);
-
-        } catch (error) {
-            console.error('Error fetching child data:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const isLoading = attendanceQuery.isLoading || attendanceQuery.isFetching || messagesQuery.isLoading || messagesQuery.isFetching;
 
     const handleDownloadReport = () => {
         if (!selectedChild) return;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { MessageSquare } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -9,31 +10,31 @@ const ParentMessages = ({ currentUser }) => {
     const { toast } = useToast();
     const { selectedChild } = useParent();
     const [messages, setMessages] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+
+    const messagesQuery = useQuery({
+        queryKey: ['parent', 'messages', selectedChild?.id],
+        queryFn: () => api.get(`/parent/messages/${selectedChild.id}`),
+        enabled: Boolean(selectedChild?.id),
+        staleTime: 1000 * 60,
+    });
 
     useEffect(() => {
-        if (selectedChild) {
-            fetchMessages();
-        }
-    }, [selectedChild]);
+        if (!messagesQuery.data) return;
+        setMessages(messagesQuery.data.data || []);
+    }, [messagesQuery.data]);
 
-    const fetchMessages = async () => {
-        try {
-            setIsLoading(true);
-            const response = await api.get(`/parent/messages/${selectedChild.id}`);
-            setMessages(response.data || []);
-        } catch (error) {
-            console.error('Error fetching messages:', error);
-            toast({
-                title: "Error",
-                description: "Failed to load messages",
-                variant: "destructive"
-            });
-            setMessages([]);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    useEffect(() => {
+        if (!messagesQuery.error) return;
+        console.error('Error fetching messages:', messagesQuery.error);
+        toast({
+            title: 'Error',
+            description: 'Failed to load messages',
+            variant: 'destructive'
+        });
+        setMessages([]);
+    }, [messagesQuery.error, toast]);
+
+    const isLoading = messagesQuery.isLoading || messagesQuery.isFetching;
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);

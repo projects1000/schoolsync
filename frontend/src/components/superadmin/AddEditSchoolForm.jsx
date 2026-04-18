@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Building2,
@@ -44,7 +45,6 @@ const AddEditSchoolForm = ({
     const [errors, setErrors] = useState({});
     const [selectedAdmin, setSelectedAdmin] = useState(null);
     const [availableAdmins, setAvailableAdmins] = useState([]);
-    const [isLoadingAdmins, setIsLoadingAdmins] = useState(false);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -90,32 +90,34 @@ const AddEditSchoolForm = ({
         }
     }, [editSchool, isOpen]);
 
-    // Fetch available admins when modal opens or step changes to 2
-    useEffect(() => {
-        if (isOpen && currentStep === 2) {
-            fetchAdmins();
-        }
-    }, [isOpen, currentStep]);
+    const adminsQuery = useQuery({
+        queryKey: ['superadmin', 'school-form', 'available-admins', editSchool?.id || 'new'],
+        queryFn: () => SuperAdminService.getAllAdmins({ page: 0, size: 1000 }),
+        enabled: isOpen && currentStep === 2,
+        staleTime: 1000 * 60,
+    });
 
-    const fetchAdmins = async () => {
-        try {
-            setIsLoadingAdmins(true);
-            const response = await SuperAdminService.getAllAdmins();
-            // Filter out admins who already have a school assigned, unless it's the current school's admin
-            const allAdmins = response.data || [];
-            const unassignedAdmins = allAdmins.filter(admin => !admin.schoolId || (editSchool && admin.id === editSchool.adminId));
-            setAvailableAdmins(unassignedAdmins);
-        } catch (error) {
-            console.error("Failed to fetch admins:", error);
-            toast({
-                title: 'Error',
-                description: 'Failed to load available admins',
-                variant: 'destructive'
-            });
-        } finally {
-            setIsLoadingAdmins(false);
-        }
-    };
+    useEffect(() => {
+        if (!adminsQuery.data) return;
+        const responseData = adminsQuery.data.data;
+        const allAdmins = responseData?.content || responseData || [];
+        const unassignedAdmins = allAdmins.filter(
+            admin => !admin.schoolId || (editSchool && admin.id === editSchool.adminId)
+        );
+        setAvailableAdmins(unassignedAdmins);
+    }, [adminsQuery.data, editSchool]);
+
+    useEffect(() => {
+        if (!adminsQuery.error) return;
+        console.error('Failed to fetch admins:', adminsQuery.error);
+        toast({
+            title: 'Error',
+            description: 'Failed to load available admins',
+            variant: 'destructive'
+        });
+    }, [adminsQuery.error, toast]);
+
+    const isLoadingAdmins = adminsQuery.isLoading || adminsQuery.isFetching;
 
     const resetForm = () => {
         setFormData({

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus, Search, Edit2, Mail, GraduationCap, BookOpen,
   ShieldOff, ShieldCheck, Trash2
@@ -38,7 +39,7 @@ import {
 
 const TeacherManagement = () => {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [teachers, setTeachers] = useState([]);
   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
@@ -74,78 +75,68 @@ const TeacherManagement = () => {
     password: ''
   });
 
-  const fetchTeachers = async () => {
-    try {
-      setLoading(true);
+  const teacherDataQuery = useQuery({
+    queryKey: ['admin', 'teachers-management', page, pageSize],
+    queryFn: async () => {
       const params = { page, size: pageSize };
-      const data = await adminService.getTeachers(params);
-      
-      // Handle Spring Data Page object
-      if (data && data.content) {
-        setTeachers(data.content);
-        setTotalPages(data.totalPages);
-        setTotalElements(data.totalElements);
-      } else {
-        setTeachers(data || []);
-        setTotalPages(1);
-        setTotalElements(data?.length || 0);
-      }
-    } catch (error) {
-      console.error("Failed to fetch teachers", error);
-      toast({ title: "Error", description: "Failed to load teachers", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
+      const [teachersData, classesDataRaw, subjectsData] = await Promise.all([
+        adminService.getTeachers(params),
+        adminService.getClasses({ size: 1000 }),
+        adminService.getSubjects({ size: 1000 }),
+      ]);
 
-  const fetchClasses = async () => {
-    try {
-      const data = await adminService.getClasses({ size: 1000 });
-      setClasses(data.content || []);
-      return data.content || [];
-    } catch (error) {
-      console.error(error);
-      return [];
-    }
-  };
+      const classesData = classesDataRaw?.content || classesDataRaw || [];
 
-  const fetchSubjects = async () => {
-    try {
-      const data = await adminService.getSubjects({ size: 1000 });
-      setSubjects(data.content || []);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+      const classSubjectsResults = await Promise.all(
+        classesData.map(async (cls) => {
+          try {
+            const classSubjects = await adminService.getClassSubjects(cls.id);
+            return [cls.id, classSubjects || []];
+          } catch {
+            return [cls.id, []];
+          }
+        })
+      );
 
-  const fetchAllClassSubjects = async (classesData) => {
-    try {
-      const subjectMap = {};
-      for (const cls of classesData) {
-        try {
-          const classSubjects = await adminService.getClassSubjects(cls.id);
-          subjectMap[cls.id] = classSubjects || [];
-        } catch {
-          subjectMap[cls.id] = [];
-        }
-      }
-      setClassSubjectsMap(subjectMap);
-    } catch (error) {
-      console.error("Failed to fetch class subjects", error);
-    }
-  };
+      return {
+        teachersData,
+        classesData,
+        subjectsData: subjectsData?.content || [],
+        classSubjectsMap: Object.fromEntries(classSubjectsResults),
+      };
+    },
+    staleTime: 1000 * 60,
+    placeholderData: (previousData) => previousData,
+  });
 
   useEffect(() => {
-    const loadData = async () => {
-      const classesData = await fetchClasses();
-      await Promise.all([
-        fetchTeachers(),
-        fetchSubjects(),
-        fetchAllClassSubjects(classesData)
-      ]);
-    };
-    loadData();
-  }, [page, pageSize]);
+    if (!teacherDataQuery.data) return;
+
+    const { teachersData, classesData, subjectsData, classSubjectsMap: mapData } = teacherDataQuery.data;
+
+    if (teachersData && teachersData.content) {
+      setTeachers(teachersData.content);
+      setTotalPages(teachersData.totalPages);
+      setTotalElements(teachersData.totalElements);
+    } else {
+      setTeachers(teachersData || []);
+      setTotalPages(1);
+      setTotalElements(teachersData?.length || 0);
+    }
+
+    setClasses(classesData || []);
+    setSubjects(subjectsData || []);
+    setClassSubjectsMap(mapData || {});
+  }, [teacherDataQuery.data]);
+
+  useEffect(() => {
+    if (!teacherDataQuery.error) return;
+
+    console.error('Failed to fetch teachers', teacherDataQuery.error);
+    toast({ title: 'Error', description: 'Failed to load teachers', variant: 'destructive' });
+  }, [teacherDataQuery.error, toast]);
+
+  const loading = teacherDataQuery.isLoading || teacherDataQuery.isFetching;
 
   // Compute teacher roles from classes and class subjects
   const teacherRoles = useMemo(() => {
@@ -198,7 +189,7 @@ const TeacherManagement = () => {
       await adminService.createTeacher(formData);
       toast({ title: "Success", description: "Teacher created successfully" });
       setIsAddModalOpen(false);
-      fetchTeachers();
+      queryClient.invalidateQueries({ queryKey: ['admin', 'teachers-management'] });
       setFormData({
         name: '', email: '', phone: '', department: '', qualification: '',
         experience: '', employmentType: 'FULL_TIME',
@@ -231,7 +222,7 @@ const TeacherManagement = () => {
       await adminService.updateTeacher(currentTeacher.id, formData);
       toast({ title: "Success", description: "Teacher updated successfully" });
       setIsEditModalOpen(false);
-      fetchTeachers();
+      queryClient.invalidateQueries({ queryKey: ['admin', 'teachers-management'] });
     } catch (error) {
       toast({ title: "Error", description: "Failed to update teacher", variant: "destructive" });
     }
@@ -267,7 +258,7 @@ const TeacherManagement = () => {
       }
       setIsConfirmModalOpen(false);
       setConfirmAction(null);
-      fetchTeachers();
+      queryClient.invalidateQueries({ queryKey: ['admin', 'teachers-management'] });
     } catch (error) {
       toast({
         title: "Error",

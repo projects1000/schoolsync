@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Send, History, User, Users, Inbox } from 'lucide-react';
 import api from '@/services/api';
 import { useToast } from '@/components/ui/use-toast';
@@ -16,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TeacherCommunications = ({ currentUser }) => {
     const { toast } = useToast();
+    const queryClient = useQueryClient();
     const [classes, setClasses] = useState([]);
     const [selectedClassId, setSelectedClassId] = useState('');
     const [students, setStudents] = useState([]);
@@ -23,77 +25,79 @@ const TeacherCommunications = ({ currentUser }) => {
     const [messageContent, setMessageContent] = useState('');
     const [messages, setMessages] = useState([]);
     const [inboxMessages, setInboxMessages] = useState([]);
-    const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('COMPOSE');
 
-    useEffect(() => {
-        fetchClasses();
-    }, []);
+    const classesQuery = useQuery({
+        queryKey: ['teacher', 'communications', 'classes'],
+        queryFn: () => api.get('/teacher/classes'),
+        staleTime: 1000 * 60,
+    });
+
+    const studentsQuery = useQuery({
+        queryKey: ['teacher', 'communications', 'students', selectedClassId],
+        queryFn: () => api.get(`/teacher/classes/${selectedClassId}/students`),
+        enabled: Boolean(selectedClassId),
+        staleTime: 1000 * 30,
+    });
+
+    const historyQuery = useQuery({
+        queryKey: ['teacher', 'communications', 'history', selectedClassId],
+        queryFn: () => api.get(`/teacher/messages/class/${selectedClassId}`),
+        enabled: Boolean(selectedClassId) && activeTab === 'HISTORY',
+        staleTime: 1000 * 30,
+    });
+
+    const inboxQuery = useQuery({
+        queryKey: ['teacher', 'communications', 'inbox'],
+        queryFn: () => api.get('/teacher/messages/inbox'),
+        enabled: activeTab === 'INBOX',
+        staleTime: 1000 * 30,
+    });
 
     useEffect(() => {
-        if (selectedClassId) {
-            fetchStudents();
-            setRecipientId('ALL');
+        if (!classesQuery.data) return;
+        const classesData = classesQuery.data.data || [];
+        setClasses(classesData);
+        if (!selectedClassId && classesData.length > 0) {
+            setSelectedClassId(classesData[0].id);
         }
-    }, [selectedClassId]);
+    }, [classesQuery.data, selectedClassId]);
 
     useEffect(() => {
-        if (selectedClassId && activeTab === 'HISTORY') {
-            fetchMessages();
-        } else if (activeTab === 'INBOX') {
-            fetchInboxMessages();
-        }
-    }, [selectedClassId, activeTab]);
+        if (!studentsQuery.data) return;
+        setStudents(studentsQuery.data.data || []);
+        setRecipientId('ALL');
+    }, [studentsQuery.data]);
 
-    const fetchClasses = async () => {
-        try {
-            // Use /teacher/classes which returns ALL assigned classes (subject teacher + class teacher)
-            const res = await api.get('/teacher/classes');
-            setClasses(res.data);
-            if (res.data.length > 0) {
-                setSelectedClassId(res.data[0].id);
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    };
+    useEffect(() => {
+        if (!historyQuery.data) return;
+        setMessages(historyQuery.data.data || []);
+    }, [historyQuery.data]);
 
-    const fetchStudents = async () => {
-        if (!selectedClassId) return;
-        try {
-            const res = await api.get(`/teacher/classes/${selectedClassId}/students`);
-            setStudents(res.data);
-        } catch (err) {
-            console.error(err);
-        }
-    };
+    useEffect(() => {
+        if (!inboxQuery.data) return;
+        setInboxMessages(inboxQuery.data.data || []);
+    }, [inboxQuery.data]);
 
-    const fetchMessages = async () => {
-        if (!selectedClassId) return;
-        setLoading(true);
-        try {
-            const res = await api.get(`/teacher/messages/class/${selectedClassId}`);
-            setMessages(res.data);
-        } catch (err) {
-            console.error(err);
-            toast({ title: "Error", description: "Failed to fetch message history", variant: "destructive" });
-        } finally {
-            setLoading(false);
+    useEffect(() => {
+        if (historyQuery.error) {
+            console.error(historyQuery.error);
+            toast({ title: 'Error', description: 'Failed to fetch message history', variant: 'destructive' });
         }
-    };
+    }, [historyQuery.error, toast]);
 
-    const fetchInboxMessages = async () => {
-        setLoading(true);
-        try {
-            const res = await api.get(`/teacher/messages/inbox`);
-            setInboxMessages(res.data);
-        } catch (err) {
-            console.error(err);
-            toast({ title: "Error", description: "Failed to fetch inbox messages", variant: "destructive" });
-        } finally {
-            setLoading(false);
+    useEffect(() => {
+        if (inboxQuery.error) {
+            console.error(inboxQuery.error);
+            toast({ title: 'Error', description: 'Failed to fetch inbox messages', variant: 'destructive' });
         }
-    };
+    }, [inboxQuery.error, toast]);
+
+    const loading = activeTab === 'HISTORY'
+        ? (historyQuery.isLoading || historyQuery.isFetching)
+        : activeTab === 'INBOX'
+            ? (inboxQuery.isLoading || inboxQuery.isFetching)
+            : false;
 
     const handleSendMessage = async () => {
         if (!selectedClassId || !messageContent.trim()) {
@@ -110,7 +114,7 @@ const TeacherCommunications = ({ currentUser }) => {
             toast({ title: "Success", description: "Message sent successfully." });
             setMessageContent('');
             if (activeTab === 'HISTORY') {
-                fetchMessages();
+                queryClient.invalidateQueries({ queryKey: ['teacher', 'communications', 'history', selectedClassId] });
             }
         } catch (err) {
             console.error(err);
@@ -139,7 +143,7 @@ const TeacherCommunications = ({ currentUser }) => {
                                 <CardTitle>Admin Announcements & Direct Messages</CardTitle>
                                 <CardDescription>View messages sent to you by the school administration.</CardDescription>
                             </div>
-                            <Button variant="outline" size="sm" onClick={fetchInboxMessages}>
+                            <Button variant="outline" size="sm" onClick={() => inboxQuery.refetch()}>
                                 <History className="w-4 h-4 mr-2" /> Refresh
                             </Button>
                         </CardHeader>
@@ -270,7 +274,7 @@ const TeacherCommunications = ({ currentUser }) => {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <Button variant="outline" size="sm" onClick={fetchMessages}>
+                            <Button variant="outline" size="sm" onClick={() => historyQuery.refetch()}>
                                 <History className="w-4 h-4 mr-2" /> Refresh
                             </Button>
                         </div>

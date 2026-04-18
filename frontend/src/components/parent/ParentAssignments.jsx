@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { FileText, Calendar, Paperclip, Download } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -9,33 +10,31 @@ const ParentAssignments = ({ currentUser }) => {
     const { toast } = useToast();
     const { selectedChild } = useParent();
     const [assignments, setAssignments] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+
+    const assignmentsQuery = useQuery({
+        queryKey: ['parent', 'assignments', selectedChild?.id],
+        queryFn: () => api.get(`/parent/assignments/${selectedChild.id}`),
+        enabled: Boolean(selectedChild?.id),
+        staleTime: 1000 * 60,
+    });
 
     useEffect(() => {
-        if (selectedChild) {
-            fetchAssignments();
-        }
-    }, [selectedChild]);
+        if (!assignmentsQuery.data) return;
+        setAssignments(assignmentsQuery.data.data || []);
+    }, [assignmentsQuery.data]);
 
-    const fetchAssignments = async () => {
-        if (!selectedChild) return;
+    useEffect(() => {
+        if (!assignmentsQuery.error) return;
+        console.error('Error fetching assignments:', assignmentsQuery.error);
+        toast({
+            title: 'Error',
+            description: 'Failed to load assignments',
+            variant: 'destructive'
+        });
+        setAssignments([]);
+    }, [assignmentsQuery.error, toast]);
 
-        try {
-            setIsLoading(true);
-            const response = await api.get(`/parent/assignments/${selectedChild.id}`);
-            setAssignments(response.data || []);
-        } catch (error) {
-            console.error('Error fetching assignments:', error);
-            toast({
-                title: "Error",
-                description: "Failed to load assignments",
-                variant: "destructive"
-            });
-            setAssignments([]);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const isLoading = assignmentsQuery.isLoading || assignmentsQuery.isFetching;
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { User, Mail, Phone, Briefcase, GraduationCap, Calendar, Award, BookOpen } from 'lucide-react';
 import api from '@/services/api';
 import { useToast } from '@/components/ui/use-toast';
@@ -8,23 +9,25 @@ import { Badge } from "@/components/ui/badge";
 const TeacherProfile = () => {
     const { toast } = useToast();
     const [profile, setProfile] = useState(null);
-    const [loading, setLoading] = useState(true);
+
+    const profileQuery = useQuery({
+        queryKey: ['teacher', 'profile'],
+        queryFn: () => api.get('/teacher/profile'),
+        staleTime: 1000 * 60,
+    });
 
     useEffect(() => {
-        fetchProfile();
-    }, []);
+        if (!profileQuery.data) return;
+        setProfile(profileQuery.data.data);
+    }, [profileQuery.data]);
 
-    const fetchProfile = async () => {
-        try {
-            const res = await api.get('/teacher/profile');
-            setProfile(res.data);
-        } catch (err) {
-            console.error(err);
-            toast({ title: "Error", description: "Failed to fetch profile", variant: "destructive" });
-        } finally {
-            setLoading(false);
-        }
-    };
+    useEffect(() => {
+        if (!profileQuery.error) return;
+        console.error(profileQuery.error);
+        toast({ title: 'Error', description: 'Failed to fetch profile', variant: 'destructive' });
+    }, [profileQuery.error, toast]);
+
+    const loading = profileQuery.isLoading || profileQuery.isFetching;
 
     if (loading) return (
         <div className="space-y-6 animate-pulse">

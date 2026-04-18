@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   BookOpen,
@@ -35,7 +36,7 @@ import { Input } from "@/components/ui/input";
 
 const AcademicsManagement = () => {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
 
   // Data
@@ -76,52 +77,95 @@ const AcademicsManagement = () => {
   const [classTeacherSearch, setClassTeacherSearch] = useState("");
   const [subjectTeacherSearch, setSubjectTeacherSearch] = useState("");
 
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
-
-  useEffect(() => {
-    fetchSubjects(subjectPage);
-  }, [subjectPage]);
-
-  const fetchInitialData = async () => {
-    try {
-      setLoading(true);
-      // Fetch classes, teachers, and a base list of subjects for dropdowns/mapping
+  const bootstrapQuery = useQuery({
+    queryKey: ["admin", "academics-bootstrap"],
+    queryFn: async () => {
       const [classesData, teachersData, subjectsData] = await Promise.all([
         adminService.getClasses({ size: 1000 }),
         adminService.getTeachers({ size: 1000 }),
         adminService.getSubjects({ size: 1000 }),
       ]);
-      setClasses(classesData.content || []);
-      setTeachers(teachersData.content || []);
-      setAllSubjects(subjectsData.content || []);
-      await fetchSubjects(0);
-    } catch (error) {
-      console.error("Failed to load data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load academic data",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const fetchSubjects = async (page) => {
-    try {
-      const data = await adminService.getSubjects({
-        page,
+      return {
+        classes: classesData.content || classesData || [],
+        teachers: teachersData.content || teachersData || [],
+        allSubjects: subjectsData.content || subjectsData || [],
+      };
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const pagedSubjectsQuery = useQuery({
+    queryKey: ["admin", "academics-subjects", subjectPage, subjectPageSize],
+    queryFn: () =>
+      adminService.getSubjects({
+        page: subjectPage,
         size: subjectPageSize,
-      });
-      setSubjects(data.content || []);
-      setSubjectTotalPages(data.totalPages || 0);
-      setSubjectTotalElements(data.totalElements || 0);
-    } catch (error) {
-      console.error("Failed to fetch subjects:", error);
+      }),
+    staleTime: 1000 * 60,
+    placeholderData: (previousData) => previousData,
+  });
+
+  const classSubjectsQuery = useQuery({
+    queryKey: ["admin", "academics-class-subjects", selectedClassId],
+    enabled: Boolean(selectedClassId),
+    queryFn: () => adminService.getClassSubjects(selectedClassId),
+  });
+
+  useEffect(() => {
+    if (!bootstrapQuery.data) return;
+    setClasses(bootstrapQuery.data.classes || []);
+    setTeachers(bootstrapQuery.data.teachers || []);
+    setAllSubjects(bootstrapQuery.data.allSubjects || []);
+  }, [bootstrapQuery.data]);
+
+  useEffect(() => {
+    if (!pagedSubjectsQuery.data) return;
+    const data = pagedSubjectsQuery.data;
+    setSubjects(data.content || []);
+    setSubjectTotalPages(data.totalPages || 0);
+    setSubjectTotalElements(data.totalElements || 0);
+  }, [pagedSubjectsQuery.data]);
+
+  useEffect(() => {
+    if (!bootstrapQuery.error && !pagedSubjectsQuery.error) return;
+    console.error("Failed to load academic data", bootstrapQuery.error || pagedSubjectsQuery.error);
+    toast({
+      title: "Error",
+      description: "Failed to load academic data",
+      variant: "destructive",
+    });
+  }, [bootstrapQuery.error, pagedSubjectsQuery.error, toast]);
+
+  useEffect(() => {
+    if (!selectedClass) {
+      setClassSubjects([]);
+      setAvailableSubjects([]);
+      return;
     }
-  };
+
+    const classSubjectsData = classSubjectsQuery.data || [];
+    const mapped = classSubjectsData.map((cs) => ({
+      id: cs.id,
+      subjectId: cs.subjectId,
+      subjectName: cs.subjectName || "Unknown",
+      teacherId: cs.teacherId || "",
+      teacherName: cs.teacherName || "Unassigned",
+    }));
+    setClassSubjects(mapped);
+
+    const assignedSubjectIds = mapped.map((cs) => cs.subjectId);
+    const clsGrade = selectedClass.grade || selectedClass.name;
+    const available = allSubjects.filter((s) => {
+      if (assignedSubjectIds.includes(s.id)) return false;
+      if (s.type === "CLASS_SPECIFIC") return s.targetGrade === clsGrade;
+      if (s.type === "UNIVERSAL") return !(s.excludedGrades || []).includes(clsGrade);
+      return true;
+    });
+    setAvailableSubjects(available);
+  }, [classSubjectsQuery.data, selectedClass, allSubjects]);
+
+  const loading = bootstrapQuery.isLoading || pagedSubjectsQuery.isLoading;
 
   const availableClassTeachers = useMemo(() => {
     const assignedTeacherIds = classes
@@ -177,40 +221,15 @@ const AcademicsManagement = () => {
     setClassTeacherId(ctId);
     setOriginalClassTeacherId(ctId);
 
-    try {
-      const classSubjectsData = await adminService.getClassSubjects(classId);
-      const mapped = (classSubjectsData || []).map((cs) => ({
-        id: cs.id,
-        subjectId: cs.subjectId,
-        subjectName: cs.subjectName || "Unknown",
-        teacherId: cs.teacherId || "",
-        teacherName: cs.teacherName || "Unassigned",
-      }));
-      setClassSubjects(mapped);
-
-      const assignedSubjectIds = mapped.map((cs) => cs.subjectId);
-      const available = allSubjects.filter((s) => {
-        if (assignedSubjectIds.includes(s.id)) return false;
-        const clsGrade = cls.grade || cls.name;
+    setClassSubjects([]);
+    const clsGrade = cls.grade || cls.name;
+    setAvailableSubjects(
+      allSubjects.filter((s) => {
         if (s.type === "CLASS_SPECIFIC") return s.targetGrade === clsGrade;
-        if (s.type === "UNIVERSAL")
-          return !(s.excludedGrades || []).includes(clsGrade);
+        if (s.type === "UNIVERSAL") return !(s.excludedGrades || []).includes(clsGrade);
         return true;
-      });
-      setAvailableSubjects(available);
-    } catch (error) {
-      console.error("Failed to fetch class subjects:", error);
-      setClassSubjects([]);
-      setAvailableSubjects(
-        allSubjects.filter((s) => {
-          const clsGrade = cls.grade || cls.name;
-          if (s.type === "CLASS_SPECIFIC") return s.targetGrade === clsGrade;
-          if (s.type === "UNIVERSAL")
-            return !(s.excludedGrades || []).includes(clsGrade);
-          return true;
-        }),
-      );
-    }
+      })
+    );
 
     setSelectedSubjectsToAdd([]);
     setHasChanges(false);
@@ -265,9 +284,8 @@ const AcademicsManagement = () => {
 
       setOriginalClassTeacherId(classTeacherId);
       setHasChanges(false);
-
-      const updatedClasses = await adminService.getClasses();
-      setClasses(updatedClasses.content || updatedClasses || []);
+      queryClient.invalidateQueries({ queryKey: ["admin", "academics-bootstrap"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "academics-class-subjects", selectedClassId] });
     } catch (error) {
       console.error("Failed to save:", error);
       toast({
@@ -303,8 +321,8 @@ const AcademicsManagement = () => {
         title: "Success",
         description: `${selectedSubjectsToAdd.length} subject(s) assigned to class`,
       });
-
-      await handleClassSelect(selectedClassId);
+      queryClient.invalidateQueries({ queryKey: ["admin", "academics-class-subjects", selectedClassId] });
+      setSelectedSubjectsToAdd([]);
     } catch (error) {
       console.error("Failed to add subjects:", error);
       toast({
@@ -346,9 +364,11 @@ const AcademicsManagement = () => {
       setNewSubjectType("UNIVERSAL");
       setNewSubjectTargetGrade("");
       setNewSubjectExcludedGrades([]);
-      const allSubs = await adminService.getSubjects({ size: 1000 });
-      setAllSubjects(allSubs.content || []);
-      await fetchSubjects(subjectPage);
+      queryClient.invalidateQueries({ queryKey: ["admin", "academics-bootstrap"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "academics-subjects"] });
+      if (selectedClassId) {
+        queryClient.invalidateQueries({ queryKey: ["admin", "academics-class-subjects", selectedClassId] });
+      }
     } catch (error) {
       console.error("Failed to create subject:", error);
       toast({
@@ -378,11 +398,10 @@ const AcademicsManagement = () => {
         title: "Success",
         description: "Subject deleted successfully",
       });
-      const allSubs = await adminService.getSubjects({ size: 1000 });
-      setAllSubjects(allSubs.content || []);
-      await fetchSubjects(subjectPage);
+      queryClient.invalidateQueries({ queryKey: ["admin", "academics-bootstrap"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "academics-subjects"] });
       if (selectedClassId) {
-        handleClassSelect(selectedClassId);
+        queryClient.invalidateQueries({ queryKey: ["admin", "academics-class-subjects", selectedClassId] });
       }
     } catch (error) {
       console.error("Failed to delete subject:", error);

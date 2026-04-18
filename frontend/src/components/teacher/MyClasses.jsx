@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import api from '@/services/api';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,37 +16,52 @@ import {
 
 const MyClasses = () => {
     const [classes, setClasses] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [selectedClass, setSelectedClass] = useState(null);
 
     // Student List State
     const [students, setStudents] = useState([]);
-    const [loadingStudents, setLoadingStudents] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
-    useEffect(() => {
-        api.get('/teacher/classes')
-            .then(res => {
-                setClasses(res.data);
-                setLoading(false);
-            })
-            .catch(err => {
-                console.error(err);
-                setLoading(false);
-            });
-    }, []);
+    const classesQuery = useQuery({
+        queryKey: ['teacher', 'classes'],
+        queryFn: () => api.get('/teacher/classes'),
+        staleTime: 1000 * 60,
+    });
 
-    const handleClassClick = async (cls) => {
-        setSelectedClass(cls);
-        setLoadingStudents(true);
-        try {
-            const res = await api.get(`/teacher/classes/${cls.id}/students`);
-            setStudents(res.data);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoadingStudents(false);
+    const classStudentsQuery = useQuery({
+        queryKey: ['teacher', 'class-students', selectedClass?.id],
+        queryFn: () => api.get(`/teacher/classes/${selectedClass.id}/students`),
+        enabled: Boolean(selectedClass?.id),
+        staleTime: 1000 * 30,
+    });
+
+    useEffect(() => {
+        if (!classesQuery.data) return;
+        setClasses(classesQuery.data.data || []);
+    }, [classesQuery.data]);
+
+    useEffect(() => {
+        if (!classStudentsQuery.data) return;
+        setStudents(classStudentsQuery.data.data || []);
+    }, [classStudentsQuery.data]);
+
+    useEffect(() => {
+        if (classesQuery.error) {
+            console.error(classesQuery.error);
         }
+    }, [classesQuery.error]);
+
+    useEffect(() => {
+        if (classStudentsQuery.error) {
+            console.error(classStudentsQuery.error);
+        }
+    }, [classStudentsQuery.error]);
+
+    const loading = classesQuery.isLoading || classesQuery.isFetching;
+    const loadingStudents = classStudentsQuery.isLoading || classStudentsQuery.isFetching;
+
+    const handleClassClick = (cls) => {
+        setSelectedClass(cls);
     };
 
     const filteredStudents = students.filter(s =>
