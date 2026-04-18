@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { setupCache } from 'axios-cache-interceptor';
 
 const axiosInstance = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
@@ -8,10 +7,9 @@ const axiosInstance = axios.create({
     },
 });
 
-// Wrap the axios instance with a long-lived TTL cache for GET requests
-const api = setupCache(axiosInstance, {
-    ttl: 1000 * 60 * 60 * 24,
-});
+// Use React Query as the primary cache layer. Global HTTP-level caching can
+// return stale responses even after query invalidation.
+const api = axiosInstance;
 
 api.interceptors.request.use(
     (config) => {
