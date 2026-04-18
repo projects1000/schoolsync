@@ -8,9 +8,9 @@ const axiosInstance = axios.create({
     },
 });
 
-// Wrap the axios instance with a 30-second TTL cache for GET requests
+// Wrap the axios instance with a long-lived TTL cache for GET requests
 const api = setupCache(axiosInstance, {
-    ttl: 1000 * 30, 
+    ttl: 1000 * 60 * 60 * 24,
 });
 
 api.interceptors.request.use(
